@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Skyhand — drone control app (wireframe prototype)
 
-## Getting Started
+A clickable, high-fidelity **greyscale wireframe** for a concept app that lets you watch and fly a drone from an iPhone, iPad, iPhone Duo or laptop, with no goggles and no physical remote. On-screen controls copy each maker's own controller layout.
 
-First, run the development server:
+> **Concept by Artonest. Not a real product.** It is not affiliated with or approved by DJI, Antigravity, Parrot, Autel or Skydio. All drone data, telemetry, maps and sign-ins are mock. Country rules are shown with their source and check date and are not legal advice.
+
+## What's inside
+
+- **Five controller skins:** DJI Mavic 4 Pro, Antigravity A1, Parrot ANAFI Ai, Autel EVO Max 4T, Skydio X10 (monitor and mission-start only).
+- **Flight simulation:** take off, sticks or the A1 Flight Slider, smart modes, return (Home / Launch point / My position), landing, flight summary.
+- **Safety cluster on every skin:** Pause, Return and Land, with hold-to-confirm.
+- **Country rules for 8 countries:** USA, UK, UAE, Australia, India, Switzerland, Japan, Luxembourg, with red flags where flying is a problem.
+- **Pre-flight:** country, use case, checklist, line-of-sight check and observer invite.
+- **First launch:** welcome, safety, permissions, country, experience, first drone. Maker sign-in happens inside Add a drone. The optional Skyhand account is only for sync across devices.
+- **Platforms:** iPhone, iPad, iPhone Duo (open and closed), laptop.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # full prototype with test sidebar on http://localhost:3000
+npm run devices    # one standalone app per device (needs the dev server running)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Address | App |
+|---|---|
+| http://localhost:3000 | Full prototype with the test sidebar (screens, events, overlays) |
+| http://localhost:4001 | iPhone (rotate) |
+| http://localhost:4002 | iPad (rotate) |
+| http://localhost:4003 | iPhone Duo (open/close, rotate) |
+| http://localhost:4004 | Laptop |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The device apps are served by the same Next.js server through a small proxy (`scripts/device-ports.mjs`). Each one keeps its own state.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Code map
 
-## Learn More
+| Path | What |
+|---|---|
+| `src/lib/data.ts` | Mock drones, brand skins, country rules, alert copy, maker sign-in needs |
+| `src/lib/layout.ts` | Device sizes, safe areas, Fly screen zones, device apps |
+| `src/lib/store.tsx` | Prototype state and the 250 ms flight simulation |
+| `src/components/Fly.tsx` | Fly screen (HUD, skins, safety cluster, sheets) |
+| `src/components/Screens.tsx` | Hangar, add drone, pre-flight, flights, rules, settings |
+| `src/components/Onboarding.tsx` | First launch and Skyhand account |
+| `src/components/art.tsx` | Greyscale illustrations: camera scene, map, drones, system bars |
+| `src/components/Shell.tsx` | Test sidebar and standalone device app frame |
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Stack: Next.js 15 (App Router), React 19, TypeScript strict, Tailwind CSS v4, lucide-react icons. Black, white and grey only.
