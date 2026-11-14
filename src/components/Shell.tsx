@@ -8,6 +8,7 @@ import { Device } from "./Device";
 import { FlyScreen } from "./Fly";
 import { ObserverPhone } from "./Observer";
 import { FoldHorizontal, RotateCw, UnfoldHorizontal } from "lucide-react";
+import { DashboardScreen, WatchScreen } from "./Dashboard";
 import { AccountScreen, ObCountry, ObDrone, ObPerms, ObSafety, ObYou, Welcome } from "./Onboarding";
 import { AddBrand, AddModel, Capability, Flights, Hangar, PfChecklist, PfCountry, PfCrowd, PfObserver, PfRedFlag, PfSight, PfUseCase, Rules, Settings, Summary } from "./Screens";
 
@@ -15,14 +16,14 @@ const SCREENS: Record<Screen, () => ReactNode> = {
   hangar: Hangar, "add-brand": AddBrand, "add-model": AddModel, capability: Capability, "pf-country": PfCountry, "pf-usecase": PfUseCase,
   "pf-redflag": PfRedFlag, "pf-crowd": PfCrowd, "pf-checklist": PfChecklist, "pf-sight": PfSight, "pf-observer": PfObserver,
   fly: FlyScreen, summary: Summary, flights: Flights, rules: Rules, settings: Settings,
-  welcome: Welcome, "ob-safety": ObSafety, "ob-perms": ObPerms, "ob-country": ObCountry, "ob-you": ObYou, "ob-drone": ObDrone, account: AccountScreen,
+  welcome: Welcome, "ob-safety": ObSafety, "ob-perms": ObPerms, "ob-country": ObCountry, "ob-you": ObYou, "ob-drone": ObDrone, account: AccountScreen, dashboard: DashboardScreen, watch: WatchScreen,
 };
 const SCREEN_LABEL: Record<Screen, string> = {
   hangar: "S01 Your drones", "add-brand": "S03 Add a drone", "add-model": "S04 Choose your model", capability: "S05 What this drone can do",
   "pf-country": "S10 Where are you flying?", "pf-usecase": "S11 What are you shooting?", "pf-redflag": "S14 Can't fly here", "pf-crowd": "S16 People nearby",
   "pf-checklist": "S12 Before you fly", "pf-sight": "S13 Keep it in sight", "pf-observer": "S17 Invite an observer", fly: "S20-S24 Fly",
   summary: "S50 Flight summary", flights: "S51 Your flights", rules: "S52 Rules", settings: "S54 Settings",
-  welcome: "S60 Welcome", "ob-safety": "S61 Before you start", "ob-perms": "S62 Allow access", "ob-country": "S63 Where do you fly?", "ob-you": "S64 About you", "ob-drone": "S65 Your first drone", account: "S67 Skyhand account",
+  welcome: "S60 Welcome", "ob-safety": "S61 Before you start", "ob-perms": "S62 Allow access", "ob-country": "S63 Where do you fly?", "ob-you": "S64 About you", "ob-drone": "S65 Your first drone", account: "S67 Skyhand account", dashboard: "S70 Dashboard (laptop, iPad)", watch: "S71 Watch wall (laptop, iPad)",
 };
 
 function Field({ label, children }: { label: string; children: ReactNode }) {

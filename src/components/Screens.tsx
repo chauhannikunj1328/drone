@@ -3,21 +3,24 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle, Camera, Car, Check, ChevronLeft, ChevronRight, Clock, Eye, FileText, Gauge, Globe, Hand, Heart, History, Info, Link2,
   Loader2, MapPin, Mountain, Navigation, Plane, Plus, Ruler, Scale, Search, Settings as SettingsIcon, ShieldCheck, Smartphone, Sparkles,
-  Trees, Users, Warehouse, Wifi,
+  Trees, Users, Warehouse, Wifi, LayoutDashboard, Grid2x2,
 } from "lucide-react";
 import { BRANDS, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type CountryCode, type Drone } from "@/lib/data";
-import { frameSize, safeArea } from "@/lib/layout";
-import { checklist, droneOf, inAir, isRedFor, useProto, type Proto, type Screen, type UseCase } from "@/lib/store";
+import { frameSize, hasCommandCentre, safeArea } from "@/lib/layout";
+import { checklist, defaultMode, droneOf, inAir, isRedFor, useProto, type Proto, type Screen, type UseCase } from "@/lib/store";
 import { Battery, DroneArt, MapArt, StatusBar, Thumb } from "./art";
 import { Icon, Mock, type IconKind } from "./ui";
 import { MakerSignIn, SignInSheet } from "./Onboarding";
+import { HangarDesk } from "./Dashboard";
 import { BRAND_ACCOUNT } from "@/lib/data";
 
 const go = (sc: Screen) => (p: Proto) => { p.screen = sc; };
 
 // ---------- Page frame: status bar, navigation, tab bar ----------
-export function Page({ title, back, children, tabs = true, large, right, sub, full, footer }: {
+export function Page({ title, back, children, tabs = true, large, right, sub, full, footer, bleed }: {
   title: string; back?: Screen; children: ReactNode; tabs?: boolean; large?: boolean; right?: ReactNode; sub?: ReactNode; full?: boolean; footer?: ReactNode;
+  // bleed: dark full-bleed command-centre content (Dashboard, Watch wall, laptop Hangar). No title or padding.
+  bleed?: boolean;
 }) {
   const { s, up } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
@@ -29,7 +32,9 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   const isLarge = large ?? !back;
   const tabsList: [string, Screen, ReactNode][] = [
     // Fly is not a tab: flying is an action on a chosen drone (from Hangar), not a place.
+    ...(hasCommandCentre(s.platform) ? [["Dashboard", "dashboard", <LayoutDashboard key="d" size={22} strokeWidth={1.8} />] as [string, Screen, ReactNode]] : []),
     ["Hangar", "hangar", <Warehouse key="h" size={22} strokeWidth={1.8} />],
+    ...(hasCommandCentre(s.platform) ? [["Watch", "watch", <Grid2x2 key="w" size={22} strokeWidth={1.8} />] as [string, Screen, ReactNode]] : []),
     ["Flights", "flights", <History key="fl" size={22} strokeWidth={1.8} />], ["Rules", "rules", <Scale key="r" size={22} strokeWidth={1.8} />],
     ["Settings", "settings", <SettingsIcon key="s" size={22} strokeWidth={1.8} />],
   ];
@@ -39,26 +44,26 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   const isOn = (sc: Screen) => s.screen === sc || (sc === "hangar" && (s.screen.startsWith("pf-") || ["add-brand", "add-model", "capability", "summary"].includes(s.screen)));
   // In-flight banner: any drone in the air stays one tap away from every page.
   // Not during first setup: the new user has no drones in the air yet.
-  const airborne = !s.obAdding ? s.drones.filter((d) => inAir(s.sims[d.id].phase)) : [];
+  const airborne = !s.obAdding && !bleed ? s.drones.filter((d) => inAir(s.sims[d.id].phase)) : [];
   const lead = airborne.find((d) => d.id === s.droneId) ?? airborne[0];
   const bannerH = lead ? 56 : 0, footH = footer ? 90 : 0;
   const bottomBase = tabs && !side && !desk ? tabH + safe.b : safe.b;
   const tabBar = tabs && desk ? (
-    <nav aria-label="Sections" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: railW, background: "var(--grey-100)", borderRight: "1px solid var(--grey-150)", padding: "14px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
+    <nav aria-label="Sections" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: railW, background: "#161616", color: "#fff", borderRight: "1px solid rgba(255,255,255,.08)", padding: "14px 12px", display: "flex", flexDirection: "column", gap: 2, zIndex: 6 }}>
       <div style={{ display: "flex", gap: 7, marginBottom: 22, paddingLeft: 4 }}>{[0, 1, 2].map((i) => <span key={i} style={{ width: 12, height: 12, borderRadius: 9999, background: ["#5c5c5c", "#9e9e9e", "#bdbdbd"][i] }} />)}</div>
-      <div className="t-over muted" style={{ padding: "0 10px 6px" }}>Skyhand</div>
+      <div className="t-over" style={{ padding: "0 10px 6px", color: "rgba(255,255,255,.5)" }}>Skyhand</div>
       {tabsList.map(([t, sc, ic]) => { const on = isOn(sc); return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined}
-        style={{ display: "flex", alignItems: "center", gap: 10, height: 36, padding: "0 10px", borderRadius: 8, border: "none", background: on ? "var(--grey-0)" : "transparent", boxShadow: on ? "var(--shadow-1)" : undefined, fontSize: 14, fontWeight: on ? 600 : 500, color: on ? "var(--grey-900)" : "var(--grey-600)", textAlign: "left" }}>{ic}{t}</button>; })}
-      <div style={{ marginTop: "auto" }} className="t-cap muted">Concept by Artonest</div>
+        style={{ display: "flex", alignItems: "center", gap: 10, height: 36, padding: "0 10px", borderRadius: 8, border: "none", background: on ? "#fff" : "transparent", fontSize: 14, fontWeight: on ? 600 : 500, color: on ? "#111" : "rgba(255,255,255,.7)", textAlign: "left" }}>{ic}{t}</button>; })}
+      <div style={{ marginTop: "auto", color: "rgba(255,255,255,.45)" }} className="t-cap">Concept by Artonest</div>
     </nav>
   ) : tabs && (
     <nav aria-label="Tabs" style={side
-      ? { position: "absolute", right: 0, top: sbH, bottom: 0, width: railW + safe.r, paddingRight: safe.r, borderLeft: "1px solid var(--grey-150)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, background: "rgba(255,255,255,.92)", backdropFilter: "blur(20px)" }
-      : { position: "absolute", left: 0, right: 0, bottom: 0, height: tabH + safe.b, paddingBottom: safe.b, borderTop: "1px solid var(--grey-150)", display: "flex", background: "rgba(255,255,255,.92)", backdropFilter: "blur(20px)", zIndex: 5 }}>
+      ? { position: "absolute", right: 0, top: sbH, bottom: 0, width: railW + safe.r, paddingRight: safe.r, borderLeft: bleed ? "1px solid rgba(255,255,255,.1)" : "1px solid var(--grey-150)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, background: bleed ? "#161616" : "rgba(255,255,255,.92)", backdropFilter: "blur(20px)" }
+      : { position: "absolute", left: 0, right: 0, bottom: 0, height: tabH + safe.b, paddingBottom: safe.b, borderTop: bleed ? "1px solid rgba(255,255,255,.1)" : "1px solid var(--grey-150)", display: "flex", background: bleed ? "#161616" : "rgba(255,255,255,.92)", backdropFilter: "blur(20px)", zIndex: 5 }}>
       {tabsList.map(([t, sc, ic]) => {
         const on = isOn(sc);
         return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined}
-          style={{ flex: side ? undefined : 1, minHeight: 48, border: "none", background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, color: on ? "var(--grey-900)" : "var(--grey-400)", fontSize: 10, fontWeight: on ? 700 : 500 }}>
+          style={{ flex: side ? undefined : 1, minHeight: 48, border: "none", background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, color: on ? (bleed ? "#fff" : "var(--grey-900)") : (bleed ? "rgba(255,255,255,.45)" : "var(--grey-400)"), fontSize: 10, fontWeight: on ? 700 : 500 }}>
           {ic}{t}</button>;
       })}
     </nav>
@@ -66,9 +71,10 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   const regular = W >= 600;
   const padX = regular ? 28 : 18;
   return (
-    <div className="light" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
-      <StatusBar platform={s.platform} landscape={s.orient === "landscape"} />
-      <div className="no-scrollbar" style={{ position: "absolute", left: safe.l + (desk && tabs ? railW : 0), right: (side ? railW : 0) + safe.r, top: desk ? 24 : top, bottom: bottomBase + bannerH + footH, overflowY: "auto", padding: `4px ${padX}px 28px` }}>
+    <div className={bleed ? "fh" : "light"} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+      <StatusBar platform={s.platform} landscape={s.orient === "landscape"} dark={bleed} />
+      {bleed && <div className="fh" style={{ position: "absolute", left: safe.l + (desk && tabs ? railW : 0), right: (side ? railW : 0) + safe.r, top: desk ? 0 : top, bottom: bottomBase, overflow: "hidden" }}>{children}</div>}
+      {!bleed && <div className="no-scrollbar" style={{ position: "absolute", left: safe.l + (desk && tabs ? railW : 0), right: (side ? railW : 0) + safe.r, top: desk ? 24 : top, bottom: bottomBase + bannerH + footH, overflowY: "auto", padding: `4px ${padX}px 28px` }}>
         <div style={{ maxWidth: full || W < 800 ? undefined : 680, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", minHeight: 44, gap: 4, marginLeft: back ? -10 : 0 }}>
           {back && <button className="btn btn-ghost" data-hit style={{ minHeight: 40, padding: "0 6px", fontWeight: 500, gap: 2 }} onClick={() => up(go(back))}><ChevronLeft size={22} />Back</button>}
@@ -80,7 +86,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
         {sub && <div className="t-body muted" style={{ marginTop: 2 }}>{sub}</div>}
         <div style={{ marginTop: 16 }}>{children}</div>
         </div>
-      </div>
+      </div>}
       {(footer || lead) && (
         <div style={{ position: "absolute", left: safe.l + (desk && tabs ? railW : 0), right: s.platform === "duoOpen" && s.orient === "portrait" ? W / 2 + 16 : (side ? railW : 0) + safe.r, bottom: bottomBase, padding: `12px ${padX}px 10px`, display: "grid", gap: 8, zIndex: 6,
           background: "linear-gradient(rgba(245,245,245,0), var(--grey-50) 30%)" }}>
@@ -145,6 +151,7 @@ function FlagChip({ level }: { level: "few" | "rules" | "cant" }) {
 // ---------- Hangar ----------
 export function Hangar() {
   const { s, up } = useProto();
+  if (s.platform === "laptop") return <HangarDesk />;
   const c = COUNTRIES[s.country];
   const sel = droneOf(s);
   const [ic, label] = statusIcon(sel, s);
@@ -313,7 +320,7 @@ export function Capability() {
     <button className="btn btn-primary btn-block" data-hit style={{ marginTop: 16 }} onClick={() => up((p) => {
       const id = `d${p.drones.length + 1}${p.obAdding ? "n" : ""}`;
       p.drones.push({ id, nickname: `My ${b.model.replace(/^(DJI|Antigravity|Parrot|Autel|Skydio) /, "")}`, brand: b.id, model: b.model, weightGrams: b.id === "antigravity" ? 249 : 1000, weightIsMock: b.id !== "antigravity", hasCamera: true, battery: 100, status: b.id === "skydio" ? "Limited" : "Ready", statusReason: b.id === "skydio" ? "monitor and mission-start only" : undefined, firmwareOk: true, monitorOnly: b.id === "skydio", is360: b.id === "antigravity" });
-      p.sims[id] = { ...p.sims.d1, phase: "grounded", height: 0, distance: 0, photos: 0, alertsSeen: [], smartMode: undefined };
+      p.sims[id] = { ...p.sims.d1, phase: "grounded", height: 0, distance: 0, photos: 0, alertsSeen: [], smartMode: undefined, mode: defaultMode(b.id) };
       // First drone during onboarding: the Hangar holds just this drone (no demo drones).
       if (p.obAdding) { p.drones = p.drones.filter((d) => d.id === id); p.droneId = id; p.obAdding = false; p.onboarded = true; p.toast = `${b.model} added. Tap Fly when you're ready.`; }
       p.screen = "hangar";

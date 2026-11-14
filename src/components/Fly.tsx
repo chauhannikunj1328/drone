@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { COUNTRIES, SKINS } from "@/lib/data";
-import { flyLayout, flyOrientation, frameSize, type Rect } from "@/lib/layout";
+import { flyLayout, flyOrientation, frameSize, isCockpit, type Rect } from "@/lib/layout";
+import { Cockpit } from "./Cockpit";
 import { activeAlerts, alertAction, droneOf, inAir, skinOf, startReturn, useProto } from "@/lib/store";
 import { AlertCard, HoldButton, Icon, Mock, Stick, VSlider } from "./ui";
 import { ArrowDownToLine, Camera, ChevronRight, Crosshair, Home, Keyboard, Layers, Lock, MapPin, Maximize2, Pause, Play, Satellite, Smartphone, Sparkles, Video, X } from "lucide-react";
@@ -20,7 +21,13 @@ function Compass({ heading, w }: { heading: number; w: number }) {
 
 const pos = (r?: Rect) => (r ? { left: r.x, top: r.y, width: r.w, height: r.h } : { display: "none" });
 
+// Laptop and iPad landscape use the command-centre cockpit; phones and Duo keep the touch layout.
 export function FlyScreen() {
+  const { s } = useProto();
+  return isCockpit(s.platform, s.orient) ? <Cockpit /> : <FlyTouch />;
+}
+
+function FlyTouch() {
   const { s, up, input } = useProto();
   const d = droneOf(s); const sim = s.sims[s.droneId]; const skin = skinOf(s); const c = COUNTRIES[s.country];
   const fo = flyOrientation(s.platform, s.orient);
@@ -342,7 +349,7 @@ function OtherDrones({ rect }: { rect?: Rect }) {
   );
 }
 
-function Handover() {
+export function Handover() {
   const { s, up } = useProto();
   const to = droneOf(s, s.handoverTo); const from = droneOf(s);
   return (

@@ -42,8 +42,10 @@ export function AlertCard({ a, onAct, extra }: { a: AlertDef; onAct: () => void;
 }
 
 // Hold-to-confirm with a visible ring (1.0 s mock). Long press / right click opens an accessible confirm instead.
-export function HoldButton({ label, holdLabel, activeLabel, onDone, className = "ctl safety", style, disabled, ms = 1000, size, icon }: {
+export function HoldButton({ label, holdLabel, activeLabel, onDone, className = "ctl safety", style, disabled, ms = 1000, size, icon, wide }: {
   label: string; holdLabel?: string; activeLabel?: string; onDone: () => void; className?: string; style?: CSSProperties; disabled?: boolean; ms?: number; size: number; icon?: ReactNode;
+  // wide: fills its box (style width) and shows hold progress as a bar instead of a ring
+  wide?: boolean;
 }) {
   const [p, setP] = useState(0);
   const [confirm, setConfirm] = useState(false);
@@ -60,15 +62,15 @@ export function HoldButton({ label, holdLabel, activeLabel, onDone, className = 
   const r = size / 2 + 3, circ = 2 * Math.PI * r;
   return (
     <>
-      <button data-hit className={className} style={{ ...style, width: size, height: size }} disabled={disabled} aria-label={label}
+      <button data-hit className={className} style={wide ? { width: size, height: size, ...style, overflow: "hidden" } : { ...style, width: size, height: size }} disabled={disabled} aria-label={label}
         onPointerDown={(e) => { if (disabled) return; capture(e); start.current = performance.now(); loop(); }}
         onPointerUp={stop} onPointerCancel={stop} onPointerLeave={stop}
         onContextMenu={(e) => { e.preventDefault(); if (!disabled) setConfirm(true); }}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setConfirm(true); } }}>
-        <svg className="ring" width={size + 12} height={size + 12} viewBox={`0 0 ${size + 12} ${size + 12}`}>
+        {wide ? <span style={{ position: "absolute", left: 0, bottom: 0, height: 4, width: `${p * 100}%`, background: "currentColor" }} /> : <svg className="ring" width={size + 12} height={size + 12} viewBox={`0 0 ${size + 12} ${size + 12}`}>
           <circle cx={(size + 12) / 2} cy={(size + 12) / 2} r={r} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round"
             strokeDasharray={`${circ * p} ${circ}`} transform={`rotate(-90 ${(size + 12) / 2} ${(size + 12) / 2})`} />
-        </svg>
+        </svg>}
         {icon}
         <span>{activeLabel ?? label}</span>
         {!activeLabel && <span style={{ fontSize: 9, fontWeight: 500, opacity: .7, letterSpacing: ".02em" }}>{p > 0 ? "Keep holding" : holdLabel ?? "Hold"}</span>}

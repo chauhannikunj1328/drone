@@ -66,7 +66,7 @@ export function Scene({ heading = 0, height = 0, gimbal = 0, zoom = 1, view = 0,
 }
 
 /* ---------- Map (stands in for the satellite or street map) ---------- */
-export function MapArt({ distance = 0, heading = 0, compact = false, zones = false, label }: { distance?: number; heading?: number; compact?: boolean; zones?: boolean; label?: string }) {
+export function MapArt({ distance = 0, heading = 0, compact = false, zones = false, label, bare = false }: { distance?: number; heading?: number; compact?: boolean; zones?: boolean; label?: string; bare?: boolean }) {
   const dx = Math.min(320, distance * 1.6), rad = ((heading - 90) * Math.PI) / 180;
   const hx = 400, hy = 300; const px = hx + Math.cos(rad) * dx * 0.2 + dx * 0.8, py = hy - Math.sin(-rad) * dx * 0.15 - dx * 0.3;
   return (
@@ -89,14 +89,14 @@ export function MapArt({ distance = 0, heading = 0, compact = false, zones = fal
       {zones && <g><circle cx="690" cy="440" r="110" fill="url(#mapHatch)" stroke="#141414" strokeWidth="3" strokeDasharray="10 6" />
         {!compact && <text x="640" y="445" fontSize="16" fill="#141414" fontWeight="700">No-fly area</text>}</g>}
       <defs><pattern id="mapHatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="rgba(0,0,0,.05)" /><line x1="0" y1="0" x2="0" y2="10" stroke="rgba(0,0,0,.25)" strokeWidth="2" /></pattern></defs>
-      {/* flight path */}
+      {!bare && <>{/* flight path */}
       <path d={`M${hx} ${hy} Q ${(hx + px) / 2 - 30} ${(hy + py) / 2 - 40} ${px} ${py}`} stroke="#141414" strokeWidth="3" strokeDasharray="2 8" strokeLinecap="round" fill="none" />
       {/* home */}
       <g transform={`translate(${hx} ${hy})`}><circle r="16" fill="#141414" /><text y="6" textAnchor="middle" fontSize="17" fontWeight="800" fill="#fff">H</text></g>
       {/* pilot */}
       <g transform={`translate(${hx - 40} ${hy + 30})`}><circle r="9" fill="#fff" stroke="#141414" strokeWidth="4" /></g>
       {/* drone */}
-      <g transform={`translate(${px} ${py}) rotate(${heading})`}><circle r="26" fill="rgba(0,0,0,.08)" /><path d="M0 -18 L13 14 L0 6 L-13 14 Z" fill="#141414" stroke="#fff" strokeWidth="3" strokeLinejoin="round" /></g>
+      <g transform={`translate(${px} ${py}) rotate(${heading})`}><circle r="26" fill="rgba(0,0,0,.08)" /><path d="M0 -18 L13 14 L0 6 L-13 14 Z" fill="#141414" stroke="#fff" strokeWidth="3" strokeLinejoin="round" /></g></>}
       {label && <text x="24" y="580" fontSize="16" fill="#757575" fontWeight="600">{label}</text>}
     </svg>
   );

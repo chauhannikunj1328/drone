@@ -61,6 +61,10 @@ export function flyOrientation(p: Platform, o: Orientation): Orientation {
   return p === "iphone" || p === "tablet" ? o : "landscape";
 }
 
+// Command centre screens (Dashboard, Watch wall) are on laptop and iPad. The Fly cockpit layout is laptop and iPad landscape.
+export const hasCommandCentre = (p: Platform) => p === "laptop" || p === "tablet";
+export const isCockpit = (p: Platform, o: Orientation) => p === "laptop" || (p === "tablet" && o === "landscape");
+
 export type ZoneKey = "status" | "alert" | "pause" | "return" | "land" | "map" | "telemetry" | "tray" | "slider" | "slider2"
   | "record" | "shutter" | "toggle" | "stickL" | "stickR" | "video" | "panel" | "panel2" | "panel3" | "keys" | "others";
 

@@ -7,7 +7,8 @@ import type { Orientation, Platform } from "./layout";
 export type Screen =
   | "hangar" | "add-brand" | "add-model" | "capability" | "pf-country" | "pf-usecase" | "pf-redflag" | "pf-crowd"
   | "pf-checklist" | "pf-sight" | "pf-observer" | "fly" | "summary" | "flights" | "rules" | "settings"
-  | "welcome" | "ob-safety" | "ob-perms" | "ob-country" | "ob-you" | "ob-drone" | "account";
+  | "welcome" | "ob-safety" | "ob-perms" | "ob-country" | "ob-you" | "ob-drone" | "account"
+  | "dashboard" | "watch";
 
 export type Perm = "unknown" | "allowed" | "denied";
 export interface Account { name: string; email: string; method: "Apple" | "Email"; }
@@ -36,21 +37,26 @@ export interface Proto {
   onboarded: boolean; obAdding: boolean; experience: "beginner" | "experienced";
   perms: { location: Perm; nearby: Perm; notify: Perm }; permAsk?: "location" | "nearby" | "notify";
   account?: Account; signInSheet?: boolean; brandAccounts: BrandId[]; deleteConfirm?: boolean;
+  // Command centre (17-flighthub2-analysis.md): watch wall layout, OSD, fit/fill, cockpit leave confirm
+  watchGrid: 1 | 4; watchFocus?: string; osd: boolean; fill: boolean; leaveCockpit?: boolean; fastMode: boolean;
 }
 
 const blankSim = (): DroneSim => ({ phase: "grounded", height: 0, distance: 0, hSpeed: 0, vSpeed: 0, heading: 0, view: 0, smartPaused: false,
   maxH: 0, maxD: 0, photos: 0, recording: false, videoMode: false, mode: 1, gimbal: 0, zoom: 1, alertsSeen: [] });
 
+// Each drone starts in its brand's everyday mode ("Normal" where it exists), not by list position.
+export const defaultMode = (b: BrandId) => { const i = SKINS[b].modes.findIndex((m) => m.name === "Normal" || m.name === "Standard" || m.name === "Film" || m.name === "Skills"); return i < 0 ? 0 : i; };
+
 export function initialState(): Proto {
   const sims: Record<string, DroneSim> = {};
-  for (const d of DRONES) sims[d.id] = blankSim();
+  for (const d of DRONES) sims[d.id] = { ...blankSim(), mode: defaultMode(d.brand) };
   // Seed: the Skydio X10 is already on a mission (monitor and mission-start only), so the monitor strip has something to show.
-  sims.d5 = { ...blankSim(), phase: "flying", height: 38, distance: 60, smartMode: "Orbit Point", startedAt: Date.now() };
+  sims.d5 = { ...blankSim(), mode: defaultMode("skydio"), phase: "flying", height: 38, distance: 60, smartMode: "Orbit Point", startedAt: Date.now() };
   return {
     platform: "iphone", orient: "landscape", droneId: "d1", country: "US", mirror: false, skin: "auto",
     overlays: { zones: false, safe: false, reserved: false, hit: false, mock: true },
     screen: "welcome", returnSheet: false,
-    onboarded: false, obAdding: false, experience: "beginner", perms: { location: "unknown", nearby: "unknown", notify: "unknown" }, brandAccounts: [], fullMap: false, traySheet: false,
+    onboarded: false, obAdding: false, watchGrid: 4, osd: true, fill: true, fastMode: false, experience: "beginner", perms: { location: "unknown", nearby: "unknown", notify: "unknown" }, brandAccounts: [], fullMap: false, traySheet: false,
     useCase: "Park", resident: false, docs: [], sight: "unknown", crowdAck: false,
     observer: "none", observerSight: false, observerLeftAck: false, armStop: false,
     link: "strong", linkLostFor: 0, moving: false, driving: false, obstacle: false,
