@@ -280,3 +280,10 @@
 @media (hover: hover) {
   :is(.look-v1, .look-v2, .look-v3) .desk.touch :is(.ctl, .tray button, .btn, .icon-btn):hover:not(:disabled) { filter: brightness(1.12); }
 }
+
+/* ---------- Start flow: large pill buttons, like iOS onboarding ---------- */
+:is(.look-v1, .look-v2, .look-v3) .desk .btn-block.btn-primary { height: 56px; min-height: 56px; border-radius: 28px; font-size: 17px; font-weight: 600; box-shadow: 0 8px 20px color-mix(in srgb, var(--primary-bg) 28%, transparent); }
+:is(.look-v1, .look-v2, .look-v3) .desk .btn-block.btn-ghost { min-height: 48px; font-size: 15px; color: var(--text-2); }
+:is(.look-v1, .look-v2, .look-v3) .desk .btn-block:not(.btn-primary):not(.btn-ghost) { height: 52px; border-radius: 26px; }
+:is(.look-v1, .look-v2, .look-v3) .desk .stepper { gap: 6px; }
+:is(.look-v1, .look-v2, .look-v3) .desk .stepper i { height: 4px; border-radius: 2px; }

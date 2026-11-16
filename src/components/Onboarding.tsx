@@ -8,7 +8,9 @@ import {
 import { BRAND_ACCOUNT, BRANDS, COUNTRIES, FLAG_WORD, type BrandId, type CountryCode } from "@/lib/data";
 import { frameSize, safeArea, sideControls } from "@/lib/layout";
 import { useProto, type Account, type Perm, type Proto, type Screen } from "@/lib/store";
-import { DroneArt, Scene, StatusBar } from "./art";
+import { DroneArt, DroneCutout, StatusBar } from "./art";
+import { RealMap } from "./RealMap";
+import { SPOTS } from "@/lib/geo";
 import { Page, SideStatus, foldClass } from "./Screens";
 import { Icon } from "./ui";
 
@@ -20,47 +22,53 @@ function useSplit() {
   const { s } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
   // Open Duo: always split at the fold (portrait: left | right; landscape: top / bottom, handled in Onboard).
+  if (s.platform === "duoClosed") return false; // the outer display is compact: one column, no picture
   return s.platform === "duoOpen" || (W > H * 1.15 && W >= 640);
 }
-function SidePicture({ step }: { step?: number }) {
-  const brand: BrandId = step === 5 ? "antigravity" : "dji";
+// Hero for the start flow, in the Air Dropper / native style: a light 3D city map with cut-out drone photos floating over it.
+// `fill` = fills its parent (book layouts), otherwise it is a rounded card. The map follows the chosen country.
+function OnbHero({ step, fill = true, caption = true, radius = 0 }: { step?: number; fill?: boolean; caption?: boolean; radius?: number }) {
+  const { s } = useProto();
+  const spot = SPOTS[s.country];
+  const shift = (step ?? 0) * 8;
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "var(--grey-300)" }}>
-      <Scene heading={30 + (step ?? 0) * 40} height={20 + (step ?? 0) * 6} />
-      <div style={{ position: "absolute", left: "50%", top: "34%", transform: "translate(-50%, -50%)", filter: "drop-shadow(0 14px 18px rgba(0,0,0,.35))" }}><DroneArt brand={brand} size={190} view="hero" art /></div>
-      <div style={{ position: "absolute", left: 22, bottom: 22, right: 22, color: "#fff" }} className="hud-text">
-        <div className="t-over" style={{ opacity: .85 }}>Skyhand · concept by Artonest</div>
-        <div className="t-title" style={{ marginTop: 4 }}>Fly from your screen</div>
-      </div>
+    <div style={{ position: fill ? "absolute" : "relative", inset: fill ? 0 : undefined, height: fill ? undefined : "100%", overflow: "hidden", background: "#efede8", borderRadius: radius }}>
+      <RealMap look="clay" pitch={58} bearing={20 + shift} zoom={15.1} center={spot.home} interactive={false} attribution={false} />
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(239,237,232,.0) 40%, rgba(239,237,232,.92) 100%)", pointerEvents: "none" }} />
+      <div aria-hidden style={{ position: "absolute", left: "50%", top: "26%", transform: "translateX(-50%)", pointerEvents: "none" }}><DroneCutout brand="dji" w={190} h={110} /></div>
+      <div aria-hidden style={{ position: "absolute", left: "9%", top: "52%", pointerEvents: "none", opacity: .95 }}><DroneCutout brand="antigravity" w={96} h={60} /></div>
+      <div aria-hidden style={{ position: "absolute", right: "9%", top: "46%", pointerEvents: "none", opacity: .95 }}><DroneCutout brand="parrot" w={96} h={60} /></div>
+      {caption && <div style={{ position: "absolute", left: 24, right: 24, bottom: 24, color: "#141414" }}>
+        <div className="t-cap" style={{ opacity: .6 }}>Skyhand · concept by Artonest</div>
+        <div className="t-title" style={{ marginTop: 2 }}>Fly from your screen</div>
+      </div>}
     </div>
   );
 }
+function SidePicture({ step }: { step?: number }) { return <OnbHero step={step} caption={step !== undefined} />; }
 
 // ---------- Full-screen onboarding frame (no tab bar) ----------
 function Onboard({ step, back, children, primary, secondary }: { step?: number; back?: Screen; children: ReactNode; primary?: ReactNode; secondary?: ReactNode }) {
   const { s, up } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
   const split = useSplit(); // hook: keep before the desktop early return
-  // Desktop: FlightHub-style start — full-screen aerial view with a centred dark card.
+  // Desktop: the map hero on the left, a white card with the step on the right.
   if (s.platform === "laptop") return (
-    <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--app-bg, #0c0c0c)" }}>
-      <div style={{ position: "absolute", inset: 0 }}><Scene heading={40 + (step ?? 0) * 35} height={36 + (step ?? 0) * 6} /></div>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(8,10,14,.85) 0%, rgba(8,10,14,.55) 45%, rgba(8,10,14,.2) 100%)" }} />
-      <div style={{ position: "absolute", left: 40, top: 32, display: "flex", alignItems: "center", gap: 12, color: "#fff" }}>
-        <span style={{ width: 34, height: 34, borderRadius: 8, background: "var(--fh-blue)", display: "grid", placeItems: "center", fontWeight: 800 }}>S</span>
-        <span style={{ fontSize: 20, fontWeight: 700 }}>Skyhand</span><span style={{ fontSize: 12, color: "#bdbdbd", border: "1px solid rgba(255,255,255,.25)", borderRadius: 4, padding: "0px 8px" }}>Concept by Artonest</span>
+    <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--app-bg, #ecebee)" }}>
+      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "54%" }}><OnbHero step={step} caption={step !== undefined} /></div>
+      <div style={{ position: "absolute", left: 40, top: 32, display: "flex", alignItems: "center", gap: 12, color: "#141414", zIndex: 2 }}>
+        <span style={{ width: 34, height: 34, borderRadius: 10, background: "#141414", color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>S</span>
+        <span style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-.02em" }}>Skyhand</span>
       </div>
-      <div style={{ position: "absolute", left: 40, bottom: 36, color: "rgba(255,255,255,.75)", maxWidth: 520 }}>
-        <div style={{ fontSize: 40, lineHeight: "48px", fontWeight: 600, color: "#fff", letterSpacing: "-.02em" }}>Fly from your screen.</div>
-        <div style={{ fontSize: 16, marginTop: 8 }}>Watch and fly DJI, Antigravity, Parrot, Autel and Skydio drones from your laptop. No goggles, no remote.</div>
-      </div>
-      <div className="no-scrollbar" style={{ position: "absolute", right: 64, top: "50%", transform: "translateY(-50%)", width: 480, maxHeight: H - 80, overflowY: "auto", background: "var(--aerial-card, rgba(30,30,30,.94))", border: "1px solid var(--line-2, #2e2e2e)", borderRadius: 12, padding: "32px 32px", boxShadow: "0 30px 80px rgba(0,0,0,.6)", backdropFilter: "blur(12px)" }}>
-        {(back || step) && <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-          {back && <button className="icon-btn" data-hit aria-label="Back" style={{ width: 32, height: 32 }} onClick={() => up(go(back))}><ChevronLeft size={18} /></button>}
-          {step && <><div className="stepper" style={{ flex: 1 }}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= step ? "on" : ""} />)}</div><span className="t-cap muted">Step {step} of 5</span></>}
-        </div>}
-        {children}
-        {primary && <div style={{ display: "grid", gap: 8, marginTop: 24 }}>{primary}{secondary}</div>}
+      <div className="no-scrollbar" style={{ position: "absolute", left: "54%", right: 0, top: 0, bottom: 0, overflowY: "auto", display: "grid", placeItems: "center", padding: 32 }}>
+        <div className="card" style={{ width: 440, maxWidth: "100%", padding: 32, borderRadius: 24 }}>
+          {(back || step) && <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+            {back && <button className="icon-btn" data-hit aria-label="Back" style={{ width: 36, height: 36 }} onClick={() => up(go(back))}><ChevronLeft size={18} /></button>}
+            {step && <><div className="stepper" style={{ flex: 1 }}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= step ? "on" : ""} />)}</div><span className="t-cap muted">Step {step} of 5</span></>}
+          </div>}
+          {children}
+          {primary && <div style={{ display: "grid", gap: 8, marginTop: 24 }}>{primary}{secondary}</div>}
+        </div>
       </div>
       {s.permAsk && <PermAlert />}
       {s.signInSheet && <SignInSheet />}
@@ -85,7 +93,7 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
         <SideStatus />
         {back && <button data-hit aria-label="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "var(--raised, #262626)", color: "var(--text, #f2f2f2)", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
       </div>}
-      <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, top: duoSide ? 16 : top, bottom: duoLand ? H / 2 + 12 : safe.b + (primary ? 132 : 16), overflowY: "auto", padding: "4px 24px 12px" }}>
+      <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, top: duoSide ? 16 : top, bottom: duoLand ? H / 2 + 12 : safe.b + (primary ? (secondary ? 132 : 92) : 16), overflowY: "auto", padding: "4px 24px 12px" }}>
         <div style={{ maxWidth: maxW, margin: "0 auto" }}>
           {(back || step) && (
             <div style={{ display: "flex", alignItems: "center", minHeight: 44, marginLeft: back ? -10 : 0 }}>
@@ -115,16 +123,15 @@ const Lead = ({ children }: { children: ReactNode }) => <p className="t-body mut
 export function Welcome() {
   const { s, up } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
-  const heroH = Math.min(W >= 700 ? 540 : 340, Math.round(H * (W > H ? 0.42 : s.platform === "duoClosed" ? 0.34 : 0.44)));
+  const heroH = Math.min(W >= 700 ? 540 : 340, Math.round(H * (W > H ? (s.platform === "duoClosed" ? 0.26 : 0.42) : s.platform === "duoClosed" ? 0.34 : 0.44)));
   const split = useSplit() || s.platform === "laptop";
   return (
     <Onboard
       primary={<button className="btn btn-primary btn-block" data-hit onClick={() => up(go("ob-safety"))}>Get started</button>}
       secondary={<button className="btn btn-ghost btn-block" data-hit onClick={() => up((p) => { p.signInSheet = true; })}><span style={{ textAlign: "center" }}>Already use Skyhand? <b>Sign in</b></span></button>}>
-      {!split && <div style={{ position: "relative", height: heroH, borderRadius: 16, overflow: "hidden", marginTop: 8, background: "var(--grey-300)" }}>
-        <Scene heading={30} height={24} />
-        <div style={{ position: "absolute", left: "50%", top: "30%", transform: "translate(-50%, -50%)", filter: "drop-shadow(0 12px 16px rgba(0,0,0,.35))" }}><DroneArt brand="dji" size={150} view="hero" art /></div>
-        <span className="chip" style={{ position: "absolute", left: 12, top: 12 }}><Sparkles size={12} />Concept by Artonest</span>
+      {!split && <div style={{ position: "relative", height: heroH, borderRadius: 24, overflow: "hidden", marginTop: 8 }}>
+        <OnbHero fill={false} caption={false} radius={24} />
+        <span className="chip" style={{ position: "absolute", left: 12, top: 12, background: "rgba(255,255,255,.9)", color: "#141414" }}><Sparkles size={12} />Concept by Artonest</span>
       </div>}
       <div className="t-over muted" style={{ marginTop: s.platform === "laptop" ? 0 : split ? Math.max(24, H * 0.18) : 22 }}>{s.platform === "laptop" ? "Welcome" : "Skyhand"}</div>
       {s.platform === "laptop" ? <>
@@ -155,7 +162,7 @@ export function ObSafety() {
       <Lead>Three things that keep every flight safe.</Lead>
       <div style={{ display: "grid", gap: 12 }}>
         {rows.map(([ic, t, d]) => (
-          <div key={t} style={{ display: "flex", gap: 16, alignItems: "flex-start", padding: 16, borderRadius: 16, background: "var(--grey-50)" }}>
+          <div key={t} style={{ display: "flex", gap: 16, alignItems: "flex-start", padding: 16, borderRadius: 16, background: "var(--card-bg, var(--grey-50))" }}>
             <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center", flex: "none" }}>{ic}</span>
             <div><div className="t-head">{t}</div><div className="t-cap muted" style={{ marginTop: 4, fontSize: 14, lineHeight: "18px" }}>{d}</div></div>
           </div>))}
@@ -204,10 +211,10 @@ function PermAlert() {
   const { s, up } = useProto();
   const x = PERMS.find((q) => q.key === s.permAsk)!;
   const set = (v: Perm) => up((p) => { if (p.permAsk) p.perms[p.permAsk] = v; p.permAsk = undefined; });
-  const btn = (label: string, v: Perm, bold?: boolean) => <button key={label} data-hit onClick={() => set(v)} style={{ height: 44, border: "none", borderTop: "1px solid var(--grey-200)", background: "transparent", fontSize: 16, fontWeight: bold ? 600 : 400, color: "var(--grey-900)" }}>{label}</button>;
+  const btn = (label: string, v: Perm, bold?: boolean) => <button key={label} data-hit onClick={() => set(v)} style={{ height: 44, border: "none", borderTop: "1px solid var(--line, var(--grey-200))", background: "transparent", fontSize: 17, fontWeight: bold ? 600 : 400, color: "var(--accent, var(--grey-900))" }}>{label}</button>;
   return (
-    <div className="sheet-back" style={{ alignItems: "center", background: "rgba(0,0,0,.35)" }}>
-      <div role="alertdialog" aria-label={x.sys} style={{ width: 270, borderRadius: 12, background: "rgba(38,38,38,.96)", color: "#f2f2f2", backdropFilter: "blur(20px)", textAlign: "center", overflow: "hidden", boxShadow: "var(--shadow-3)", display: "grid" }}>
+    <div className="sheet-back" style={{ alignItems: "center" }}>
+      <div role="alertdialog" aria-label={x.sys} style={{ width: 270, borderRadius: 12, background: "var(--sheet-bg, rgba(38,38,38,.96))", color: "var(--text, #f2f2f2)", backdropFilter: "blur(30px) saturate(160%)", textAlign: "center", overflow: "hidden", boxShadow: "var(--shadow-3)", display: "grid" }}>
         <div style={{ padding: "16px 16px 16px" }}><div style={{ fontSize: 16, fontWeight: 600, lineHeight: "21px" }}>{x.sys}</div><div className="t-cap" style={{ marginTop: 8, fontSize: 14 }}>{x.sysWhy}</div>
           {x.key === "location" && <div style={{ height: 90, marginTop: 12, borderRadius: 8, overflow: "hidden", position: "relative" }}><div style={{ position: "absolute", inset: 0 }}><MapPreview /></div></div>}
           <div className="t-micro muted" style={{ marginTop: 8 }}>System prompt (mock)</div></div>
@@ -254,7 +261,7 @@ export function ObYou() {
   const { s, up } = useProto();
   const opt = (k: "beginner" | "experienced", t: string, d: string) => {
     const on = s.experience === k;
-    return <button key={k} data-hit onClick={() => up((p) => { p.experience = k; })} style={{ textAlign: "left", padding: 16, borderRadius: 16, border: on ? "2px solid var(--grey-900)" : "1px solid var(--grey-200)", background: on ? "var(--grey-50)" : "var(--grey-0)", display: "flex", gap: 12, alignItems: "center" }}>
+    return <button key={k} data-hit onClick={() => up((p) => { p.experience = k; })} style={{ textAlign: "left", padding: 16, borderRadius: 16, border: on ? "2px solid var(--sel-bg, var(--grey-900))" : "2px solid transparent", background: "var(--card-bg, var(--grey-0))", display: "flex", gap: 12, alignItems: "center" }}>
       <span style={{ flex: 1 }}><span className="t-head" style={{ display: "block" }}>{t}</span><span className="t-cap muted">{d}</span></span>
       <span style={{ width: 24, height: 24, borderRadius: 9999, border: on ? "none" : "1.5px solid var(--grey-300)", background: on ? "var(--accent)" : "transparent", color: "var(--on-accent)", display: "grid", placeItems: "center" }}>{on && <Check size={15} strokeWidth={3} />}</span>
     </button>;
@@ -280,7 +287,7 @@ export function ObYou() {
 export function ObDrone() {
   const { up } = useProto();
   const card = (icon: ReactNode, t: string, d: string, run: (p: Proto) => void, primary?: boolean) => (
-    <button data-hit onClick={() => up(run)} style={{ textAlign: "left", padding: 16, borderRadius: 16, border: primary ? "none" : "1px solid var(--grey-200)", background: primary ? "var(--accent)" : "var(--grey-0)", color: primary ? "#fff" : "var(--grey-900)", display: "flex", gap: 16, alignItems: "center", boxShadow: "var(--shadow-1)" }}>
+    <button data-hit onClick={() => up(run)} style={{ textAlign: "left", padding: 16, borderRadius: 16, border: "none", background: primary ? "var(--primary-bg, var(--accent))" : "var(--card-bg, var(--grey-0))", color: primary ? "var(--primary-fg, #fff)" : "var(--text, var(--grey-900))", display: "flex", gap: 16, alignItems: "center", boxShadow: "var(--shadow-1)" }}>
       <span style={{ width: 52, height: 52, borderRadius: 12, background: primary ? "rgba(255,255,255,.14)" : "var(--grey-100)", display: "grid", placeItems: "center", flex: "none" }}>{icon}</span>
       <span style={{ flex: 1 }}><span className="t-head" style={{ display: "block" }}>{t}</span><span className="t-cap" style={{ opacity: .7 }}>{d}</span></span>
       <ChevronRight size={20} style={{ opacity: .6 }} />
@@ -290,7 +297,7 @@ export function ObDrone() {
     <Onboard step={5} back="ob-you">
       <H1>Your first drone</H1>
       <Lead>Connect the drone you own, or look around with demo drones first.</Lead>
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, margin: "8px 0 24px" }}>{(["dji", "antigravity", "parrot"] as BrandId[]).map((b) => <span key={b} style={{ width: 88, height: 70, borderRadius: 12, background: "var(--grey-50)", display: "grid", placeItems: "center" }}><DroneArt brand={b} size={80} /></span>)}</div>
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, margin: "8px 0 24px" }}>{(["dji", "antigravity", "parrot"] as BrandId[]).map((b) => <span key={b} style={{ width: 88, height: 70, borderRadius: 14, background: "var(--card-bg, var(--grey-50))", display: "grid", placeItems: "center" }}><DroneCutout brand={b} w={76} h={50} /></span>)}</div>
       <div style={{ display: "grid", gap: 12 }}>
         {card(<Plus size={24} />, "Add my drone", "DJI, Antigravity, Parrot, Autel or Skydio", (p) => { p.obAdding = true; p.screen = "add-brand"; }, true)}
         {card(<Sparkles size={22} />, "Explore with demo drones", "Five mock drones. Nothing connects.", (p) => { p.onboarded = true; p.screen = "hangar"; })}
@@ -339,7 +346,7 @@ export function SignInSheet() {
           <button className="btn btn-primary btn-block" data-hit onClick={() => done("Apple")}><Apple size={18} />Sign in with Apple</button>
           <button className="btn btn-block" data-hit onClick={() => setEmail(true)}><Mail size={17} />Continue with email</button>
         </div> : <div style={{ display: "grid", gap: 12 }}>
-          <label className="t-label" style={{ display: "grid", gap: 8 }}>Email<input defaultValue={MOCK_ACCOUNT.email} style={{ minHeight: 48, borderRadius: 12, border: "1px solid var(--grey-300)", padding: "0 16px", fontSize: 16 }} /></label>
+          <label className="t-label" style={{ display: "grid", gap: 8 }}>Email<input defaultValue={MOCK_ACCOUNT.email} style={{ minHeight: 48, borderRadius: 12, border: "none", padding: "0 16px", fontSize: 17 }} /></label>
           <button className="btn btn-primary btn-block" data-hit onClick={() => done("Email")}>Send sign-in code (mock)</button>
           <button className="btn btn-ghost btn-block" onClick={() => setEmail(false)}>Back</button>
         </div>}
@@ -358,7 +365,7 @@ export function AccountScreen() {
   return (
     <Page title="Skyhand account" back="settings">
       {!a ? <>
-        <div style={{ height: 120, borderRadius: 16, background: "var(--grey-100)", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, color: "var(--grey-600)" }}>
+        <div style={{ height: 120, borderRadius: 20, background: "var(--card-bg, var(--grey-100))", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, color: "var(--text-2, var(--grey-600))" }}>
           <Smartphone size={34} strokeWidth={1.4} /><Tablet size={44} strokeWidth={1.4} /><Laptop size={48} strokeWidth={1.4} />
         </div>
         <div className="t-title" style={{ marginTop: 16 }}>Sync across your devices</div>
