@@ -54,7 +54,7 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
         <div style={{ fontSize: 40, lineHeight: "48px", fontWeight: 600, color: "#fff", letterSpacing: "-.02em" }}>Fly from your screen.</div>
         <div style={{ fontSize: 16, marginTop: 8 }}>Watch and fly DJI, Antigravity, Parrot, Autel and Skydio drones from your laptop. No goggles, no remote.</div>
       </div>
-      <div className="no-scrollbar" style={{ position: "absolute", right: 64, top: "50%", transform: "translateY(-50%)", width: 480, maxHeight: H - 80, overflowY: "auto", background: "rgba(30,30,30,.94)", border: "1px solid #2e2e2e", borderRadius: 12, padding: "32px 32px", boxShadow: "0 30px 80px rgba(0,0,0,.6)", backdropFilter: "blur(12px)" }}>
+      <div className="no-scrollbar" style={{ position: "absolute", right: 64, top: "50%", transform: "translateY(-50%)", width: 480, maxHeight: H - 80, overflowY: "auto", background: "var(--aerial-card, rgba(30,30,30,.94))", border: "1px solid var(--line-2, #2e2e2e)", borderRadius: 12, padding: "32px 32px", boxShadow: "0 30px 80px rgba(0,0,0,.6)", backdropFilter: "blur(12px)" }}>
         {(back || step) && <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
           {back && <button className="icon-btn" data-hit aria-label="Back" style={{ width: 32, height: 32 }} onClick={() => up(go(back))}><ChevronLeft size={18} /></button>}
           {step && <><div className="stepper" style={{ flex: 1 }}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= step ? "on" : ""} />)}</div><span className="t-cap muted">Step {step} of 5</span></>}
@@ -98,7 +98,7 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
       </div>
       {primary && (
         <div style={duoLand
-          ? { position: "absolute", right: sideW + 24, bottom: 24, width: 320, padding: 16, display: "grid", gap: 8, background: "rgba(30,30,30,.94)", border: "1px solid #2e2e2e", borderRadius: 12 }
+          ? { position: "absolute", right: sideW + 24, bottom: 24, width: 320, padding: 16, display: "grid", gap: 8, background: "var(--aerial-card, rgba(30,30,30,.94))", border: "1px solid var(--line-2, #2e2e2e)", borderRadius: 12 }
           : { position: "absolute", left: leftEdge, right: safe.r + sideW, bottom: safe.b + 12, padding: "0 24px", display: "grid", gap: 8 }}>
           <div style={{ maxWidth: maxW, width: "100%", margin: "0 auto", display: "grid", gap: 8 }}>{primary}{secondary}</div>
         </div>

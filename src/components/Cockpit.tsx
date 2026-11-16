@@ -243,7 +243,7 @@ export function Cockpit() {
   );
 
   return (
-    <div className={`fh desk${laptop ? "" : " touch"}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+    <div className={`fh desk cockpit${laptop ? "" : " touch"}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
       {s.platform === "tablet" && <StatusBar platform="tablet" dark />}
       {top}{map}{live}{strip}
 

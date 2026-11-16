@@ -24,7 +24,7 @@ export interface DroneSim {
 export interface FlightRecord { id: string; droneId: string; nickname: string; model: string; country: string; useCase: UseCase; seconds: number; maxH: number; maxD: number; photos: number; alerts: string[]; }
 
 export type Look = "v1" | "v2" | "v3";
-export const LOOKS: [Look, string, string][] = [["v1", "V1 Frost", "Light frosted glass, dot-matrix numbers, soft gradient cards"], ["v2", "V2 Mission", "Dark teal mission control, cyan lines, glass tiles"], ["v3", "V3 Frost + Mission", "Light glass app with a dark teal flight view"]];
+export const LOOKS: [Look, string, string][] = [["v1", "V1 Light", "SwiftUI style: light grey canvas, white cards, black selection, indigo accent"], ["v2", "V2 Dark", "The same system in iOS dark mode"], ["v3", "V3 Map", "Every screen floats on a muted city map, glass cards, graphite accent"]];
 export interface Overlays { zones: boolean; safe: boolean; reserved: boolean; hit: boolean; mock: boolean; }
 
 export interface Proto {

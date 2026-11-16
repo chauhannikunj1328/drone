@@ -10,7 +10,7 @@ import { BRANDS, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type CountryCode, ty
 import { frameSize, hasCommandCentre, safeArea, sideControls } from "@/lib/layout";
 import { checklist, defaultMode, droneOf, inAir, isRedFor, useProto, type Proto, type Screen, type UseCase } from "@/lib/store";
 import { Battery, DroneArt, DroneHero, PhotoCredit, Scene, StatusBar, Thumb } from "./art";
-import { DRONE_PHOTO } from "@/lib/data";
+import { ALERTS, DRONE_PHOTO } from "@/lib/data";
 import { Icon, Mock, type IconKind } from "./ui";
 import { MakerSignIn, SignInSheet } from "./Onboarding";
 import { RealMap } from "./RealMap";
@@ -738,7 +738,7 @@ export function Summary() {
     <SectionH action={<span className="t-cap muted">Mock</span>}>Media</SectionH>
     <div style={{ display: "flex", gap: 8, overflowX: "auto" }} className="no-scrollbar">{[0, 1, 2, 3, 4].map((i) => <Thumb key={i} seed={i + 1} w={92} h={68} video={i % 2 === 0} />)}</div>
     <SectionH>Alerts in this flight</SectionH>
-    <div className="group">{f.alerts.length ? f.alerts.map((a) => <div key={a} className="row"><Icon kind="info" size={16} /><span className="t-label">{a}</span></div>) : <div className="row"><Icon kind="pass" size={16} /><span className="t-label">None</span></div>}</div>
+    <div className="group">{f.alerts.length ? f.alerts.map((a) => <div key={a} className="row"><Icon kind={ALERTS[a]?.level === "critical" ? "critical" : "warning"} size={16} /><span style={{ flex: 1, minWidth: 0 }}><span className="t-label" style={{ display: "block" }}>{ALERTS[a]?.title ?? a}</span><span className="t-cap muted">{ALERTS[a]?.message}</span></span></div>) : <div className="row"><Icon kind="pass" size={16} /><span className="t-label">None</span></div>}</div>
     <button className="btn btn-primary btn-block" data-hit style={{ marginTop: 16 }} onClick={() => up(go("hangar"))}>Done</button>
   </>} /></Page>;
 }

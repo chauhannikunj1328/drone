@@ -16,18 +16,18 @@ A clickable, high-fidelity **greyscale wireframe** for a concept app that lets y
 
 ## Creative design versions (this branch: `creative-design`)
 
-There are three visual styles with the same layout and flows. They are based on a style study of the Dribbble shot "SuperPower – Smart Health Tracking Web App" by RonDesignLab. No artwork from the shot is used.
+Two apps share one design, in the SwiftUI / iOS style, based on a style study of "Air Dropper" (Phenomenon Studio, Dribbble). No artwork from it is used.
 
 | Version | Style |
 |---|---|
-| V1 Frost | Light frosted glass, pill shapes, dot-matrix numbers, deep green and tan |
-| V2 Mission | Dark teal mission control, glass tiles, cyan hairlines, grid backdrop |
-| V3 Frost + Mission | V1 on app screens, V2 on flight views |
+| V1 Light | Light grey canvas, white cards, black selection, indigo accent |
+| V2 Dark | The same system in iOS dark mode |
+| V3 Map | Every screen floats on a muted city map, glass cards, graphite accent |
 
-**To switch versions:**
-- On port 3000, use the sidebar's "Design version".
-- On port 4003 (iPhone Duo), use the V1 / V2 / V3 buttons.
-- Or add `?look=v2` to the URL.
+The flight screens (Fly, cockpit) are dark glass over the live view in every version.
+
+- **Web prototype (this folder):** the way to preview iPhone Duo, because Xcode has no Duo simulator. Switch versions in the sidebar on port 3000, with the V1 / V2 / V3 buttons on the device apps, or with `?look=v2` in the URL. It covers all devices (iPhone, iPad, iPhone Duo, laptop). Styles are in `src/app/looks.css`.
+- **Native SwiftUI app:** `ios/Skyhand` (open `Skyhand.xcodeproj` in Xcode). Main flow only. Settings > iPhone Duo preview shows the Duo sizes and fold on an iPad simulator.
 
 ## Run it
 
