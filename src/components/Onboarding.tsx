@@ -6,10 +6,10 @@ import {
   Smartphone, Sparkles, Tablet, Trash2, UserRound,
 } from "lucide-react";
 import { BRAND_ACCOUNT, BRANDS, COUNTRIES, FLAG_WORD, type BrandId, type CountryCode } from "@/lib/data";
-import { frameSize, safeArea } from "@/lib/layout";
+import { frameSize, safeArea, sideControls } from "@/lib/layout";
 import { useProto, type Account, type Perm, type Proto, type Screen } from "@/lib/store";
 import { DroneArt, Scene, StatusBar } from "./art";
-import { Page } from "./Screens";
+import { Page, SideStatus, foldClass } from "./Screens";
 import { Icon } from "./ui";
 
 const go = (sc: Screen) => (p: Proto) => { p.screen = sc; };
@@ -19,7 +19,7 @@ const MOCK_ACCOUNT: Account = { name: "Avery Kim", email: "avery@example.com", m
 function useSplit() {
   const { s } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
-  return (s.platform === "duoOpen" && s.orient === "portrait") || (W > H * 1.15 && W >= 640);
+  return (s.platform === "duoOpen" && s.orient === "portrait" && s.halfFold) || (W > H * 1.15 && W >= 640);
 }
 function SidePicture({ step }: { step?: number }) {
   const brand: BrandId = step === 5 ? "antigravity" : "dji";
@@ -69,18 +69,23 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
   const sbH = s.platform === "iphone" ? (s.orient === "landscape" ? 0 : 54) : s.platform === "tablet" ? 24 : 30;
   const top = Math.max(safe.t, sbH);
   const fold = s.platform === "duoOpen" && s.orient === "portrait";
+  const duoSide = sideControls(s.platform, s.orient); const sideW = duoSide ? 88 : 0;
   // In split mode the content lives in the right half (right of the fold on Duo open).
   const leftEdge = split ? (fold ? W / 2 + 28 : Math.round(W * 0.48)) : safe.l;
   const maxW = !split && W >= 700 ? 480 : undefined;
   return (
-    <div className="light" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--grey-0)" }}>
+    <div className={`light desk touch${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--grey-50)" }}>
       {split && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: fold ? W / 2 - 12 : Math.round(W * 0.48) - 24 }}><SidePicture step={step} /></div>}
-      <StatusBar platform={s.platform} landscape={s.orient === "landscape"} />
-      <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r, top, bottom: safe.b + (primary ? 132 : 16), overflowY: "auto", padding: "4px 24px 12px" }}>
+      {!duoSide && <StatusBar platform={s.platform} landscape={s.orient === "landscape"} dark />}
+      {duoSide && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: sideW, paddingTop: s.platform === "duoClosed" ? 48 : 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, background: "rgba(22,22,22,.96)", borderLeft: "1px solid #2a2a2a", zIndex: 4 }}>
+        <SideStatus />
+        {back && <button data-hit aria-label="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "#262626", color: "#f2f2f2", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
+      </div>}
+      <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, top: duoSide ? 16 : top, bottom: safe.b + (primary ? 132 : 16), overflowY: "auto", padding: "4px 24px 12px" }}>
         <div style={{ maxWidth: maxW, margin: "0 auto" }}>
           {(back || step) && (
             <div style={{ display: "flex", alignItems: "center", minHeight: 44, marginLeft: back ? -10 : 0 }}>
-              {back && <button className="btn btn-ghost" data-hit aria-label="Back" style={{ minHeight: 40, padding: "0 8px" }} onClick={() => up(go(back))}><ChevronLeft size={22} /></button>}
+              {back && !duoSide && <button className="btn btn-ghost" data-hit aria-label="Back" style={{ minHeight: 40, padding: "0 8px" }} onClick={() => up(go(back))}><ChevronLeft size={22} /></button>}
               {step && <div className="stepper" style={{ flex: 1, marginLeft: back ? 6 : 0 }}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= step ? "on" : ""} />)}</div>}
             </div>
           )}
@@ -88,7 +93,7 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
         </div>
       </div>
       {primary && (
-        <div style={{ position: "absolute", left: leftEdge, right: safe.r, bottom: safe.b + 12, padding: "0 24px", display: "grid", gap: 8 }}>
+        <div style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, bottom: safe.b + 12, padding: "0 24px", display: "grid", gap: 8 }}>
           <div style={{ maxWidth: maxW, width: "100%", margin: "0 auto", display: "grid", gap: 8 }}>{primary}{secondary}</div>
         </div>
       )}
@@ -104,7 +109,7 @@ const Lead = ({ children }: { children: ReactNode }) => <p className="t-body mut
 export function Welcome() {
   const { s, up } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
-  const heroH = Math.min(W >= 700 ? 540 : 340, Math.round(H * (W > H ? 0.42 : 0.44)));
+  const heroH = Math.min(W >= 700 ? 540 : 340, Math.round(H * (W > H ? 0.42 : s.platform === "duoClosed" ? 0.34 : 0.44)));
   const split = useSplit() || s.platform === "laptop";
   return (
     <Onboard
@@ -196,7 +201,7 @@ function PermAlert() {
   const btn = (label: string, v: Perm, bold?: boolean) => <button key={label} data-hit onClick={() => set(v)} style={{ height: 44, border: "none", borderTop: "1px solid var(--grey-200)", background: "transparent", fontSize: 16, fontWeight: bold ? 600 : 400, color: "var(--grey-900)" }}>{label}</button>;
   return (
     <div className="sheet-back" style={{ alignItems: "center", background: "rgba(0,0,0,.35)" }}>
-      <div role="alertdialog" aria-label={x.sys} style={{ width: 270, borderRadius: 12, background: "rgba(245,245,245,.96)", backdropFilter: "blur(20px)", textAlign: "center", overflow: "hidden", boxShadow: "var(--shadow-3)", display: "grid" }}>
+      <div role="alertdialog" aria-label={x.sys} style={{ width: 270, borderRadius: 12, background: "rgba(38,38,38,.96)", color: "#f2f2f2", backdropFilter: "blur(20px)", textAlign: "center", overflow: "hidden", boxShadow: "var(--shadow-3)", display: "grid" }}>
         <div style={{ padding: "16px 16px 16px" }}><div style={{ fontSize: 16, fontWeight: 600, lineHeight: "21px" }}>{x.sys}</div><div className="t-cap" style={{ marginTop: 8, fontSize: 14 }}>{x.sysWhy}</div>
           {x.key === "location" && <div style={{ height: 90, marginTop: 12, borderRadius: 8, overflow: "hidden", position: "relative" }}><div style={{ position: "absolute", inset: 0 }}><MapPreview /></div></div>}
           <div className="t-micro muted" style={{ marginTop: 8 }}>System prompt (mock)</div></div>

@@ -6,7 +6,7 @@ import {
   Trees, Users, Warehouse, Wifi, LayoutDashboard, Grid2x2, UserRound,
 } from "lucide-react";
 import { BRANDS, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type CountryCode, type Drone } from "@/lib/data";
-import { frameSize, hasCommandCentre, safeArea } from "@/lib/layout";
+import { frameSize, hasCommandCentre, safeArea, sideControls } from "@/lib/layout";
 import { checklist, defaultMode, droneOf, inAir, isRedFor, useProto, type Proto, type Screen, type UseCase } from "@/lib/store";
 import { Battery, DroneArt, DroneHero, PhotoCredit, Scene, StatusBar, Thumb } from "./art";
 import { DRONE_PHOTO } from "@/lib/data";
@@ -19,6 +19,19 @@ import { HangarDesk } from "./Dashboard";
 import { BRAND_ACCOUNT } from "@/lib/data";
 
 const go = (sc: Screen) => (p: Proto) => { p.screen = sc; };
+// Partially folded Duo: sheets, dialogs and banners move to one side of the fold (CSS .fold-v / .fold-h).
+export const foldClass = (s: Proto) => s.platform === "duoOpen" && s.halfFold ? (s.orient === "portrait" ? " fold-v" : " fold-h") : "";
+
+// Vertical status bar for the Duo side column (time, signal, Wi-Fi, battery stacked).
+export function SideStatus() {
+  return (
+    <div aria-label="Status bar" style={{ display: "grid", justifyItems: "center", gap: 8, color: "#f2f2f2", fontSize: 12, fontWeight: 600 }}>
+      <span className="num">9:41</span>
+      <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#f2f2f2" /><rect x="5" y="5" width="3" height="6" rx="1" fill="#f2f2f2" /><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#f2f2f2" /><rect x="15" y="0" width="3" height="11" rx="1" fill="#f2f2f2" /></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="#f2f2f2" strokeOpacity=".4" fill="none" /><rect x="2.5" y="2.5" width="16" height="7" rx="2" fill="#f2f2f2" /></svg>
+    </div>
+  );
+}
 
 // ---------- Page frame: status bar, navigation, tab bar ----------
 export function Page({ title, back, children, tabs = true, large, right, sub, full, footer, bleed }: {
@@ -30,8 +43,10 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   const { W, H } = frameSize(s.platform, s.orient);
   const safe = safeArea(s.platform, s.orient);
   const landscapePhone = s.platform === "iphone" && s.orient === "landscape";
-  const side = landscapePhone || (s.platform === "duoClosed" && s.orient === "landscape");
-  const sbH = s.platform === "iphone" ? (landscapePhone ? 0 : 54) : s.platform === "tablet" ? 24 : s.platform === "laptop" ? 0 : 30;
+  // iPhone Duo: controls (and the status bar) move to the side on the outer display and on the inner display in landscape.
+  const duoSide = sideControls(s.platform, s.orient);
+  const side = landscapePhone || duoSide;
+  const sbH = s.platform === "iphone" ? (landscapePhone ? 0 : 54) : s.platform === "tablet" ? 24 : s.platform === "laptop" || duoSide ? 0 : 30;
   const top = Math.max(safe.t, sbH);
   const isLarge = large ?? !back;
   const tabsList: [string, Screen, ReactNode][] = [
@@ -44,7 +59,9 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   ];
   const tabH = 50;
   const desk = s.platform === "laptop";
-  const railW = 84;
+  const railW = duoSide ? 88 : 84;
+  // Task-oriented screens minimise the tab bar so their own actions stay visible (HIG: vertical bar compression).
+  const task = s.screen.startsWith("pf-") || ["add-brand", "add-model", "capability"].includes(s.screen);
   const isOn = (sc: Screen) => s.screen === sc || (sc === "hangar" && (s.screen.startsWith("pf-") || ["add-brand", "add-model", "capability", "summary"].includes(s.screen)));
   // In-flight banner: any drone in the air stays one tap away from every page.
   // Not during first setup: the new user has no drones in the air yet.
@@ -71,14 +88,30 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
         <button aria-label="Account" title={s.account ? s.account.email : "Sign in"} onClick={() => up(go("account"))} style={{ width: 34, height: 34, borderRadius: 9999, border: "1px solid #343434", background: s.account ? "var(--fh-blue)" : "#262626", color: "#fff", fontSize: 12, fontWeight: 700 }}>{s.account ? s.account.name.split(" ").map((w) => w[0]).join("") : <UserRound size={15} />}</button>
       </div>
     </nav>
+  ) : duoSide ? (
+    // Duo side column, top to bottom: outer camera, vertical status bar, navigation (Back) and the prominent action, then the tab bar.
+    <nav aria-label="Controls" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: railW, paddingTop: s.platform === "duoClosed" ? 48 : 12, paddingBottom: 16, borderLeft: "1px solid #2a2a2a", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "rgba(22,22,22,.96)", zIndex: 6 }}>
+      <SideStatus />
+      {(back || right) && <div style={{ display: "grid", gap: 8, justifyItems: "center", marginTop: 8 }}>
+        {back && <button data-hit aria-label="Back" title="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "#262626", color: "#f2f2f2", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
+        {right}
+      </div>}
+      <div style={{ flex: 1 }} />
+      {tabs && tabsList.filter(([, sc]) => !task || isOn(sc)).map(([t, sc, ic]) => {
+        const on = isOn(sc);
+        return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined} title={t}
+          style={{ width: 72, minHeight: 56, border: "none", borderRadius: 12, background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: on ? "var(--fh-blue)" : "rgba(255,255,255,.55)", fontSize: 12, fontWeight: on ? 600 : 500 }}>
+          {ic}{t}</button>;
+      })}
+    </nav>
   ) : tabs && (
     <nav aria-label="Tabs" style={side
-      ? { position: "absolute", right: 0, top: sbH, bottom: 0, width: railW + safe.r, paddingRight: safe.r, borderLeft: bleed ? "1px solid rgba(255,255,255,.1)" : "1px solid var(--grey-150)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 4, background: bleed ? "#161616" : "rgba(255,255,255,.92)", backdropFilter: "blur(20px)" }
-      : { position: "absolute", left: 0, right: 0, bottom: 0, height: tabH + safe.b, paddingBottom: safe.b, borderTop: bleed ? "1px solid rgba(255,255,255,.1)" : "1px solid var(--grey-150)", display: "flex", background: bleed ? "#161616" : "rgba(255,255,255,.92)", backdropFilter: "blur(20px)", zIndex: 5 }}>
+      ? { position: "absolute", right: 0, top: sbH, bottom: 0, width: railW + safe.r, paddingRight: safe.r, borderLeft: "1px solid #2a2a2a", display: "flex", flexDirection: "column", justifyContent: "center", gap: 4, background: "rgba(22,22,22,.96)", backdropFilter: "blur(20px)" }
+      : { position: "absolute", left: 0, right: 0, bottom: 0, height: tabH + safe.b, paddingBottom: safe.b, borderTop: "1px solid #2a2a2a", display: "flex", background: "rgba(22,22,22,.96)", backdropFilter: "blur(20px)", zIndex: 5 }}>
       {tabsList.map(([t, sc, ic]) => {
         const on = isOn(sc);
         return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined}
-          style={{ flex: side ? undefined : 1, minHeight: 48, border: "none", background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: on ? (bleed ? "#fff" : "var(--grey-900)") : (bleed ? "rgba(255,255,255,.45)" : "var(--grey-400)"), fontSize: 12, fontWeight: on ? 700 : 500 }}>
+          style={{ flex: side ? undefined : 1, minHeight: 48, border: "none", background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: on ? "var(--fh-blue)" : "rgba(255,255,255,.55)", fontSize: 12, fontWeight: on ? 600 : 500 }}>
           {ic}{t}</button>;
       })}
     </nav>
@@ -134,7 +167,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
             : <div style={{ maxWidth: full ? 1200 : 760, margin: "0 auto" }}>{children}</div>}
         </div>
         {(footer || lead) && (
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "12px 40px 16px", display: "grid", gap: 8, zIndex: 6, background: "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" }}>
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "12px 40px 16px", display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8, zIndex: 6, background: "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" }}>
             {lead && <div style={{ maxWidth: 760, width: "100%", margin: "0 auto" }}><FlightBanner id={lead.id} more={airborne.length - 1} /></div>}
             {footer && <div style={{ maxWidth: 760, width: "100%", margin: "0 auto" }}>{footer}</div>}
           </div>)}
@@ -144,16 +177,16 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
     );
   }
   return (
-    <div className={`${bleed ? "fh" : "light"}${desk ? " desk" : ""}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
-      <StatusBar platform={s.platform} landscape={s.orient === "landscape"} dark={bleed} />
+    <div className={`${bleed ? "fh" : "light"} desk${desk ? "" : " touch"}${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+      {!duoSide && <StatusBar platform={s.platform} landscape={s.orient === "landscape"} dark />}
       {bleed && <div className="fh" style={{ position: "absolute", left: safe.l, right: (side ? railW : 0) + safe.r, top: desk ? (tabs ? topH : 0) : top, bottom: bottomBase, overflow: "hidden" }}>{children}</div>}
       {!bleed && <div className="no-scrollbar" style={{ position: "absolute", left: safe.l, right: (side ? railW : 0) + safe.r, top: desk ? (tabs ? topH + 16 : 24) : top, bottom: bottomBase + bannerH + footH, overflowY: "auto", padding: `4px ${padX}px 28px` }}>
         <div style={{ maxWidth: full || W < 800 ? undefined : 680, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", minHeight: 44, gap: 4, marginLeft: back ? -10 : 0 }}>
-          {back && <button className="btn btn-ghost" data-hit style={{ minHeight: 40, padding: "0 8px", fontWeight: 500, gap: 4 }} onClick={() => up(go(back))}><ChevronLeft size={22} />Back</button>}
+        <div style={{ display: "flex", alignItems: "center", minHeight: 44, gap: 4, marginLeft: back && !duoSide ? -10 : 0 }}>
+          {back && !duoSide && <button className="btn btn-ghost" data-hit style={{ minHeight: 40, padding: "0 8px", fontWeight: 500, gap: 4 }} onClick={() => up(go(back))}><ChevronLeft size={22} />Back</button>}
           {!isLarge && <div className="t-head" style={{ flex: 1, textAlign: "center", marginRight: back ? 60 : 0 }}>{title}</div>}
           {isLarge && <div style={{ flex: 1 }} />}
-          {right}
+          {!duoSide && right}
         </div>
         {isLarge && <h1 className={H < 500 ? "t-display" : "t-large"} style={{ margin: "4px 0 0" }}>{title}</h1>}
         {sub && <div className="t-body muted" style={{ marginTop: 4 }}>{sub}</div>}
@@ -161,8 +194,8 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
         </div>
       </div>}
       {(footer || lead) && (
-        <div style={{ position: "absolute", left: safe.l, right: s.platform === "duoOpen" && s.orient === "portrait" ? W / 2 + 16 : (side ? railW : 0) + safe.r, bottom: bottomBase, padding: `12px ${padX}px 10px`, display: "grid", gap: 8, zIndex: 6,
-          background: desk ? "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" : "linear-gradient(rgba(245,245,245,0), var(--grey-50) 30%)" }}>
+        <div style={{ position: "absolute", left: safe.l, right: s.platform === "duoOpen" && s.orient === "portrait" && s.halfFold ? W / 2 + 16 : (side ? railW : 0) + safe.r, bottom: bottomBase, padding: `12px ${padX}px 10px`, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8, zIndex: 6,
+          background: "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" }}>
           {lead && <div style={{ maxWidth: full || W < 800 ? undefined : 680, width: "100%", margin: "0 auto" }}><FlightBanner id={lead.id} more={airborne.length - 1} /></div>}
           {footer && <div style={{ maxWidth: full || W < 800 ? undefined : 680, width: "100%", margin: "0 auto" }}>{footer}</div>}
         </div>)}
@@ -234,8 +267,9 @@ function Columns({ left, right, ratio = "1fr 1fr" }: { left: ReactNode; right: R
   const { W } = frameSize(s.platform, s.orient);
   if (W < 600) return <>{left}<div style={{ height: 16 }} />{right}</>;
   const fold = s.platform === "duoOpen" && s.orient === "portrait";
+  const gapFold = s.halfFold ? 56 : 32; // small adjustment when folding (HIG: avoid extreme layout changes)
   const cols = (fold ? "1fr 1fr" : ratio).split(" ").map((f) => `minmax(0, ${f})`).join(" ");
-  return <div style={{ display: "grid", gridTemplateColumns: cols, columnGap: fold ? 56 : 28, alignItems: "start" }}><div style={{ minWidth: 0 }}>{left}</div><div style={{ minWidth: 0 }}>{right}</div></div>;
+  return <div style={{ display: "grid", gridTemplateColumns: cols, columnGap: fold ? gapFold : 28, alignItems: "start" }}><div style={{ minWidth: 0 }}>{left}</div><div style={{ minWidth: 0 }}>{right}</div></div>;
 }
 
 function SectionH({ children, action }: { children: ReactNode; action?: ReactNode }) {
@@ -641,7 +675,7 @@ export function Summary() {
   const d = s.drones.find((x) => x.id === f.droneId);
   return <Page title="Flight summary" large>
     <div className="card raised" style={{ overflow: "hidden" }}>
-      <div style={{ position: "relative", height: 176 }}><RealMap center={world(s).spot.home} zoom={16} grey={s.platform !== "laptop"} homes={[world(s).myHome]} landing={world(s).landing} path={[world(s).myHome, offset(world(s).myHome, f.maxD * 0.6, f.maxD * 0.5), world(s).myHome]} interactive={false} attribution={false} />
+      <div style={{ position: "relative", height: 176 }}><RealMap center={world(s).spot.home} zoom={16} homes={[world(s).myHome]} landing={world(s).landing} path={[world(s).myHome, offset(world(s).myHome, f.maxD * 0.6, f.maxD * 0.5), world(s).myHome]} interactive={false} attribution={false} />
         <span className="chip" style={{ position: "absolute", left: 12, top: 12 }}><Icon kind="landed" size={12} />Landed safely</span></div>
       <div style={{ padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
         {d && <DroneArt brand={d.brand} size={52} />}
@@ -666,17 +700,31 @@ const PAST = [
 ];
 export function Flights() {
   const { s } = useProto();
+  const { W } = frameSize(s.platform, s.orient);
+  const [sel, setSel] = useState("m1");
   if (s.platform === "laptop") return <FlightsDesk />;
-  return <Page title="Flights" sub="Your flight log and media">
+  const rows = [
+    ...s.flights.map((f, i) => ({ k: f.id, seed: i + 2, title: f.nickname, sub: `${f.model} · ${f.country}`, meta: `${Math.floor(f.seconds / 60)}:${String(f.seconds % 60).padStart(2, "0")} · max ${f.maxH} m · ${f.photos} photos`, today: true })),
+    ...PAST.map((f, i) => ({ k: f.id, seed: i + 5, title: f.place, sub: `${f.nickname} · ${f.model}`, meta: `${f.when} · ${f.time} · max ${f.maxH} m · ${f.photos} photos`, today: false })),
+  ];
+  const wide = W >= 600; // regular width (inner Duo display, iPad): list + detail; compact: list only
+  const pick = rows.find((r) => r.k === sel) ?? rows[0];
+  const row = (r: typeof rows[number]) => <button key={r.k} className="row" data-hit onClick={() => setSel(r.k)} style={{ background: wide && pick?.k === r.k ? "var(--fh-blue-soft)" : undefined }}>
+    <Thumb seed={r.seed} w={72} h={56} video />
+    <div style={{ flex: 1, minWidth: 0 }}><div className="t-head">{r.title}</div><div className="t-cap muted">{r.sub}</div><div className="t-cap num" style={{ marginTop: 4 }}>{r.meta}</div></div>
+    {!wide && <ChevronRight size={18} color="var(--grey-400)" />}</button>;
+  const list = <>
     <div className="seg" style={{ marginBottom: 8 }}><button className="on">All</button><button>Videos</button><button>Photos</button></div>
-    {s.flights.length > 0 && <><SectionH>Today</SectionH>
-      <div className="group">{s.flights.map((f, i) => <div key={f.id} className="row"><Thumb seed={i + 2} w={72} h={54} video />
-        <div style={{ flex: 1, minWidth: 0 }}><div className="t-head">{f.nickname}</div><div className="t-cap muted">{f.model} · {f.country}</div>
-          <div className="t-cap num" style={{ marginTop: 4 }}>{Math.floor(f.seconds / 60)}:{String(f.seconds % 60).padStart(2, "0")} · max {f.maxH} m · {f.photos} photos</div></div><ChevronRight size={18} color="var(--grey-400)" /></div>)}</div></>}
-    <SectionH action={<Mock />}>Earlier</SectionH>
-    <div className="group">{PAST.map((f, i) => <div key={f.id} className="row"><Thumb seed={i + 5} w={72} h={54} video />
-      <div style={{ flex: 1, minWidth: 0 }}><div className="t-head">{f.place}</div><div className="t-cap muted">{f.nickname} · {f.model}</div>
-        <div className="t-cap num" style={{ marginTop: 4 }}>{f.when} · {f.time} · max {f.maxH} m · {f.photos} photos</div></div><ChevronRight size={18} color="var(--grey-400)" /></div>)}</div>
+    {rows.some((r) => r.today) && <><SectionH>Today</SectionH><div className="group">{rows.filter((r) => r.today).map(row)}</div></>}
+    <SectionH>Earlier</SectionH><div className="group">{rows.filter((r) => !r.today).map(row)}</div>
+  </>;
+  const detail = pick && <div className="card" style={{ overflow: "hidden", position: "sticky", top: 0 }}>
+    <div style={{ position: "relative", height: 200 }}><Thumb seed={pick.seed} w={1000} h={200} video /></div>
+    <div style={{ padding: 16 }}><div className="t-title">{pick.title}</div><div className="t-cap muted">{pick.sub}</div><div className="t-body" style={{ marginTop: 8 }}>{pick.meta}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}><button className="btn">Play</button><button className="btn">Share</button></div></div>
+  </div>;
+  return <Page title="Flights" sub="Your flight log and media" full={wide}>
+    {wide ? <Columns left={list} right={detail} /> : list}
   </Page>;
 }
 export function Rules() {

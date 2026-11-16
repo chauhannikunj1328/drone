@@ -104,7 +104,7 @@ export function Cockpit() {
         <ChevronDown size={14} style={{ opacity: .7 }} />
       </button>
       <div style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><span style={{ width: 8, height: 8, borderRadius: 9999, background: flying ? (laptop ? "#18e888" : "#fff") : "transparent", border: `1.5px solid ${flying && laptop ? "#18e888" : "#fff"}` }} />{title}</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><span style={{ width: 8, height: 8, borderRadius: 9999, background: flying ? "#18e888" : "transparent", border: `1.5px solid ${flying ? "#18e888" : "#fff"}` }} />{title}</span>
         <span className="fh-label" style={{ marginLeft: 12 }}>{skin.appCopied} layout</span>
       </div>
       <span className="fh-chip"><MapPin size={12} />{c.code} · max {c.maxAltitude} m</span>
@@ -116,7 +116,7 @@ export function Cockpit() {
   // ---------- map pane ----------
   const map = (
     <div style={{ position: "absolute", left: 0, top: mainY, width: mapW, height: mainH, overflow: "hidden", borderRight: "1px solid rgba(255,255,255,.08)" }}>
-      <RealMap center={w.spot.home} zoom={16.5} grey={!laptop} drones={w.drones} homes={[w.myHome]} landing={w.landing} noFly={w.noFly} path={w.path} follow={w.me} tools onDrone={(id) => { if (id !== s.droneId) up((p) => { p.handoverTo = id; }); }} />
+      <RealMap center={w.spot.home} zoom={16.5} drones={w.drones} homes={[w.myHome]} landing={w.landing} noFly={w.noFly} path={w.path} follow={w.me} tools onDrone={(id) => { if (id !== s.droneId) up((p) => { p.handoverTo = id; }); }} />
       <div className="fh-panel" style={{ position: "absolute", left: 16, top: 16, padding: "8px 12px", zIndex: 2 }}>
         <div style={{ fontWeight: 600 }}>{w.spot.place}, {w.spot.city}</div>
         <div className="fh-label">Example location · drone rules not checked</div>
@@ -130,7 +130,7 @@ export function Cockpit() {
   const live = (
     <div style={{ position: "absolute", left: mapW, right: 0, top: mainY, height: mainH, overflow: "hidden", background: "#000", cursor: mouselook ? "crosshair" : undefined }}
       onMouseMove={(e) => { if (!mouselook || !flying) return; const b = e.currentTarget.getBoundingClientRect(); const ny = (e.clientY - b.top) / b.height; setSim((x) => { x.gimbal = Math.round(Math.max(0, Math.min(90, ny * 90))); }); }}>
-      <DroneView at={w.me} heading={d.is360 ? m.view : m.heading} height={m.height} gimbal={m.gimbal} grey={!laptop} dim={!flying} />
+      <DroneView at={w.me} heading={d.is360 ? m.view : m.heading} height={m.height} gimbal={m.gimbal} dim={!flying} />
       {flash && <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,.5)", pointerEvents: "none" }} />}
       <div className="hud-text" style={{ position: "absolute", left: 0, right: 0, top: 0, padding: "8px 12px", display: "flex", gap: 16, fontSize: 12, fontWeight: 600, background: "linear-gradient(rgba(0,0,0,.6), transparent)" }}>
         <span>{m.videoMode ? "VIDEO 4K 30" : "PHOTO 48MP"}</span><span>ISO 100</span><span>1/500</span><span>EV 0</span><span>{skin.slider}: −{m.gimbal}°</span><span style={{ marginLeft: "auto" }}>128 GB free <Mock /></span>
@@ -220,7 +220,7 @@ export function Cockpit() {
     {d.brand === "antigravity" && !unlocked
       ? <button className="fh-btn primary" style={{ width: "100%", minHeight: 120, flexDirection: "column" }} onClick={() => setUnlocked(true)}><Lock size={22} />Push Flight Slider up twice</button>
       : <div style={{ position: "relative", width: 150, height: 150 }}>
-          <HoldButton wide={laptop} label="Take off" holdLabel={locked ? lockedWhy : "Hold 1 s"} size={150} className={laptop ? "ctl" : "ctl pause"} disabled={locked} style={{ left: 0, top: 0, borderRadius: laptop ? 8 : 14, ...(laptop ? { background: "#2a2a2a", border: "1px solid #3c3c3c", color: "#fff", fontSize: 14 } : {}) }} icon={<ArrowDownToLine size={28} style={{ transform: "rotate(180deg)" }} />}
+          <HoldButton wide label="Take off" holdLabel={locked ? lockedWhy : "Hold 1 s"} size={150} className={laptop ? "ctl" : "ctl pause"} disabled={locked} style={{ left: 0, top: 0, borderRadius: laptop ? 8 : 14, ...(laptop ? { background: "#2a2a2a", border: "1px solid #3c3c3c", color: "#fff", fontSize: 14 } : {}) }} icon={<ArrowDownToLine size={28} style={{ transform: "rotate(180deg)" }} />}
             onDone={() => up((p) => { const x = p.sims[p.droneId]; x.phase = "takeoff"; x.startedAt = Date.now(); x.alertsSeen = []; })} />
         </div>}
   </div>, { padding: "12px 16px" }) : sec(laptop ? 232 : 240, <div style={{ display: "grid", gap: 8, height: "100%", alignContent: "center" }}>
@@ -231,7 +231,7 @@ export function Cockpit() {
       <div style={{ position: "relative", flex: 1, height: 56 }}><HoldButton wide label="Land" holdLabel="Hold" activeLabel={landing ? "Landing" : undefined} size={56} className={`ctl safety${landing ? " active" : ""}`} disabled={landing || locked} style={{ left: 0, top: 0, width: "100%", borderRadius: 8, flexDirection: "row", gap: 8 }} icon={<ArrowDownToLine size={16} />} onDone={() => setLandAsk(true)} /></div>
     </div>
     <button aria-label={paused ? "Resume [Space]" : "Pause [Space]"} disabled={landing} onClick={() => setSim((x) => { if (x.phase === "flying" || x.phase === "returning" || x.phase === "takeoff") { x.phase = "paused"; if (x.smartMode) x.smartPaused = true; } else if (x.phase === "paused") x.phase = "flying"; })}
-      style={{ minHeight: 72, borderRadius: laptop ? 8 : 12, border: paused ? `2px solid ${laptop ? "#e00000" : "#fff"}` : "none", background: laptop ? (paused ? "#2a0d0d" : "#e00000") : (paused ? "#111" : "#fff"), color: laptop ? "#fff" : (paused ? "#fff" : "#111"), fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 8px 24px rgba(0,0,0,.4)" }}>
+      style={{ minHeight: 72, borderRadius: 8, border: paused ? "2px solid #e00000" : "none", background: paused ? "#2a0d0d" : "#e00000", color: "#fff", fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 8px 24px rgba(0,0,0,.4)" }}>
       {paused ? <Play size={22} fill="currentColor" /> : <Pause size={22} fill="currentColor" />}{paused ? "Resume" : "Pause"}<span style={{ fontSize: 12, fontWeight: 600, opacity: .6 }}>[Space]</span>
     </button>
   </div>, { padding: "12px 16px" });
@@ -243,7 +243,7 @@ export function Cockpit() {
   );
 
   return (
-    <div className={`fh${laptop ? " desk" : ""}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+    <div className={`fh desk${laptop ? "" : " touch"}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
       {s.platform === "tablet" && <StatusBar platform="tablet" dark />}
       {top}{map}{live}{strip}
 

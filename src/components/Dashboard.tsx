@@ -93,7 +93,7 @@ export function DashboardScreen() {
   const w = world(s);
   const map = (
     <div style={{ position: "absolute", inset: 0 }}>
-      <RealMap center={w.spot.home} zoom={15.5} grey={s.platform !== "laptop"} drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} tools={!wide ? false : false}
+      <RealMap center={w.spot.home} zoom={15.5} drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} tools={!wide ? false : false}
         onDrone={(id) => up((p) => { p.droneId = id; p.skin = "auto"; p.screen = inAir(p.sims[id].phase) ? "fly" : "hangar"; })} />
     </div>
   );
@@ -172,7 +172,7 @@ function WatchTile({ d, seed }: { d: Drone; seed: number }) {
   const reconnect = () => { up((p) => { const x = droneOf(p, d.id); x.status = "Not ready"; x.statusReason = "connecting"; }); setTimeout(() => up((p) => { const x = droneOf(p, d.id); x.status = "Ready"; x.statusReason = undefined; }), 1500); };
   return (
     <div style={{ position: "relative", borderRadius: 8, overflow: "hidden", background: "#000", border: mine ? "2px solid #fff" : "1px solid rgba(255,255,255,.12)" }}>
-      <div style={{ position: "absolute", inset: s.fill ? 0 : "8% 6%" }}><DroneView at={w.posOf(d.id)} heading={m.heading + seed * 0} height={m.height} gimbal={m.gimbal} grey={s.platform !== "laptop"} dim={!air} /></div>
+      <div style={{ position: "absolute", inset: s.fill ? 0 : "8% 6%" }}><DroneView at={w.posOf(d.id)} heading={m.heading + seed * 0} height={m.height} gimbal={m.gimbal} dim={!air} /></div>
       <div style={{ position: "absolute", left: 0, right: 0, top: 0, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8, background: "linear-gradient(rgba(0,0,0,.6), transparent)", fontSize: 12 }} className="hud-text">
         <span style={{ width: 8, height: 8, borderRadius: 9999, background: air ? "#fff" : "transparent", border: "1.5px solid #fff" }} />
         <b>{d.nickname}</b><span style={{ opacity: .7 }}>| Main camera</span>

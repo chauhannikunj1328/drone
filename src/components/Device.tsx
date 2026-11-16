@@ -5,8 +5,8 @@ import type { Overlays } from "@/lib/store";
 import { HomeIndicator, Island } from "./art";
 
 // A device frame scaled to fit its box, with wireframe overlays (zones, safe area, reserved regions, hit areas, mock tags).
-export function Device({ platform, orient, fly, mirror, overlays, label, maxScale = 1, dark = false, bare = false, children }: {
-  platform: Platform; orient: Orientation; fly: boolean; mirror: boolean; overlays: Overlays; label: string; maxScale?: number; dark?: boolean; bare?: boolean; children: ReactNode;
+export function Device({ platform, orient, fly, mirror, overlays, label, maxScale = 1, bare = false, half = false, children }: {
+  platform: Platform; orient: Orientation; fly: boolean; mirror: boolean; overlays: Overlays; label: string; maxScale?: number; dark?: boolean; bare?: boolean; half?: boolean; children: ReactNode;
 }) {
   const o = fly ? flyOrientation(platform, orient) : platform === "laptop" ? "landscape" : orient;
   const { W, H } = frameSize(platform, o);
@@ -18,7 +18,7 @@ export function Device({ platform, orient, fly, mirror, overlays, label, maxScal
     const fit = () => setScale(Math.min(maxScale, (el.clientWidth - 8) / (W + 24), (el.clientHeight - (platform === "laptop" ? 64 : 40) + (bare ? 30 : 0)) / (H + 24)));
     fit(); const ro = new ResizeObserver(fit); ro.observe(el); return () => ro.disconnect();
   }, [W, H, maxScale, platform, bare]);
-  const zones = fly ? flyLayout(platform, orient, mirror).zones : {};
+  const zones = fly ? flyLayout(platform, orient, mirror, half).zones : {};
   const radius = platform === "laptop" ? 10 : platform === "tablet" ? 28 : 44;
   return (
     <div ref={box} style={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
@@ -30,10 +30,12 @@ export function Device({ platform, orient, fly, mirror, overlays, label, maxScal
           <div style={{ position: "relative", width: W, height: H, overflow: "hidden", borderRadius: radius, background: "var(--grey-50)" }}>
             {children}
             {platform === "iphone" && <Island landscape={o === "landscape"} />}
-            {(platform === "iphone" || platform === "duoClosed" || platform === "duoOpen") && <HomeIndicator dark={dark} />}
-            {platform === "duoOpen" && <div style={{ position: "absolute", pointerEvents: "none", zIndex: 69, ...(o === "landscape" ? { left: 0, right: 0, top: H / 2 - 0.5, height: 1 } : { top: 0, bottom: 0, left: W / 2 - 0.5, width: 1 }), background: "linear-gradient(90deg, rgba(0,0,0,.18), rgba(255,255,255,.25), rgba(0,0,0,.18))" }} />}
+            {(platform === "iphone" || platform === "duoClosed" || platform === "duoOpen") && <HomeIndicator dark />}
+            {platform === "duoOpen" && <div style={{ position: "absolute", pointerEvents: "none", zIndex: 69, ...(o === "landscape" ? { left: 0, right: 0, top: H / 2 - (half ? 12 : 0.5), height: half ? 24 : 1 } : { top: 0, bottom: 0, left: W / 2 - (half ? 12 : 0.5), width: half ? 24 : 1 }),
+              background: half ? `linear-gradient(${o === "landscape" ? "180deg" : "90deg"}, rgba(0,0,0,0), rgba(0,0,0,.35) 50%, rgba(0,0,0,0))` : "rgba(255,255,255,.12)" }} />}
+            {platform === "duoClosed" && <div aria-hidden style={{ position: "absolute", right: 18, top: 18, width: 16, height: 16, borderRadius: 9999, background: "#000", boxShadow: "inset 0 0 0 3px #1a1a1a, 0 0 0 1px rgba(255,255,255,.08)", zIndex: 70, pointerEvents: "none" }} />}
             {overlays.safe && <div className="ov-safe" style={{ left: safe.l, top: safe.t, width: W - safe.l - safe.r, height: H - safe.t - safe.b }} />}
-            {overlays.reserved && reservedRegions(platform, o).map((r, i) => <div key={i} className="ov-res" style={{ left: r.x, top: r.y, width: r.w, height: r.h }}>{r.label}</div>)}
+            {overlays.reserved && reservedRegions(platform, o, half).map((r, i) => <div key={i} className="ov-res" style={{ left: r.x, top: r.y, width: r.w, height: r.h }}>{r.label}</div>)}
             {overlays.zones && fly && (Object.keys(zones) as ZoneKey[]).filter((k) => ZONE_LABEL[k] && k !== "video").map((k) => {
               const r = zones[k]!; return <div key={k} className="ov-zone" style={{ left: r.x, top: r.y, width: r.w, height: r.h }}>{ZONE_LABEL[k]}</div>;
             })}

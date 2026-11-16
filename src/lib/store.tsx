@@ -38,6 +38,8 @@ export interface Proto {
   perms: { location: Perm; nearby: Perm; notify: Perm }; permAsk?: "location" | "nearby" | "notify";
   account?: Account; signInSheet?: boolean; brandAccounts: BrandId[]; deleteConfirm?: boolean;
   // Command centre (17-flighthub2-analysis.md): watch wall layout, OSD, fit/fill, cockpit leave confirm
+  // iPhone Duo pose: halfFold = partially folded like a book (fold region reserved). Closed/open = platform duoClosed/duoOpen.
+  halfFold: boolean;
   watchGrid: 1 | 4; watchFocus?: string; osd: boolean; fill: boolean; leaveCockpit?: boolean; fastMode: boolean;
 }
 
@@ -56,7 +58,7 @@ export function initialState(): Proto {
     platform: "iphone", orient: "landscape", droneId: "d1", country: "US", mirror: false, skin: "auto",
     overlays: { zones: false, safe: false, reserved: false, hit: false, mock: true },
     screen: "welcome", returnSheet: false,
-    onboarded: false, obAdding: false, watchGrid: 4, osd: true, fill: true, fastMode: false, experience: "beginner", perms: { location: "unknown", nearby: "unknown", notify: "unknown" }, brandAccounts: [], fullMap: false, traySheet: false,
+    onboarded: false, obAdding: false, halfFold: false, watchGrid: 4, osd: true, fill: true, fastMode: false, experience: "beginner", perms: { location: "unknown", nearby: "unknown", notify: "unknown" }, brandAccounts: [], fullMap: false, traySheet: false,
     useCase: "Park", resident: false, docs: [], sight: "unknown", crowdAck: false,
     observer: "none", observerSight: false, observerLeftAck: false, armStop: false,
     link: "strong", linkLostFor: 0, moving: false, driving: false, obstacle: false,
@@ -136,8 +138,10 @@ interface Ctx { s: Proto; up: (f: (d: Proto) => void) => void; input: React.Muta
 export interface Input { lx: number; ly: number; rx: number; ry: number; throttle: boolean; slider: number; }
 const C = createContext<Ctx | null>(null);
 export const useProto = () => useContext(C)!;
-// Desktop (laptop) uses the high-fidelity colour theme after DJI FlightHub 2; other devices stay greyscale.
-export const useDesk = () => useContext(C)?.s.platform === "laptop";
+// High-fidelity colour theme (after DJI FlightHub 2). On the standard-design branch every device uses it
+// (desktop since 2026-11-16, iPhone, iPad and Duo since 2026-11-16 later). Return false to get the greyscale wireframe back.
+export const HIFI = true;
+export const useDesk = () => { useContext(C); return HIFI; };
 
 const KEYS_IN_URL: (keyof Proto)[] = ["platform", "orient", "droneId", "country", "mirror", "skin"];
 

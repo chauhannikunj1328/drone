@@ -7,7 +7,7 @@ import { droneOf, inAir, useProto, type Overlays, type Screen } from "@/lib/stor
 import { Device } from "./Device";
 import { FlyScreen } from "./Fly";
 import { ObserverPhone } from "./Observer";
-import { FoldHorizontal, RotateCw, UnfoldHorizontal } from "lucide-react";
+import { BookOpen, FoldHorizontal, RotateCw, UnfoldHorizontal } from "lucide-react";
 import { DashboardScreen, WatchScreen } from "./Dashboard";
 import { AccountScreen, ObCountry, ObDrone, ObPerms, ObSafety, ObYou, Welcome } from "./Onboarding";
 import { AddBrand, AddModel, Capability, Flights, Hangar, PfChecklist, PfCountry, PfCrowd, PfObserver, PfRedFlag, PfSight, PfUseCase, Rules, Settings, Summary } from "./Screens";
@@ -63,6 +63,9 @@ export function Shell({ locked }: { locked?: Platform }) {
             {DEVICE_APPS.map((a, i) => <a key={a.slug} href={`http://localhost:${4001 + i}`} target="_blank" rel="noreferrer" className="chip" style={{ textDecoration: "none", color: "inherit" }}>{a.label} :{4001 + i}</a>)}
           </div>
         </Field>
+        {s.platform === "duoOpen" && <label className="t-label" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="checkbox" checked={s.halfFold} onChange={(e) => up((p) => { p.halfFold = e.target.checked; })} /> Half open (partially folded)
+        </label>}
         <Field label="Orientation"><Seg value={s.orient} options={[["portrait", "Portrait"], ["landscape", "Landscape"]]} onChange={(v) => up((p) => { p.orient = v; })} /></Field>
         <Field label="Drone (controlled)">
           <select value={s.droneId} onChange={(e) => up((p) => { if (inAir(p.sims[p.droneId].phase) && p.screen === "fly") p.handoverTo = e.target.value; else { p.droneId = e.target.value; p.skin = "auto"; } })}>
@@ -106,7 +109,7 @@ export function Shell({ locked }: { locked?: Platform }) {
         <div className="t-cap muted">Hold buttons need a 1 s press. Right-click or press Enter on them for the confirm alternative. Laptop: keyboard W/S, arrows, Space, R.</div>
       </aside>
       <main style={{ flex: 1, minWidth: 0, display: "flex", gap: 24, padding: "20px 24px 28px", background: "radial-gradient(ellipse at 50% 40%, #f4f4f4 0, #e2e2e2 70%)" }}>
-        <Device platform={s.platform} orient={s.orient} fly={s.screen === "fly"} dark={s.screen === "fly"} mirror={s.mirror} overlays={s.overlays} label={`Pilot · ${PLATFORM_LABEL[s.platform]} · ${SCREEN_LABEL[s.screen]}`}>
+        <Device half={s.halfFold} platform={s.platform} orient={s.orient} fly={s.screen === "fly"} dark={s.screen === "fly"} mirror={s.mirror} overlays={s.overlays} label={`Pilot · ${PLATFORM_LABEL[s.platform]} · ${SCREEN_LABEL[s.screen]}`}>
           <Screen />
         </Device>
         {showObserver && (
@@ -130,6 +133,13 @@ export function DeviceApp({ slug }: { slug: string }) {
   const open = s.platform === "duoOpen";
   // Fly is locked to landscape on Duo (Step 11 decision), so rotating does nothing there and is hidden.
   const rotateLocked = s.screen === "fly" && flyOrientation(s.platform, "portrait") === "landscape";
+  // Device poses (HIG): closed, fully open, partially folded like a book.
+  const pose = (label: string, icon: ReactNode, on: boolean, run: () => void) => (
+    <button aria-label={label} aria-pressed={on} title={label} onClick={run}
+      style={{ height: 40, padding: "0 16px 0 12px", borderRadius: 9999, border: "none", background: on ? "#141414" : "transparent", color: on ? "#fff" : "var(--grey-900)", display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600 }}>
+      {icon}{label}
+    </button>
+  );
   const ctl = (label: string, icon: ReactNode, run: () => void) => (
     <button aria-label={label} title={label} onClick={run}
       style={{ height: 40, padding: "0 14px 0 12px", borderRadius: 9999, border: "none", background: "transparent", display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: "var(--grey-900)" }}>
@@ -138,12 +148,16 @@ export function DeviceApp({ slug }: { slug: string }) {
   );
   return (
     <div style={{ position: "relative", height: "100vh", display: "flex", padding: app.start === "laptop" ? "24px 24px 48px" : "24px 24px 76px", background: "radial-gradient(ellipse at 50% 40%, #f4f4f4 0, #e2e2e2 70%)", overflow: "hidden" }}>
-      <Device bare maxScale={2} platform={s.platform} orient={s.orient} fly={s.screen === "fly"} dark={s.screen === "fly"} mirror={s.mirror} overlays={{ zones: false, safe: false, reserved: false, hit: false, mock: true }} label={app.label}>
+      <Device bare maxScale={2} half={s.halfFold} platform={s.platform} orient={s.orient} fly={s.screen === "fly"} dark={s.screen === "fly"} mirror={s.mirror} overlays={{ zones: false, safe: false, reserved: false, hit: false, mock: true }} label={app.label}>
         <Screen />
       </Device>
       {app.controls.length > 0 && (
         <div style={{ position: "absolute", left: "50%", bottom: 20, transform: "translateX(-50%)", display: "flex", gap: 2, padding: 4, borderRadius: 9999, background: "rgba(255,255,255,.9)", border: "1px solid var(--grey-200)", boxShadow: "var(--shadow-2)", backdropFilter: "blur(12px)" }}>
-          {app.controls.includes("fold") && ctl(open ? "Close" : "Open", open ? <FoldHorizontal size={17} /> : <UnfoldHorizontal size={17} />, () => up((p) => { p.platform = p.platform === "duoOpen" ? "duoClosed" : "duoOpen"; }))}
+          {app.controls.includes("fold") && <>
+            {pose("Closed", <FoldHorizontal size={17} />, !open, () => up((p) => { p.platform = "duoClosed"; p.halfFold = false; }))}
+            {pose("Open", <UnfoldHorizontal size={17} />, open && !s.halfFold, () => up((p) => { p.platform = "duoOpen"; p.halfFold = false; }))}
+            {pose("Half open", <BookOpen size={17} />, open && s.halfFold, () => up((p) => { p.platform = "duoOpen"; p.halfFold = true; }))}
+          </>}
           {app.controls.includes("fold") && !rotateLocked && <span style={{ width: 1, margin: "8px 0", background: "var(--grey-200)" }} />}
           {app.controls.includes("rotate") && !rotateLocked && ctl(s.orient === "portrait" ? "Landscape" : "Portrait", <RotateCw size={17} />, () => up((p) => { p.orient = p.orient === "portrait" ? "landscape" : "portrait"; }))}
         </div>

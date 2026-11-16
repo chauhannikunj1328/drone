@@ -15,8 +15,8 @@ export function ObserverPhone() {
   if (s.observer === "invited" || s.observer === "left") {
     const ok = code.replace(/\s/g, "").toUpperCase() === "K7Q2M9";
     return (
-      <div className="light" style={{ position: "absolute", inset: 0, width: W, height: H, padding: "71px 18px 34px" }}>
-        <StatusBar platform="iphone" />
+      <div className="light desk touch" style={{ position: "absolute", inset: 0, width: W, height: H, padding: "72px 16px 32px" }}>
+        <StatusBar platform="iphone" dark />
         <h1 className="t-large" style={{ margin: "8px 0 4px" }}>Join a flight</h1>
         <p className="t-body">{s.observer === "left" ? "You left the flight. Enter the code to rejoin." : "Enter the code from the pilot"}</p>
         <input data-hit aria-label="Code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="K7Q 2M9"
@@ -29,7 +29,7 @@ export function ObserverPhone() {
     );
   }
   return (
-    <div className="dark" style={{ position: "absolute", inset: 0, width: W, height: H }}>
+    <div className="dark desk touch" style={{ position: "absolute", inset: 0, width: W, height: H }}>
       <div style={{ position: "absolute", top: 59, left: 16, right: 16 }}>
         <div className="t-head">Watching</div>
         <div className="t-cap muted">You&apos;re watching {d.nickname}</div>
@@ -46,7 +46,7 @@ export function ObserverPhone() {
         <button className={`btn ${s.observerSight ? "" : "btn-primary"}`} data-hit onClick={() => up((p) => { p.observerSight = true; })}>
           {s.observerSight ? <><Icon kind="pass" /> You confirmed you can see it</> : "I can see the drone"}</button>
         <div style={{ display: "flex", gap: 24, justifyContent: "center", alignItems: "center", marginTop: 8 }}>
-          <button data-hit className={`ctl pause${sim.phase === "paused" ? " active" : ""}`} style={{ position: "relative", width: 72, height: 72 }} disabled={!inAir(sim.phase)}
+          <button data-hit className={`ctl pause stop${sim.phase === "paused" ? " active" : ""}`} style={{ position: "relative", width: 72, height: 72 }} disabled={!inAir(sim.phase)}
             onClick={() => up((p) => { const m = p.sims[p.droneId]; if (m.phase === "flying" || m.phase === "returning") m.phase = "paused"; else if (m.phase === "paused") m.phase = "flying"; })}>
             {sim.phase === "paused" ? "Resume" : "Pause"}</button>
           <div style={{ position: "relative", width: 56, height: 56 }}>

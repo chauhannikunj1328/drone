@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { COUNTRIES, SKINS } from "@/lib/data";
-import { flyLayout, flyOrientation, frameSize, isCockpit, type Rect } from "@/lib/layout";
+import { DUO_SYS_W, flyLayout, flyOrientation, frameSize, isCockpit, type Rect } from "@/lib/layout";
 import { Cockpit } from "./Cockpit";
 import { activeAlerts, alertAction, droneOf, inAir, skinOf, startReturn, useProto } from "@/lib/store";
 import { AlertCard, HoldButton, Icon, Mock, Stick, VSlider } from "./ui";
@@ -9,7 +9,7 @@ import { ArrowDownToLine, Camera, ChevronRight, Crosshair, Home, Keyboard, Layer
 import { Bars, Battery, DroneArt, StatusBar } from "./art";
 import { DroneView, RealMap } from "./RealMap";
 import { world } from "@/lib/world";
-import { DronePicker } from "./Screens";
+import { DronePicker, SideStatus, foldClass } from "./Screens";
 import { ChevronDown, ChevronLeft } from "lucide-react";
 
 function Compass({ heading, w }: { heading: number; w: number }) {
@@ -34,7 +34,7 @@ function FlyTouch() {
   const d = droneOf(s); const sim = s.sims[s.droneId]; const skin = skinOf(s); const c = COUNTRIES[s.country];
   const fo = flyOrientation(s.platform, s.orient);
   const { W, H } = frameSize(s.platform, fo);
-  const L = flyLayout(s.platform, s.orient, s.mirror).zones;
+  const L = flyLayout(s.platform, s.orient, s.mirror, s.halfFold).zones;
   const alerts = activeAlerts(s);
   const critical = alerts.find((a) => a.level === "critical");
   const shown = critical ? [critical] : alerts.filter((a) => a.level !== "critical").slice(0, 2);
@@ -73,12 +73,13 @@ function FlyTouch() {
   const trayCompact = (L.tray?.w ?? 0) < 150;
 
   return (
-    <div className="dark" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+    <div className={`dark desk touch${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+      {(s.platform === "duoClosed" || s.platform === "duoOpen") && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: DUO_SYS_W, paddingTop: s.platform === "duoClosed" ? 48 : 12, background: "rgba(12,12,12,.85)", borderLeft: "1px solid #2a2a2a", display: "flex", justifyContent: "center", alignItems: "flex-start", zIndex: 30 }}><SideStatus /></div>}
       {/* Z3 video */}
       <div className="video" style={pos(L.video)}
         onPointerDown={(e) => { if (d.is360) { (e.currentTarget as HTMLElement).dataset.x = String(e.clientX); } }}
         onPointerMove={(e) => { if (d.is360 && e.buttons) { const x0 = Number((e.currentTarget as HTMLElement).dataset.x ?? e.clientX); setSim((m) => { m.view = Math.round((m.view + (e.clientX - x0) * 0.6 + 360) % 360); }); (e.currentTarget as HTMLElement).dataset.x = String(e.clientX); } }}>
-        <DroneView at={w.me} heading={d.is360 ? sim.view : sim.heading} height={sim.height} gimbal={sim.gimbal} grey dim={sim.phase === "grounded"} />
+        <DroneView at={w.me} heading={d.is360 ? sim.view : sim.heading} height={sim.height} gimbal={sim.gimbal} dim={sim.phase === "grounded"} />
         {flying && <Crosshair size={28} strokeWidth={1.2} color="rgba(255,255,255,.7)" style={{ position: "absolute", left: "50%", top: "50%", marginLeft: -14, marginTop: -14, pointerEvents: "none" }} />}
         {flash && <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,.55)", pointerEvents: "none" }} />}
         <div style={{ position: "absolute", left: 0, right: 0, bottom: "18%", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, pointerEvents: "none" }}>
@@ -88,8 +89,8 @@ function FlyTouch() {
         </div>
         <span className="t-micro hud-text" style={{ position: "absolute", right: 12, bottom: 10, opacity: .6, pointerEvents: "none" }}>Simulated view · real map imagery</span>
         {sim.smartMode && ["Shadow Track and Follow", "Deep Track", "FocusTrack", "Cameraman"].includes(sim.smartMode) && (
-          <div style={{ position: "absolute", left: "44%", top: "52%", width: 64, height: 80, border: "2px solid var(--grey-0)", borderRadius: 10, boxShadow: "0 0 0 1px rgba(0,0,0,.4)" }}>
-            <span className="t-cap" style={{ position: "absolute", top: -18, left: 0, whiteSpace: "nowrap", color: "var(--grey-0)" }}>{d.brand === "skydio" ? "Following" : "Subject locked"}</span>
+          <div style={{ position: "absolute", left: "44%", top: "52%", width: 64, height: 80, border: "2px solid #fff", borderRadius: 10, boxShadow: "0 0 0 1px rgba(0,0,0,.4)" }}>
+            <span className="t-cap" style={{ position: "absolute", top: -18, left: 0, whiteSpace: "nowrap", color: "#fff" }}>{d.brand === "skydio" ? "Following" : "Subject locked"}</span>
           </div>
         )}
       </div>
@@ -133,7 +134,7 @@ function FlyTouch() {
       </div>
 
       {/* Z2 safety cluster */}
-      <button data-hit className={`ctl pause${paused ? " active" : ""}`} style={{ ...pos(L.pause), zIndex: 20 }} disabled={!flying || landing}
+      <button data-hit className={`ctl pause stop${paused ? " active" : ""}`} style={{ ...pos(L.pause), zIndex: 20 }} disabled={!flying || landing}
         onClick={() => setSim((m) => { if (m.phase === "flying" || m.phase === "returning" || m.phase === "takeoff") { m.phase = "paused"; if (m.smartMode) m.smartPaused = true; } else if (m.phase === "paused") m.phase = "flying"; })}>
         {paused ? <Play size={24} fill="currentColor" /> : <Pause size={24} fill="currentColor" />}{paused ? "Resume" : "Pause"}
       </button>
@@ -182,7 +183,7 @@ function FlyTouch() {
       {/* Z6 map PiP */}
       {!L.panel2 && <button data-hit className="z" style={{ ...pos(L.map), padding: 0, overflow: "hidden", border: "2px solid rgba(255,255,255,.9)", borderRadius: 14, boxShadow: "0 8px 24px rgba(0,0,0,.35)" }}
         onClick={() => up((p) => { p.fullMap = true; })} aria-label="Open map">
-        <RealMap center={w.spot.home} zoom={16} grey drones={w.drones.filter((x) => x.id === s.droneId)} homes={[w.myHome]} interactive={false} attribution={false} follow={w.me} />
+        <RealMap center={w.spot.home} zoom={16} drones={w.drones.filter((x) => x.id === s.droneId)} homes={[w.myHome]} interactive={false} attribution={false} follow={w.me} />
         <Maximize2 size={12} color="#141414" style={{ position: "absolute", right: 5, top: 5 }} />
       </button>}
 
@@ -212,7 +213,7 @@ function FlyTouch() {
       {(s.platform === "tablet" || s.platform === "laptop") && <>
         {fo === "landscape" && <div className="z" style={{ left: (L.panel?.x ?? 0) - 8, top: 0, width: (L.panel?.w ?? 0) + 16, height: H, background: "var(--grey-950)", borderLeft: "1px solid var(--glass-line)" }} />}
         <button data-hit className="z card" style={{ ...pos(L.panel), padding: 0, overflow: "hidden", textAlign: "left" }} onClick={() => up((p) => { p.fullMap = true; })}>
-          <RealMap center={w.spot.home} zoom={16} grey drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} path={w.path} follow={w.me} interactive={false} />
+          <RealMap center={w.spot.home} zoom={16} drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} path={w.path} follow={w.me} interactive={false} />
           <div style={{ position: "absolute", left: 10, top: 10, right: 10, display: "flex", justifyContent: "space-between" }}><span className="chip" style={{ background: "#fff", color: "#141414" }}><MapPin size={11} />Map <Mock /></span><Maximize2 size={14} color="#141414" /></div>
         </button>
         <div className="z card" style={{ ...pos(L.panel2), padding: 14 }}>
@@ -293,7 +294,7 @@ function FlyTouch() {
       {s.fullMap && (
         <div className="sheet-back" style={{ alignItems: "stretch" }}>
           <div className="light" style={{ flex: 1, position: "relative" }}>
-            <RealMap center={w.spot.home} zoom={16.5} grey drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} path={w.path} follow={w.me} tools />
+            <RealMap center={w.spot.home} zoom={16.5} drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} path={w.path} follow={w.me} tools />
             <div className="card" style={{ position: "absolute", left: 16, top: 16, padding: "10px 14px" }}><div className="t-head">Map <Mock /></div><div className="t-cap muted">{d.nickname} · {sim.height.toFixed(0)} m · {sim.distance.toFixed(0)} m from Home</div></div>
             <div className="card" style={{ position: "absolute", left: 16, bottom: 16, padding: "8px 12px", display: "flex", gap: 14 }} >
               <span className="t-cap" style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ width: 14, height: 14, borderRadius: 9999, background: "#141414" }} />Home</span>
@@ -340,7 +341,7 @@ function OtherDrones({ rect }: { rect?: Rect }) {
         const m = s.sims[o.id];
         return (
           <div key={o.id} className="glass" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", minWidth: 220 }}>
-            <button data-hit className="t-cap" style={{ background: "none", border: "none", textAlign: "left", flex: 1, color: "var(--grey-0)" }} onClick={() => up((p) => { p.handoverTo = o.id; })}>
+            <button data-hit className="t-cap" style={{ background: "none", border: "none", textAlign: "left", flex: 1, color: "#fff" }} onClick={() => up((p) => { p.handoverTo = o.id; })}>
               <b>{o.nickname}</b> · {Math.round(o.battery)}% · {m.phase === "returning" ? "Returning" : m.smartMode ?? "Holding"}{o.battery <= 25 ? " · Battery low" : ""}
             </button>
             <button data-hit className="chip" style={{ minHeight: 30 }} onClick={() => up((p) => { p.sims[o.id].phase = "paused"; p.sims[o.id].smartPaused = true; })}>Hold</button>

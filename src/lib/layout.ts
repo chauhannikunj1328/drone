@@ -44,12 +44,20 @@ export function safeArea(p: Platform, o: Orientation): Insets {
 }
 
 export interface Reserved extends Rect { label: string; kind: "island" | "camera" | "fold"; }
-export function reservedRegions(p: Platform, o: Orientation): Reserved[] {
+// iPhone Duo (Apple HIG "Designing for iPhone Duo", 9 Sep 2026; see 19-iphone-duo-compliance.md):
+// controls move to the side on the outer display (any orientation) and on the inner display in landscape.
+export const sideControls = (p: Platform, o: Orientation) => p === "duoClosed" || (p === "duoOpen" && o === "landscape");
+// Width of the vertical system column (outer camera / Dynamic Island + status bar) on Duo side layouts.
+export const DUO_SYS_W = 48;
+
+export function reservedRegions(p: Platform, o: Orientation, half = false): Reserved[] {
   const { W, H } = frameSize(p, o);
   if (p === "iphone") return o === "portrait"
     ? [{ x: W / 2 - 63, y: 11, w: 126, h: 37, label: "Dynamic Island", kind: "island" }]
     : [{ x: 11, y: H / 2 - 63, w: 37, h: 126, label: "Island", kind: "island" }];
-  if (p === "duoClosed") return [{ x: W - 48, y: 8, w: 40, h: 40, label: "Cam (provisional)", kind: "camera" }];
+  if (p === "duoClosed") return [{ x: W - 44, y: 8, w: 36, h: 36, label: "Outer camera", kind: "camera" }];
+  // The folding region is reserved only when the device is partially folded (HIG: "conditional").
+  if (p === "duoOpen" && !half) return [];
   if (p === "duoOpen") return o === "landscape"
     ? [{ x: 0, y: H / 2 - 12, w: W, h: 24, label: "Fold (mock 24 pt)", kind: "fold" }]
     : [{ x: W / 2 - 12, y: 0, w: 24, h: H, label: "Fold", kind: "fold" }];
@@ -93,10 +101,14 @@ function railsZones(W: number, H: number, s: Insets, x0 = 0, panelW = 0): Partia
   return z;
 }
 
-export function flyLayout(p: Platform, o: Orientation, mirror: boolean): FlyLayout {
+export function flyLayout(p: Platform, o: Orientation, mirror: boolean, half = false): FlyLayout {
   const fo = flyOrientation(p, o);
-  const { W, H } = frameSize(p, fo);
-  const s = safeArea(p, fo);
+  const { W: FW, H } = frameSize(p, fo);
+  const s0 = safeArea(p, fo);
+  const duo = p === "duoClosed" || p === "duoOpen";
+  // Duo: keep the HUD clear of the side system column (camera, status). Immersive full width is allowed elsewhere.
+  const s = duo ? { ...s0, r: s0.r + DUO_SYS_W } : s0;
+  const W = FW;
   let out: FlyLayout;
   if (fo === "portrait") {
     const vTop = s.t + 48, vH = Math.round((W * 9) / 16), row = vTop + vH + 12, sy = row + 84, sticks = sy + 138;
@@ -116,8 +128,10 @@ export function flyLayout(p: Platform, o: Orientation, mirror: boolean): FlyLayo
       const pw = (W - 48) / 2;
       out.zones.panel = { x: 16, y: free, w: pw, h: room }; out.zones.panel2 = { x: 32 + pw, y: free, w: pw, h: room };
     }
-  } else if (p === "duoOpen") {
-    const half = H / 2 - 12; const vH = half - 56, vW = Math.round((vH * 16) / 9);
+  } else if (p === "duoOpen" && half) {
+    // Partially folded: overlay arrangement puts the live view and the controls on each side of the fold.
+    const W = FW - DUO_SYS_W;
+    const halfH = H / 2 - 12; const vH = halfH - 56, vW = Math.round((vH * 16) / 9);
     out = { kind: "split", zones: {
       status: { x: 16, y: 8, w: W - 32, h: 44 }, alert: { x: W / 2 - 130, y: 12, w: 260, h: 36 },
       video: { x: (W - vW) / 2, y: 56, w: vW, h: vH },

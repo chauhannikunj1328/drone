@@ -347,3 +347,50 @@ button:disabled { cursor: not-allowed; }
 /* real maps: keep the required map credits out of the way of controls */
 .dv .maplibregl-ctrl-bottom-right { top: 40px; bottom: auto; }
 .maplibregl-ctrl-attrib { font: 400 10px/14px Inter, system-ui; }
+
+/* =====================================================================================
+   TOUCH DEVICES (.desk.touch = iPhone, iPad, iPhone Duo) — same colours and 8 px grid as desktop,
+   with touch sizes: targets ≥ 44 pt, body 16/24, iOS-size switches. See 18-desktop-design-system.md §8.
+   ===================================================================================== */
+.desk.touch, .desk .touch { font-size: 16px; line-height: 24px; }
+.desk.touch .t-body, .desk.touch .t-label { font-size: 16px; line-height: 24px; }
+.desk.touch .t-cap { font-size: 12px; line-height: 16px; }
+.desk.touch .btn { height: 48px; min-height: 48px; padding: 0 16px; font-size: 16px; font-weight: 600; }
+.desk.touch .btn-sm { height: 40px; min-height: 40px; padding: 0 12px; font-size: 14px; }
+.desk.touch .btn-block.btn-primary { height: 48px; }
+.desk.touch .icon-btn { width: 44px; height: 44px; }
+.desk.touch .row { min-height: 56px; padding: 8px 16px; }
+.desk.touch .chip { height: 28px; padding: 0 12px; font-size: 12px; }
+.desk.touch .switch { width: 52px; height: 32px; }
+.desk.touch .switch::after { width: 28px; height: 28px; }
+.desk.touch .switch.on::after { transform: translateX(20px); }
+.desk.touch .seg { height: 44px; }
+.desk.touch .seg button { min-height: 36px; font-size: 14px; }
+.desk.touch .alert .act { height: 36px; min-height: 36px; }
+.desk.touch .fh-tool { width: 44px; height: 44px; }
+.desk.touch .fh-btn { height: 44px; min-height: 44px; }
+.desk.touch .sheet { border-radius: 16px 16px 0 0; padding: 8px 16px 32px; }
+.desk.touch .sheet.center { border-radius: 16px; padding: 24px; }
+.desk.touch .sheet::before { display: block; margin-bottom: 16px; }
+/* dark flight HUD on touch devices */
+.desk.dark, .desk .dark { background: #0c0c0c; color: #f2f2f2; }
+.desk.dark .muted, .desk .dark .muted { color: #9a9a9a; }
+.desk .vslider { background: rgba(30,30,30,.9); backdrop-filter: none; border-color: #3c3c3c; }
+.desk .vslider .thumb { background: #f2f2f2; }
+.desk .tray button { color: #f2f2f2; background: rgba(30,30,30,.9); border-color: #3c3c3c; backdrop-filter: none; height: 40px; }
+.desk .tray button.on { background: var(--fh-blue); border-color: var(--fh-blue); color: #fff; }
+.desk .seg.dark { background: rgba(30,30,30,.9); }
+.desk .seg.dark button { color: #d0d0d0; }
+.desk .seg.dark button.on { background: var(--fh-blue); color: #fff; }
+.desk .ctl { background: rgba(30,30,30,.9); border-color: #3c3c3c; backdrop-filter: none; }
+.desk .ctl.pause.stop { background: #e00000; color: #fff; box-shadow: 0 8px 24px rgba(224,0,0,.35); }
+.desk .ctl.pause.stop.active { background: #2a0d0d; color: #fff; outline: 2px solid #e00000; }
+.desk .ctl.pause.stop[disabled] { background: #3a1a1a; color: rgba(255,255,255,.5); box-shadow: none; }
+.desk .stick { border-color: rgba(255,255,255,.3); }
+
+/* iPhone Duo partially folded: sheets and dialogs move to one side of the fold (HIG: components adapt to the fold) */
+.fold-v .sheet-back { justify-content: flex-end; }
+.fold-v .sheet { width: calc(50% - 12px); max-width: none; }
+.fold-v .sheet.center { width: calc(50% - 44px); margin: auto 16px auto auto; }
+.fold-h .sheet { max-height: calc(50% - 12px); overflow-y: auto; }
+.fold-h .sheet.center { max-height: calc(50% - 32px); margin: auto auto 16px; }
