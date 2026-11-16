@@ -2,6 +2,7 @@
 import { circle, droneLngLat, homeOf, nearestLanding, offset, SPOTS, type LngLat } from "./geo";
 import { inAir, type Proto } from "./store";
 import { DRONE_PHOTO } from "./data";
+import { stillPeek } from "./droneModels";
 import type { MapDrone, MapPlace, MapZone } from "@/components/RealMap";
 
 export function world(s: Proto) {
@@ -12,7 +13,7 @@ export function world(s: Proto) {
   const drones: MapDrone[] = s.drones.map((d) => {
     const m = s.sims[d.id];
     const state = inAir(m.phase) ? "air" : d.status === "Ready" || d.status === "Limited" ? "ready" : d.status === "Offline" ? "offline" : "notready";
-    return { cut: DRONE_PHOTO[d.brand]?.cut, id: d.id, label: inAir(m.phase) ? `${d.nickname} · ${m.height.toFixed(0)} m` : d.nickname, at: posOf(d.id), heading: m.heading, state, selected: d.id === s.droneId };
+    return { cut: stillPeek(d.brand, 192, 128) ?? DRONE_PHOTO[d.brand]?.cut, id: d.id, label: inAir(m.phase) ? `${d.nickname} · ${m.height.toFixed(0)} m` : d.nickname, at: posOf(d.id), heading: m.heading, state, selected: d.id === s.droneId };
   });
   const landing: MapPlace[] = spot.landing.map((l) => ({ name: l.name, at: offset(spot.home, l.east, l.north) }));
   const noFly: MapZone[] = spot.noFly.map((z) => { const c = offset(spot.home, z.east, z.north); return { name: z.name, center: c, ring: circle(c, z.radius) }; });

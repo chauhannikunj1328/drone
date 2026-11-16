@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ZONE_LABEL, flyLayout, flyOrientation, frameSize, reservedRegions, safeArea, type Orientation, type Platform, type ZoneKey } from "@/lib/layout";
 import type { Overlays } from "@/lib/store";
 import { HomeIndicator, Island } from "./art";
+import { pregenerateStills } from "@/lib/droneModels";
 
 // A device frame scaled to fit its box, with wireframe overlays (zones, safe area, reserved regions, hit areas, mock tags).
 export function Device({ platform, orient, fly, mirror, overlays, label, maxScale = 1, bare = false, half = false, dark = false, children }: {
@@ -18,6 +19,7 @@ export function Device({ platform, orient, fly, mirror, overlays, label, maxScal
     const fit = () => setScale(Math.min(maxScale, (el.clientWidth - 8) / (W + 24), (el.clientHeight - (platform === "laptop" ? 64 : 40) + (bare ? 30 : 0)) / (H + 24)));
     fit(); const ro = new ResizeObserver(fit); ro.observe(el); return () => ro.disconnect();
   }, [W, H, maxScale, platform, bare]);
+  useEffect(() => { pregenerateStills(); }, []); // render the 3D drone images once, so cards and map pins have them
   const zones = fly ? flyLayout(platform, orient, mirror, half).zones : {};
   const radius = platform === "laptop" ? 10 : platform === "tablet" ? 28 : 44;
   return (

@@ -14,6 +14,7 @@ import { ALERTS, DRONE_PHOTO } from "@/lib/data";
 import { Icon, Mock, type IconKind } from "./ui";
 import { MakerSignIn, SignInSheet } from "./Onboarding";
 import { RealMap } from "./RealMap";
+import { Drone3D } from "./Drone3D";
 import { world } from "@/lib/world";
 import { offset } from "@/lib/geo";
 import { BRAND_ACCOUNT } from "@/lib/data";
@@ -388,9 +389,9 @@ export function Hangar() {
       </div>
       <div style={{ margin: "8px 0 4px", height: 180, position: "relative", display: "grid", placeItems: "center" }}>
         <span aria-hidden style={{ position: "absolute", left: "6%", right: "6%", bottom: 14, height: 40, borderRadius: "50%", border: "1px solid var(--text-3)", opacity: .45 }} />
-        <DroneCutout brand={sel.brand} w={Math.min(300, W - 96)} h={150} />
+        <Drone3D brand={sel.brand} w={Math.min(300, W - 96)} h={170} />
       </div>
-      <PhotoCredit brand={sel.brand} style={{ display: "block", marginBottom: 8 }} />
+      <span className="t-cap muted" style={{ display: "block", marginBottom: 8 }}>3D model: original, simplified, not an exact replica. Drag to turn it.</span>
       <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr 1fr" : "repeat(3, 1fr)", gap: 8 }}>
         {[["Battery", `${Math.round(sel.battery)}%`, <Battery key="b" pct={sel.battery} size={11} />], ["Weight", `${sel.weightGrams} g`, sel.weightIsMock ? <Mock key="m" /> : null], ["Firmware", sel.firmwareOk ? "Current" : "Update", null]].slice(0, narrow ? 2 : 3).map(([k, v, x]) => (
           <div key={k as string} style={{ background: "var(--grey-50)", borderRadius: 12, padding: "12px 12px" }}>

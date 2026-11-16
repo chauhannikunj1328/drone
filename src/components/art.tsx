@@ -1,7 +1,9 @@
 "use client";
 // Greyscale illustrations for the high-fidelity wireframe: camera scene, map, drone pictures, system bars.
 // Pure black, white and grey. No photos, no colour.
+import { useEffect, useState } from "react";
 import { DRONE_PHOTO, type BrandId } from "@/lib/data";
+import { droneStill, onStills, stillPeek } from "@/lib/droneModels";
 import type { Platform } from "@/lib/layout";
 import { useDesk } from "@/lib/store";
 
@@ -222,12 +224,19 @@ export function DroneHero({ brand, height, bg }: { brand: BrandId; height: numbe
   return <div role="img" aria-label={`${brand} drone photo by ${p.author}, ${p.license}`} style={{ height, backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: p.pos, filter: desk ? undefined : "grayscale(1)" }} />;
 }
 
-// Cut-out drone photo (background removed) for cards and map pins, in the Air Dropper style. Autel has no free photo, so it keeps the drawing.
+// Drone image for cards and pins: the original 3D model, rendered once to a transparent PNG (see lib/droneModels.ts).
+// Until it is ready (first moment on the client) the cut-out photo is shown, if one exists.
 export function DroneCutout({ brand, w = 96, h = 64 }: { brand: BrandId; w?: number; h?: number }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => { setUrl(stillPeek(brand, 360, 240) ?? droneStill(brand, 360, 240)); return onStills(() => setUrl(stillPeek(brand, 360, 240))); }, [brand]);
   const p = DRONE_PHOTO[brand];
-  if (!p) return <div style={{ width: w, height: h, display: "grid", placeItems: "center" }}><DroneArt brand={brand} size={Math.round(Math.min(w, h * 1.5))} art /></div>;
+  if (url) return (
+    // eslint-disable-next-line @next/next/no-img-element -- generated data URL
+    <img src={url} alt={`${brand} drone, 3D model`} width={w} height={h} style={{ width: w, height: h, objectFit: "contain", display: "block", filter: "drop-shadow(0 6px 8px rgba(0,0,0,.22))" }} />
+  );
+  if (!p) return <div style={{ width: w, height: h }} />;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- small local cut-out
-    <img src={p.cut} alt={`${brand} drone (photo: ${p.author}, ${p.license}, cut out)`} width={w} height={h} style={{ width: w, height: h, objectFit: "contain", display: "block", filter: "drop-shadow(0 6px 8px rgba(0,0,0,.22))" }} />
+    <img src={p.cut} alt="" width={w} height={h} style={{ width: w, height: h, objectFit: "contain", display: "block", opacity: .5 }} />
   );
 }
