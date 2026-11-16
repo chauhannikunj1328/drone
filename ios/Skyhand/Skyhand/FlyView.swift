@@ -11,6 +11,7 @@ struct FlyView: View {
     @Environment(\.palette) private var p
     @Environment(\.horizontalSizeClass) private var hSize
     @Environment(\.duoHarness) private var harness
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var wasLandscape = false
     var droneID: String
 
@@ -76,6 +77,7 @@ struct FlyView: View {
         }
         .clipped()
         .environment(\.colorScheme, .dark)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)   // fixed-size HUD controls: cap text growth
     }
 
     private var topBar: some View {
@@ -84,6 +86,8 @@ struct FlyView: View {
                 if flying && sim.phase != .paused { confirmLeave = true } else { close() }
             } label: { Image(systemName: "chevron.left").font(.title3.weight(.semibold)).frame(width: 44, height: 44) }
             .accessibilityLabel("Back")
+            .keyboardShortcut(.cancelAction)   // Esc on Mac and iPad keyboards
+            .hoverEffect(.highlight)
             Text(drone?.nickname ?? "").font(.title3)
             if monitorOnly { Text("Monitor only").font(.caption).padding(.horizontal, 8).padding(.vertical, 3).background(.white.opacity(0.18), in: Capsule()) }
             Spacer()
@@ -103,7 +107,7 @@ struct FlyView: View {
             if monitorOnly {
                 Label("Skydio missions start from the Skydio app. Here you can watch, pause or bring it home.", systemImage: "eye")
                     .font(.footnote).padding(12).frame(maxWidth: 320, alignment: .leading)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .glass(in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             } else {
                 Stick(value: $leftStick, label: "Climb · turn", enabled: flying)
             }
@@ -116,6 +120,10 @@ struct FlyView: View {
     }
 
     private var safetyCluster: some View {
+        GlassGroup(spacing: 10) { safetyStack }
+    }
+
+    private var safetyStack: some View {
         VStack(spacing: 10) {
             Button {
                 let paused = sim.phase == .paused
@@ -133,6 +141,8 @@ struct FlyView: View {
             .disabled(!flying)
             .opacity(flying ? 1 : 0.45)
             .accessibilityHint("Stops the drone where it is")
+            .keyboardShortcut(.space, modifiers: [])
+            .hoverEffect(.highlight)
             HoldButton(action: { model.sims[droneID]?.phase = .returning }) { hudKey("house", "Return") }
                 .disabled(!flying).opacity(flying ? 1 : 0.45)
             HoldButton(action: { model.sims[droneID]?.phase = .landing }) { hudKey("arrow.down.to.line", "Land") }
@@ -144,10 +154,11 @@ struct FlyView: View {
         VStack(spacing: 2) {
             Image(systemName: icon).font(.body.weight(.semibold))
             Text(title).font(.caption2.weight(.semibold))
-            Text("Hold").font(.system(size: 9)).opacity(0.7)
+            Text("Hold").font(.caption2).opacity(0.7)
         }
         .frame(width: 56, height: 56).foregroundStyle(.white)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .glass(in: RoundedRectangle(cornerRadius: 14, style: .continuous), interactive: true)
+        .hoverEffect(.highlight)
         .accessibilityLabel(title)
     }
 
@@ -187,7 +198,7 @@ struct FlyView: View {
             Text("Press and hold for 1 second").font(.caption).foregroundStyle(.white.opacity(0.8))
         }
         .padding(20)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .glass(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     // MARK: Side panel (regular width)
@@ -233,7 +244,7 @@ struct FlyView: View {
         guard let d = drone else { return }
         let pos = model.position(of: d)
         let cam = MapCamera(centerCoordinate: pos, distance: 220 + sim.height * 5, heading: sim.heading, pitch: 72)
-        if animated { withAnimation(.linear(duration: 0.25)) { camera = .camera(cam) } } else { camera = .camera(cam) }
+        if animated && !reduceMotion { withAnimation(.linear(duration: 0.25)) { camera = .camera(cam) } } else { camera = .camera(cam) }
     }
 
     private func close() { model.flyingDroneID = nil }
@@ -296,7 +307,7 @@ struct HorizonGauge: View {
     var tilt: Double
     var body: some View {
         ZStack {
-            Circle().fill(.ultraThinMaterial)
+            Color.clear.glass(in: Circle())
             VStack(spacing: 5) { ForEach(0..<7) { _ in Rectangle().fill(.white.opacity(0.5)).frame(width: 14, height: 1) } }
             Path { p in
                 p.move(to: .init(x: 0, y: 42)); p.addLine(to: .init(x: 28, y: 42)); p.addLine(to: .init(x: 34, y: 36)); p.addLine(to: .init(x: 40, y: 48))
@@ -304,7 +315,7 @@ struct HorizonGauge: View {
             }
             .stroke(.white, lineWidth: 1.5).frame(width: 84, height: 84)
             .rotationEffect(.degrees(tilt))
-            Rectangle().fill(Color(hex: 0xE05555)).frame(height: 1).rotationEffect(.degrees(tilt))
+            Rectangle().fill(HUD.red).frame(height: 1).rotationEffect(.degrees(tilt))
         }
         .clipShape(Circle())
         .overlay(alignment: .leading) { Text("\(Int(tilt))°").font(.caption2.monospacedDigit()).foregroundStyle(.white).offset(x: -24) }
@@ -316,13 +327,13 @@ struct CompassGauge: View {
     var heading: Double
     var body: some View {
         ZStack {
-            Circle().fill(.ultraThinMaterial)
+            Color.clear.glass(in: Circle())
             Path { p in p.move(to: .init(x: 42, y: 42)); p.addArc(center: .init(x: 42, y: 42), radius: 40, startAngle: .degrees(-115), endAngle: .degrees(-65), clockwise: false); p.closeSubpath() }
-                .fill(LinearGradient(colors: [Color(hex: 0x7380FF).opacity(0.8), .clear], startPoint: .top, endPoint: .center))
+                .fill(LinearGradient(colors: [HUD.indigo.opacity(0.8), .clear], startPoint: .top, endPoint: .center))
                 .frame(width: 84, height: 84)
             ZStack {
                 ForEach(Array(["N", "E", "S", "W"].enumerated()), id: \.offset) { i, t in
-                    Text(t).font(.system(size: 9, weight: .semibold)).foregroundStyle(t == "N" ? Color(hex: 0xE05555) : .white)
+                    Text(t).font(.caption2.weight(.semibold)).foregroundStyle(t == "N" ? HUD.red : .white)
                         .offset(y: -32).rotationEffect(.degrees(Double(i) * 90))
                 }
             }
@@ -342,7 +353,7 @@ struct Stick: View {
     private let size: CGFloat = 128
     var body: some View {
         ZStack {
-            Circle().fill(.ultraThinMaterial)
+            Color.clear.glass(in: Circle())
             Circle().stroke(.white.opacity(0.35), lineWidth: 1).padding(22)
             Path { p in p.move(to: .init(x: size / 2, y: 10)); p.addLine(to: .init(x: size / 2, y: size - 10)); p.move(to: .init(x: 10, y: size / 2)); p.addLine(to: .init(x: size - 10, y: size / 2)) }
                 .stroke(.white.opacity(0.25), lineWidth: 1)

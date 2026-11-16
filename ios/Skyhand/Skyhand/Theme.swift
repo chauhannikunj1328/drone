@@ -46,6 +46,35 @@ struct Palette {
     }
 }
 
+/// HUD colours. The Fly screen is always dark glass over the live view, so these do not change with the look.
+enum HUD {
+    static let red = Color(hex: 0xE05555)
+    static let indigo = Color(hex: 0x7380FF)
+    static let ink = Color(hex: 0x141414)
+}
+
+// MARK: - Liquid Glass (controls and transient UI only; content cards use `card()`)
+
+extension View {
+    /// Liquid Glass on iOS 26 and later, a standard material before that. Use on controls, HUD and overlays, never on content.
+    @ViewBuilder func glass<S: Shape>(in shape: S, interactive: Bool = false) -> some View {
+        if #available(iOS 26.0, *) {
+            self.glassEffect(interactive ? .regular.interactive() : .regular, in: shape)
+        } else {
+            self.background(.ultraThinMaterial, in: shape)
+        }
+    }
+}
+
+/// Groups nearby glass controls so they render and blend together (iOS 26 and later).
+struct GlassGroup<Content: View>: View {
+    var spacing: CGFloat = 12
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        if #available(iOS 26.0, *) { GlassEffectContainer(spacing: spacing) { content() } } else { content() }
+    }
+}
+
 extension Color {
     init(hex: UInt32, alpha: Double = 1) {
         self.init(.sRGB, red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255, opacity: alpha)

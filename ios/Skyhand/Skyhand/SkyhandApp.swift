@@ -24,6 +24,22 @@ struct SkyhandApp: App {
                 .environment(\.palette, Palette.of(model.look))
                 .preferredColorScheme(Palette.of(model.look).scheme)
                 .tint(Palette.of(model.look).accent)
+                #if targetEnvironment(macCatalyst)
+                .task {   // Mac: resizable window with a sensible minimum (sidebar + two panes)
+                    for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+                        scene.sizeRestrictions?.minimumSize = CGSize(width: 900, height: 600)
+                    }
+                }
+                #endif
+        }
+        .commands {   // Keyboard shortcuts: Mac menu bar and iPad keyboard shortcut overlay
+            CommandMenu("Go") {
+                Button("Overview") { model.tab = .overview }.keyboardShortcut("1")
+                Button("Drones") { model.tab = .fleet }.keyboardShortcut("2")
+                Button("Flights") { model.tab = .flights }.keyboardShortcut("3")
+                Button("Rules") { model.tab = .rules }.keyboardShortcut("4")
+                Button("Settings") { model.tab = .settings }.keyboardShortcut("5")
+            }
         }
     }
 }
@@ -34,7 +50,7 @@ struct RootView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.palette) private var p
     @Environment(\.duoHarness) private var harness
-    @State private var tab: AppTab = .overview
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         if harness != nil { harnessBody } else { deviceBody }
@@ -49,7 +65,7 @@ struct RootView: View {
                 }
             }
             .overlay { if let id = model.flyingDroneID { FlyView(droneID: id) } }
-            .animation(.snappy, value: model.preflightDroneID)
+            .animation(reduceMotion ? nil : .snappy, value: model.preflightDroneID)
             .task { await clock() }
     }
 
@@ -63,8 +79,9 @@ struct RootView: View {
 
     private var tabs: some View {
         // Standard iOS tab bar. On regular width (iPhone Duo open, iPad) it adapts to a sidebar.
-        TabView(selection: $tab) {
-            Tab("Overview", systemImage: "square.grid.2x2", value: AppTab.overview) { OverviewView(tab: $tab) }
+        @Bindable var model = model
+        return TabView(selection: $model.tab) {
+            Tab("Overview", systemImage: "square.grid.2x2", value: AppTab.overview) { OverviewView(tab: $model.tab) }
             Tab("Drones", systemImage: "airplane", value: AppTab.fleet) { FleetView() }
             Tab("Flights", systemImage: "point.topleft.down.to.point.bottomright.curvepath", value: AppTab.flights) { FlightsView() }
             Tab("Rules", systemImage: "checkmark.shield", value: AppTab.rules) { RulesView() }

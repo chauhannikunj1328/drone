@@ -179,8 +179,11 @@ struct CountChip: View {
             .padding(.horizontal, 14).frame(minHeight: 36)
             .foregroundStyle(on ? p.onSelected : p.ink)
             .background(on ? AnyShapeStyle(p.selected) : (p.cardMaterial.map { AnyShapeStyle($0) } ?? AnyShapeStyle(p.card)), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .padding(.vertical, 4)                       // 44 pt tap target around the 36 pt chip
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .hoverEffect(.highlight)
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 }

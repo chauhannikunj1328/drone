@@ -83,15 +83,15 @@ export type FlyLayout = { kind: "rails" | "deck" | "split" | "side"; zones: Part
 function railsZones(W: number, H: number, s: Insets, x0 = 0, panelW = 0): Partial<Record<ZoneKey, Rect>> {
   const L = x0 + s.l + 16, R = W - panelW - s.r - 16, T = 8, B = H - s.b - 8;
   const z: Partial<Record<ZoneKey, Rect>> = {};
-  z.status = { x: L - 8, y: T, w: R - L + 16, h: 44 };
+  z.status = { x: L, y: T + 4, w: R - L, h: 44 };   // inset from the rounded display corners
   z.alert = { x: L + (R - L) / 2 - 150, y: T + 4, w: 300, h: 36 };
   z.pause = { x: L, y: T + 56, w: 72, h: 72 };
   z.return = { x: L + 8, y: T + 144, w: 56, h: 56 };
   z.land = { x: L + 8, y: T + 216, w: 56, h: 56 };
   z.map = W - panelW > 760 ? { x: L + 88, y: T + 56, w: 144, h: 80 } : { x: L + 88, y: T + 56, w: 120, h: 68 };
   z.record = { x: R - 60, y: T + 56, w: 56, h: 56 };
-  z.shutter = { x: R - 64, y: T + 128, w: 64, h: 64 };
-  z.toggle = { x: R - 54, y: T + 208, w: 44, h: 44 };
+  z.shutter = { x: R - 64, y: T + 144, w: 64, h: 64 };   // 16 pt below Record so the photo count fits between them
+  z.toggle = { x: R - 54, y: T + 224, w: 44, h: 44 };
   z.slider = { x: R - 116, y: T + 56, w: 44, h: 160 };
   z.stickL = { x: L + 102, y: B - 140, w: 140, h: 140 };
   z.stickR = { x: R - 272, y: B - 140, w: 140, h: 140 };
@@ -134,16 +134,17 @@ export function flyLayout(p: Platform, o: Orientation, mirror: boolean, half = f
   } else if (p === "duoOpen") {
     // Open Duo, landscape: the fold runs vertically, so the HUD splits left | right and nothing crosses it.
     // Left half: live view, status, safety cluster, left stick. Right half: map, telemetry, camera, smart modes, right stick.
-    const L = Math.round(FW / 2) - 12, R0 = Math.round(FW / 2) + 12, RW = FW - DUO_SYS_W;
+    // RW leaves 12 pt between the right-hand controls and the system column; the status bar clears the rounded corner.
+    const L = Math.round(FW / 2) - 12, R0 = Math.round(FW / 2) + 12, RW = FW - DUO_SYS_W - 12;
     out = { kind: "split", zones: {
       video: { x: 0, y: 0, w: L, h: H },
-      status: { x: 8, y: 8, w: L - 16, h: 44 }, alert: { x: 16, y: 60, w: L - 32, h: 36 },
-      pause: { x: 16, y: 64, w: 72, h: 72 }, return: { x: 24, y: 152, w: 56, h: 56 }, land: { x: 24, y: 224, w: 56, h: 56 },
+      status: { x: 20, y: 14, w: L - 32, h: 44 }, alert: { x: 20, y: 66, w: L - 40, h: 36 },
+      pause: { x: 20, y: 72, w: 72, h: 72 }, return: { x: 28, y: 160, w: 56, h: 56 }, land: { x: 28, y: 232, w: 56, h: 56 },
       stickL: { x: 24, y: H - 172, w: 140, h: 140 },
       map: { x: R0 + 16, y: 16, w: RW - R0 - 152, h: 152 },
       telemetry: { x: R0 + 16, y: 184, w: RW - R0 - 152, h: 88 },
       slider: { x: RW - 120, y: 16, w: 44, h: 160 },
-      record: { x: RW - 64, y: 16, w: 56, h: 56 }, shutter: { x: RW - 68, y: 88, w: 64, h: 64 }, toggle: { x: RW - 58, y: 168, w: 44, h: 44 },
+      record: { x: RW - 64, y: 16, w: 56, h: 56 }, shutter: { x: RW - 68, y: 96, w: 64, h: 64 }, toggle: { x: RW - 58, y: 176, w: 44, h: 44 },
       tray: { x: R0 + 16, y: 288, w: RW - R0 - 32, h: 48 }, panel: { x: R0 + 16, y: 352, w: RW - R0 - 32, h: 72 },
       stickR: { x: RW - 156, y: H - 172, w: 140, h: 140 },
     } };
@@ -171,4 +172,18 @@ export function flyLayout(p: Platform, o: Orientation, mirror: boolean, half = f
 export const ZONE_LABEL: Partial<Record<ZoneKey, string>> = {
   status: "Z1", pause: "Z2", return: "Z2", land: "Z2", video: "Z3", record: "Z4", shutter: "Z4", toggle: "Z4", slider: "Z4",
   stickL: "Z5", map: "Z6", tray: "Z7", stickR: "Z8",
+};
+
+// SwiftUI standards per device (mirrors antigravity-a1/21-swiftui-device-standards.md; the native app is ios/Skyhand).
+export interface DeviceStandard {
+  nav: string;            // navigation pattern
+  minTarget: number;      // pt, smallest tap or click target
+  input: ("touch" | "pointer" | "keyboard")[];
+  glass: string;         // where Liquid Glass is used
+}
+export const DEVICE_STANDARDS: Record<"iphone" | "ipad" | "duo" | "laptop", DeviceStandard> = {
+  iphone: { nav: "Tab bar (5 tabs), NavigationStack, sheets", minTarget: 44, input: ["touch"], glass: "HUD controls, map layer button, floating Fly overlays" },
+  ipad: { nav: "Sidebar-adaptable tabs, two-pane lists", minTarget: 44, input: ["touch", "pointer", "keyboard"], glass: "HUD controls and floating overlays, hover highlight on pointer" },
+  duo: { nav: "Tab bar closed; sidebar and two panes open, nothing across the fold", minTarget: 44, input: ["touch"], glass: "Same as iPhone; sheets stay on one side of the fold" },
+  laptop: { nav: "Sidebar, menu bar Go menu (Cmd 1-5), resizable window 900x600 minimum", minTarget: 44, input: ["pointer", "keyboard"], glass: "Toolbar and floating overlays; Esc leaves Fly, Space pauses" },
 };

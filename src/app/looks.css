@@ -241,7 +241,7 @@
 .dev-screen.dev-fly { --home-fg: #ffffff; --crease: rgba(255,255,255,.18); }
 
 /* ---------- iOS glass tab bar: a floating capsule (touch devices, bottom bar only) ---------- */
-:is(.look-v1, .look-v2, .look-v3) .desk.touch nav[aria-label="Tabs"][style*="bottom: 0px"] {
+:is(.look-v1, .look-v2, .look-v3) .desk.touch nav[aria-label="Tabs"][style*="left: 0px"][style*="bottom: 0px"] {
   left: 12px !important; right: 12px !important; bottom: 10px !important; height: 58px !important; padding: 0 6px !important;
   border: 1px solid var(--card-line, transparent) !important; border-radius: 29px;
   background: var(--bar-glass) !important; backdrop-filter: blur(28px) saturate(170%) !important; -webkit-backdrop-filter: blur(28px) saturate(170%) !important;
@@ -253,3 +253,30 @@
 /* selected card / row: solid black (white in dark) */
 :is(.look-v1, .look-v2, .look-v3) .desk .card.sel { box-shadow: 0 6px 18px rgba(0,0,0,.18); }
 :is(.look-v1, .look-v2, .look-v3) .desk .card.sel .t-cap, :is(.look-v1, .look-v2, .look-v3) .desk .card.sel .muted { color: inherit; }
+
+/* SwiftUI standards mirrored on the web prototype (see antigravity-a1/21-swiftui-device-standards.md) */
+@media (prefers-reduced-motion: reduce) {
+  .desk *, .desk *::before, .desk *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+:is(.look-v1, .look-v2, .look-v3) .desk :is(button, [role="button"], a, input, select):focus-visible { outline: 2px solid var(--primary-bg); outline-offset: 2px; }
+/* 44 pt minimum tap target on touch devices (iPhone, iPad, Duo) */
+:is(.look-v1, .look-v2, .look-v3) .desk.touch :is(.btn, .fh-btn) { min-height: 44px; min-width: 44px; }
+
+/* Liquid Glass (iOS 26 look) on the touch Fly HUD: controls and overlays only, never content cards */
+:is(.look-v1, .look-v2, .look-v3) .desk.touch:is(.dark, .cockpit) :is(.glass, .ctl:not(.safety):not(.pause), .vslider, .tray button, .alert, .icon-btn) {
+  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.07));
+  backdrop-filter: blur(22px) saturate(180%) brightness(1.05); -webkit-backdrop-filter: blur(22px) saturate(180%) brightness(1.05);
+  border: 1px solid rgba(255,255,255,.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 8px 22px rgba(0,0,0,.28);
+}
+:is(.look-v1, .look-v2, .look-v3) .desk.touch:is(.dark, .cockpit) .ctl.safety { box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 8px 22px rgba(0,0,0,.28); }
+/* Pause and Take off are solid action buttons: keep their own colours (red Pause, white Take off) */
+:is(.look-v1, .look-v2, .look-v3) .desk.touch:is(.dark, .cockpit) .ctl.pause { background: #f2f2f2; color: #111; border: none; }
+:is(.look-v1, .look-v2, .look-v3) .desk.touch:is(.dark, .cockpit) .ctl.pause.stop { background: #e5382f; color: #fff; box-shadow: 0 8px 24px rgba(229,56,47,.35); }
+:is(.look-v1, .look-v2, .look-v3) .desk.touch:is(.dark, .cockpit) .ctl.pause[disabled] { background: rgba(255,255,255,.55); color: #3a393d; box-shadow: none; }
+/* Shortcut tray scrolls sideways: fade the right edge instead of cutting a chip in half */
+:is(.look-v1, .look-v2, .look-v3) .desk.touch .tray { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+/* pointer hover on iPad and Duo (hover:hover only) */
+@media (hover: hover) {
+  :is(.look-v1, .look-v2, .look-v3) .desk.touch :is(.ctl, .tray button, .btn, .icon-btn):hover:not(:disabled) { filter: brightness(1.12); }
+}

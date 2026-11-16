@@ -16,7 +16,6 @@ import { MakerSignIn, SignInSheet } from "./Onboarding";
 import { RealMap } from "./RealMap";
 import { world } from "@/lib/world";
 import { offset } from "@/lib/geo";
-import { HangarDesk } from "./Dashboard";
 import { BRAND_ACCOUNT } from "@/lib/data";
 
 const go = (sc: Screen) => (p: Proto) => { p.screen = sc; };
@@ -57,13 +56,13 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   const isLarge = large ?? !back;
   const tabsList: [string, Screen, ReactNode][] = [
     // Fly is not a tab: flying is an action on a chosen drone (from Hangar), not a place.
-    [s.platform === "laptop" ? "Dashboard" : "Overview", "dashboard", <LayoutDashboard key="d" size={22} strokeWidth={1.8} />],
-    [s.platform === "laptop" ? "Hangar" : "Drones", "hangar", <Warehouse key="h" size={22} strokeWidth={1.8} />],
+    ["Overview", "dashboard", <LayoutDashboard key="d" size={22} strokeWidth={1.8} />],
+    ["Drones", "hangar", <Warehouse key="h" size={22} strokeWidth={1.8} />],
     ...(hasCommandCentre(s.platform) ? [["Watch", "watch", <Grid2x2 key="w" size={22} strokeWidth={1.8} />] as [string, Screen, ReactNode]] : []),
     ["Flights", "flights", <History key="fl" size={22} strokeWidth={1.8} />], ["Rules", "rules", <Scale key="r" size={22} strokeWidth={1.8} />],
     ["Settings", "settings", <SettingsIcon key="s" size={22} strokeWidth={1.8} />],
   ];
-  const tabH = 50;
+  const tabH = 60; // 58 pt floating glass capsule + a little air
   const desk = s.platform === "laptop";
   const railW = duoSide ? 88 : 84;
   // Task-oriented screens minimise the tab bar so their own actions stay visible (HIG: vertical bar compression).
@@ -74,6 +73,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   const airborne = !s.obAdding && !bleed ? s.drones.filter((d) => inAir(s.sims[d.id].phase)) : [];
   const lead = airborne.find((d) => d.id === s.droneId) ?? airborne[0];
   const bannerH = lead ? 56 : 0, footH = footer ? 90 : 0;
+  const deskBottom = bannerH + footH + (lead || footer ? 32 : 0); // the desktop footer block has 12 + 16 px padding
   const bottomBase = tabs && !side && !desk ? tabH + safe.b : safe.b;
   // Desktop: FlightHub-style top bar (logo, centred tabs, status on the right) instead of a sidebar.
   const topH = 56;
@@ -167,7 +167,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
           {sub && <div className="t-body muted" style={{ maxWidth: 400 }}>{sub}</div>}
           {right}
         </div>
-        <div className="no-scrollbar" style={{ position: "absolute", left: 0, right: 0, top: topH + 72, bottom: bannerH + footH, overflowY: "auto", padding: "32px" }}>
+        <div className="no-scrollbar" style={{ position: "absolute", left: 0, right: 0, top: topH + 72, bottom: deskBottom, overflowY: "auto", padding: "32px" }}>
           {s.screen.startsWith("pf-")
             ? <div style={{ maxWidth: 1160, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: 32, alignItems: "start" }}><div>{children}</div><PreflightAside /></div>
             : <div style={{ maxWidth: full ? 1200 : 760, margin: "0 auto" }}>{children}</div>}
@@ -186,7 +186,9 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   if (s.platform === "duoOpen" && !bleed) {
     const portrait = s.orient === "portrait";
     const F = 12; // half of the 24 pt fold region
-    const cTop = portrait ? top : 8, cBottom = portrait ? tabH + safe.b : safe.b, cRight = portrait ? 0 : railW;
+    // Landscape: keep both panes clear of the rounded display edge and fade scrolled content (iOS scroll edge effect) instead of a hard cut.
+    const cTop = portrait ? top : 20, cBottom = portrait ? tabH + safe.b : safe.b + 12, cRight = portrait ? 0 : railW;
+    const edgeFade: CSSProperties = portrait ? {} : { WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%)", maskImage: "linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%)" };
     // Landscape: fold runs vertically, panes left | right. Portrait: fold runs horizontally, panes top / bottom.
     const paneA: CSSProperties = portrait ? { left: 0, right: 0, top: cTop, height: H / 2 - F - cTop } : { left: 0, width: W / 2 - F, top: cTop, bottom: cBottom };
     const paneB: CSSProperties = portrait ? { left: 0, right: 0, top: H / 2 + F, bottom: cBottom } : { left: W / 2 + F, right: cRight, top: cTop, bottom: cBottom };
@@ -194,7 +196,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
       <div className={`light desk touch${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
         {portrait && <StatusBar platform={s.platform} landscape={false} dark />}
         <DuoPaneCtx.Provider value={{ el: paneEl, claim: () => setClaimedFor(s.screen) }}>
-          <div className="no-scrollbar" style={{ position: "absolute", ...paneA, overflowY: "auto", padding: "8px 24px 0" }}>
+          <div className="no-scrollbar" style={{ position: "absolute", ...paneA, ...edgeFade, overflowY: "auto", padding: portrait ? "8px 24px 0" : "14px 24px 0" }}>
             {portrait && (back || right) && <div style={{ display: "flex", alignItems: "center", minHeight: 44, gap: 4, marginLeft: back ? -12 : 0 }}>
               {back && <button className="btn btn-ghost" data-hit style={{ minHeight: 40, padding: "0 8px", fontWeight: 500, gap: 4 }} onClick={() => up(go(back))}><ChevronLeft size={22} />Back</button>}
               <div style={{ flex: 1 }} />{right}
@@ -206,7 +208,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
               {lead && <FlightBanner id={lead.id} more={airborne.length - 1} />}{footer}
             </div>}
           </div>
-          <div className="no-scrollbar" style={{ position: "absolute", ...paneB, overflowY: "auto", padding: portrait ? "16px 24px 24px" : "16px 24px 24px" }}>
+          <div className="no-scrollbar" style={{ position: "absolute", ...paneB, ...edgeFade, overflowY: "auto", padding: portrait ? "16px 24px 24px" : "16px 24px 28px" }}>
             <div ref={setPaneEl} />
             {claimedFor !== s.screen && <PreflightAside />}
           </div>
@@ -345,7 +347,7 @@ function DroneCard({ d }: { d: Drone }) {
     <button data-hit aria-label={`Select ${d.nickname}`} aria-pressed={on} onClick={() => up((p) => { p.droneId = d.id; p.skin = "auto"; })}
       className={on ? "card sel" : "card"} style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, textAlign: "left", width: "100%", minWidth: 0, overflow: "hidden", background: on ? "var(--sel-bg)" : undefined, color: on ? "var(--sel-fg)" : undefined }}>
       <span style={{ flex: "none" }}><DroneCutout brand={d.brand} w={80} h={54} /></span>
-      <span style={{ flex: 1, minWidth: 0, display: "grid", gap: 8 }}>
+      <span style={{ flex: 1, minWidth: 0, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8 }}>
         <span style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
           <span style={{ minWidth: 0, flex: 1 }}><span className="t-head" style={{ display: "block", fontWeight: 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.nickname}</span><span className="t-cap" style={{ display: "block", opacity: .6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.model}</span></span>
           <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 6, opacity: .85, whiteSpace: "nowrap", minWidth: 0, maxWidth: 104 }}><span style={{ width: 6, height: 6, borderRadius: 9999, background: col, flex: "none" }} /><span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{flying ? "Flying" : label}</span></span>
@@ -368,7 +370,6 @@ function DroneCard({ d }: { d: Drone }) {
 
 export function Hangar() {
   const { s, up } = useProto();
-  if (s.platform === "laptop") return <HangarDesk />;
   const c = COUNTRIES[s.country];
   const sel = droneOf(s);
   const [ic, label] = statusIcon(sel, s);
@@ -420,8 +421,8 @@ export function Hangar() {
       <div style={{ display: "grid", gap: 12 }}>
         {s.drones.map((d) => <DroneCard key={d.id} d={d} />)}
         <button className="card" data-hit onClick={() => up(go("add-brand"))} style={{ display: "flex", alignItems: "center", gap: 14, padding: 14, textAlign: "left", width: "100%", minHeight: 76 }}>
-          <span style={{ width: 96, height: 56, borderRadius: 12, border: "1.5px dashed var(--text-3)", display: "grid", placeItems: "center", flex: "none" }}><Plus size={20} /></span>
-          <span style={{ flex: 1 }}><span className="t-head" style={{ display: "block" }}>Add a drone</span><span className="t-cap muted">DJI, Antigravity, Parrot, Autel, Skydio</span></span>
+          <span style={{ width: 80, height: 54, borderRadius: 12, border: "1.5px dashed var(--text-3)", display: "grid", placeItems: "center", flex: "none" }}><Plus size={20} /></span>
+          <span style={{ flex: 1, minWidth: 0 }}><span className="t-head" style={{ display: "block" }}>Add a drone</span><span className="t-cap muted">DJI, Antigravity, Parrot, Autel, Skydio</span></span>
           <ChevronRight size={18} color="var(--text-3)" />
         </button>
       </div>
@@ -786,7 +787,7 @@ export function Flights() {
     return <button key={r.k} data-hit onClick={() => setSel(r.k)} className="sel-row" style={{ display: "flex", gap: 14, padding: 14, margin: 4, width: "calc(100% - 8px)", textAlign: "left", borderRadius: 12, alignItems: "flex-start",
       background: on ? "var(--sel-bg)" : "transparent", color: on ? "var(--sel-fg)" : undefined }}>
       <span style={{ paddingTop: 6 }}><DroneCutout brand={brandOf(model) as BrandId} w={84} h={56} /></span>
-      <span style={{ flex: 1, minWidth: 0, display: "grid", gap: 8 }}>
+      <span style={{ flex: 1, minWidth: 0, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8 }}>
         <span style={{ display: "flex", justifyContent: "space-between" }}><span className="t-head" style={{ fontWeight: 400 }}>{r.title}</span><ChevronRight size={16} style={{ opacity: .4 }} /></span>
         <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 6, opacity: .85 }}><span style={{ width: 6, height: 6, borderRadius: 9999, background: prog < 1 ? "var(--danger)" : "var(--text-3)" }} />{prog < 1 ? "Returned early" : "Landed"}</span>
         <RouteTrack progress={prog} />
@@ -834,7 +835,7 @@ export function Rules() {
 export function Settings() {
   const { s, up } = useProto();
   const Row = ({ icon, label, sub, right }: { icon: ReactNode; label: string; sub?: ReactNode; right?: ReactNode }) =>
-    <div className="row"><span className="ico">{icon}</span><div style={{ flex: 1 }}><div className="t-label" style={{ fontWeight: 500, fontSize: 16 }}>{label}</div>{sub && <div className="t-cap muted">{sub}</div>}</div>{right ?? <ChevronRight size={18} color="var(--grey-400)" />}</div>;
+    <div className="row" style={typeof sub === "string" || !sub ? undefined : { alignItems: "flex-start" }}><span className="ico">{icon}</span><div style={{ flex: 1, minWidth: 0 }}><div className="t-label" style={{ fontWeight: 500, fontSize: 16 }}>{label}</div>{sub && <div className="t-cap muted">{sub}</div>}</div>{right ?? <ChevronRight size={18} color="var(--grey-400)" />}</div>;
   // Two halves on wide or open-Duo screens: account and controls | general and about.
   return <Page title="Settings"><Columns left={<>
     <button className="card" data-hit onClick={() => up(go("account"))} style={{ width: "100%", padding: 16, display: "flex", gap: 12, alignItems: "center", textAlign: "left" }}>

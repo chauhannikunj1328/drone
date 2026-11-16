@@ -122,7 +122,7 @@ export function Cockpit() {
         <div style={{ fontWeight: 600 }}>{w.spot.place}, {w.spot.city}</div>
         <div className="fh-label">Example location · drone rules not checked</div>
       </div>
-      <div className="fh-panel fh-label" style={{ position: "absolute", left: 16, bottom: 16, padding: "4px 12px", display: "flex", gap: 16, zIndex: 2, color: "#d0d0d0", whiteSpace: "nowrap" }}><span>H Home</span><span>↓ Landing spot</span><span>Red: no-fly</span></div>
+      <div className="fh-panel fh-label" style={{ position: "absolute", left: 16, bottom: 46, padding: "4px 12px", display: "flex", gap: 16, zIndex: 2, color: "#d0d0d0", whiteSpace: "nowrap" }}><span>H Home</span><span>↓ Landing spot</span><span>Red: no-fly</span></div>
     </div>
   );
 

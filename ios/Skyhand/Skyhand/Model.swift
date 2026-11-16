@@ -190,6 +190,7 @@ final class AppModel {
     var flyingDroneID: String?          // Fly screen open for this drone
     var preflightDroneID: String?       // pre-flight sheet open for this drone
     var leftHanded = false
+    var tab: AppTab = .overview         // selected tab; also driven by the Go menu shortcuts on Mac and iPad keyboards
     /// iPhone Duo preview harness (design review on iPad until an iPhone Duo simulator exists).
     var duoPreview: Bool = UserDefaults.standard.bool(forKey: "duoPreview") { didSet { UserDefaults.standard.set(duoPreview, forKey: "duoPreview") } }
 

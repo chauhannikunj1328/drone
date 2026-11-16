@@ -105,7 +105,9 @@ struct HarnessSheet<Content: View>: View {
         let split = h?.isOpen == true
         let land = h?.landscape == true
         ZStack(alignment: split && land ? .trailing : .bottom) {
-            Color.black.opacity(0.3).ignoresSafeArea().onTapGesture(perform: close)
+            Button(action: close) { Color.black.opacity(0.3).ignoresSafeArea() }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close")
             content()
                 .frame(maxWidth: split && land ? (h!.size.width / 2 - 12) : .infinity,
                        maxHeight: split && !land ? (h!.size.height / 2 - 12) : (split ? .infinity : h.map { $0.size.height * 0.7 } ?? 600))

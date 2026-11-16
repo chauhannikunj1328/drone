@@ -59,8 +59,8 @@ struct OpsMap: View {
                 Menu {
                     Picker("Show", selection: $layer) { ForEach(Layer.allCases) { Text($0.rawValue).tag($0) } }
                 } label: {
-                    Image(systemName: "square.3.layers.3d").font(.body.weight(.medium)).frame(width: 40, height: 40)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    Image(systemName: "square.3.layers.3d").font(.body.weight(.medium)).frame(width: 44, height: 44)
+                        .glass(in: RoundedRectangle(cornerRadius: 12, style: .continuous), interactive: true)
                 }
                 .padding(10)
                 .accessibilityLabel("Map layers")
@@ -82,7 +82,7 @@ struct DroneMarker: View {
     var photo: Bool
     var body: some View {
         VStack(spacing: 4) {
-            Text(drone.nickname).font(.caption2.weight(.medium)).foregroundStyle(Color(hex: 0x141414))
+            Text(drone.nickname).font(.caption2.weight(.medium)).foregroundStyle(HUD.ink)
                 .padding(.horizontal, 6).padding(.vertical, 3)
                 .background(.white, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
                 .shadow(color: .black.opacity(0.08), radius: 2, y: 1)

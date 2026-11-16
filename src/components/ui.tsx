@@ -67,7 +67,7 @@ export function HoldButton({ label, holdLabel, activeLabel, onDone, className = 
         onPointerUp={stop} onPointerCancel={stop} onPointerLeave={stop}
         onContextMenu={(e) => { e.preventDefault(); if (!disabled) setConfirm(true); }}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setConfirm(true); } }}>
-        {wide ? <span style={{ position: "absolute", left: 0, bottom: 0, height: 4, width: `${p * 100}%`, background: "currentColor" }} /> : <svg className="ring" width={size + 12} height={size + 12} viewBox={`0 0 ${size + 12} ${size + 12}`}>
+        {wide ? <span style={{ position: "absolute", left: 0, bottom: 0, height: 4, width: `${p * 100}%`, background: "currentColor" }} /> : p > 0 && <svg className="ring" width={size + 12} height={size + 12} viewBox={`0 0 ${size + 12} ${size + 12}`}>
           <circle cx={(size + 12) / 2} cy={(size + 12) / 2} r={r} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round"
             strokeDasharray={`${circ * p} ${circ}`} transform={`rotate(-90 ${(size + 12) / 2} ${(size + 12) / 2})`} />
         </svg>}
@@ -121,7 +121,7 @@ export function Stick({ rect, label, locked, onMove }: { rect: { x: number; y: n
 }
 
 // Vertical slider (gimbal, zoom, A1 Flight Slider). Value 0..1 from bottom; spring returns to rest if springTo set.
-export function VSlider({ rect, label, value, onChange, springTo, locked }: { rect: { x: number; y: number; w: number; h: number }; label: string; value: number; onChange: (v: number) => void; springTo?: number; locked?: boolean }) {
+export function VSlider({ rect, label, value, onChange, springTo, locked, labelSide = "right" }: { rect: { x: number; y: number; w: number; h: number }; label: string; value: number; onChange: (v: number) => void; springTo?: number; locked?: boolean; labelSide?: "left" | "right" }) {
   const handle = (e: React.PointerEvent<HTMLDivElement>) => {
     if (locked) return;
     const b = e.currentTarget.getBoundingClientRect();
@@ -133,7 +133,7 @@ export function VSlider({ rect, label, value, onChange, springTo, locked }: { re
       onPointerDown={(e) => { capture(e); handle(e); }} onPointerMove={(e) => { if (e.buttons) handle(e); }}
       onPointerUp={() => { if (springTo !== undefined) onChange(springTo); }}>
       <div className="thumb" style={{ top: (1 - value) * (rect.h - 36) + 3 }} />
-      <div className="t-cap" style={{ position: "absolute", top: "50%", left: rect.w + 2, writingMode: "vertical-rl", transform: "translateY(-50%)", whiteSpace: "nowrap", color: "var(--grey-300)", fontSize: 12, pointerEvents: "none" }}>{label}</div>
+      <div className="t-cap" style={{ position: "absolute", top: "50%", ...(labelSide === "left" ? { right: rect.w + 2 } : { left: rect.w + 2 }), writingMode: "vertical-rl", transform: "translateY(-50%)", whiteSpace: "nowrap", color: "var(--grey-300)", fontSize: 12, pointerEvents: "none" }}>{label}</div>
     </div>
   );
 }

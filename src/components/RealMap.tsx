@@ -50,6 +50,22 @@ function clayStyle(): StyleSpecification {
 }
 
 export type DroneState = "air" | "ready" | "notready" | "offline";
+// Keep marker labels inside the map box: a label near an edge slides inward instead of being cut off. The pin itself stays put.
+function clampLabels(mp: MLMap, marks: Map<string, MLMarker>) {
+  const box = mp.getContainer().getBoundingClientRect();
+  marks.forEach((mk) => {
+    const label = mk.getElement().querySelector<HTMLElement>('div[style*="nowrap"]');
+    if (!label) return;
+    label.style.transform = "";
+    const pin = mk.getElement().getBoundingClientRect();
+    const cx = pin.left + pin.width / 2;
+    if (cx < box.left - 80 || cx > box.right + 80) return;   // pin is well off the map: leave its label off too
+    const r = label.getBoundingClientRect();
+    const dx = r.left < box.left + 6 ? box.left + 6 - r.left : r.right > box.right - 6 ? box.right - 6 - r.right : 0;
+    if (dx) label.style.transform = `translateX(${dx}px)`;
+  });
+}
+
 export interface MapDrone { id: string; label: string; at: LngLat; heading: number; state: DroneState; selected?: boolean; cut?: string }
 export interface MapPlace { at: LngLat; name: string }
 export interface MapZone { name: string; ring: LngLat[]; center: LngLat }
@@ -103,6 +119,9 @@ export function RealMap({ look = "sat", pitch = 0, bearing = 0, center, zoom = 1
       lib.current = m;
       const mp = new m.Map({ container: box.current, style: look === "clay" ? clayStyle() : satelliteStyle(true), center, zoom, pitch, bearing, interactive, attributionControl: attribution ? { compact: true } : false, maxPitch: 85, fadeDuration: 0 });
       map.current = mp;
+      mp.on("moveend", () => clampLabels(mp, markers));
+      mp.on("idle", () => clampLabels(mp, markers));
+      mp.on("resize", () => clampLabels(mp, markers));
       mp.on("load", () => {
         mp.addSource("zones", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
         mp.addLayer({ id: "zones-fill", type: "fill", source: "zones", paint: { "fill-color": look === "clay" ? "#d9534f" : grey ? "#000" : "#e00000", "fill-opacity": look === "clay" ? 0.16 : 0.18 } });
@@ -140,6 +159,7 @@ export function RealMap({ look = "sat", pitch = 0, bearing = 0, center, zoom = 1
     noFly.forEach((z, i) => put(`zone${i}`, z.center, look === "clay" ? clayZone(z.name) : zoneEl(z.name)));
     drones.forEach((d) => put(`d-${d.id}`, d.at, look === "clay" ? clayDrone(d) : droneEl(d, grey), () => onDroneRef.current?.(d.id), "top"));
     marks.current.forEach((mk, k) => { if (!want.has(k)) { mk.remove(); marks.current.delete(k); } });
+    requestAnimationFrame(() => { if (map.current) clampLabels(map.current, marks.current); });
   }, [ready, drones, homes, landing, noFly, grey, look]);
 
   // keep the followed point in view

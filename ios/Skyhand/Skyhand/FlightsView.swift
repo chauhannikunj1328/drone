@@ -131,7 +131,7 @@ struct FlightDetail: View {
                             Text("Time:  \(flight.duration)").font(.footnote)
                         }
                         .padding(14).frame(width: 230)
-                        .background(Color(hex: 0x141414).opacity(0.92), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .background(HUD.ink.opacity(0.92), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         .foregroundStyle(.white)
                         .padding(12)
                     }

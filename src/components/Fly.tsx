@@ -103,7 +103,7 @@ function FlyTouch() {
           {sim.smartMode && <span className="chip solid"><Sparkles size={12} />{sim.smartMode}{sim.smartPaused ? " · paused" : ""}</span>}
           {sim.recording && <span className="chip"><span style={{ width: 8, height: 8, borderRadius: 9999, background: "#fff", boxShadow: "0 0 0 2px rgba(255,255,255,.3)" }} />REC {String(Math.floor(recT / 60)).padStart(2, "0")}:{String(recT % 60).padStart(2, "0")}</span>}
         </div>
-        {lay.kind !== "rails" && <span className="t-micro hud-text" style={{ position: "absolute", left: 0, right: 0, bottom: lay.kind === "deck" ? 4 : 16, textAlign: "center", opacity: .6, pointerEvents: "none" }}>Simulated view · real map imagery</span>}
+        {lay.kind !== "rails" && <span className="t-micro hud-text" style={{ position: "absolute", ...(lay.kind === "split" ? { left: 180, right: 12, bottom: 100, textAlign: "right" } : { left: 0, right: 0, bottom: lay.kind === "deck" ? 4 : 16, textAlign: "center" }), opacity: .6, pointerEvents: "none" }}>Simulated view · real map imagery</span>}
         {sim.smartMode && ["Shadow Track and Follow", "Deep Track", "FocusTrack", "Cameraman"].includes(sim.smartMode) && (
           <div style={{ position: "absolute", left: "44%", top: "52%", width: 64, height: 80, border: "2px solid #fff", borderRadius: 10, boxShadow: "0 0 0 1px rgba(0,0,0,.4)" }}>
             <span className="t-cap" style={{ position: "absolute", top: -18, left: 0, whiteSpace: "nowrap", color: "#fff" }}>{d.brand === "skydio" ? "Following" : "Subject locked"}</span>
@@ -172,8 +172,8 @@ function FlyTouch() {
         {d.brand === "autel" ? <Layers size={18} /> : sim.videoMode ? <Video size={18} /> : <Camera size={18} />}
       </button>
       {L.record && <div className="z t-micro hud-text" style={{ left: L.record.x - 20, top: L.record.y + L.record.h + 2, width: L.record.w + 40, textAlign: "center", opacity: .75, pointerEvents: "none" }}>{sim.photos} photos</div>}
-      {L.slider && <VSlider rect={L.slider} label={skin.slider} value={1 - sim.gimbal / 90} onChange={(v) => setSim((m) => { m.gimbal = Math.round((1 - v) * 90); })} />}
-      {L.slider2 && skin.slider2 && <VSlider rect={L.slider2} label={skin.slider2} value={(sim.zoom - 1) / 3} onChange={(v) => setSim((m) => { m.zoom = +(1 + v * 3).toFixed(1); })} />}
+      {L.slider && <VSlider rect={L.slider} labelSide={L.slider.x > (L.status ? L.status.x + L.status.w / 2 : 0) ? "left" : "right"} label={skin.slider} value={1 - sim.gimbal / 90} onChange={(v) => setSim((m) => { m.gimbal = Math.round((1 - v) * 90); })} />}
+      {L.slider2 && skin.slider2 && <VSlider rect={L.slider2} labelSide={L.slider2.x > (L.status ? L.status.x + L.status.w / 2 : 0) ? "left" : "right"} label={skin.slider2} value={(sim.zoom - 1) / 3} onChange={(v) => setSim((m) => { m.zoom = +(1 + v * 3).toFixed(1); })} />}
 
       {/* Z5 and Z8: sticks or brand controls */}
       {L.stickL && skin.left === "stick" && <Stick rect={L.stickL} label={`Left ${skin.stickName}`} locked={locked || !flying} onMove={(x, y) => { input.current.lx = x; input.current.ly = y; }} />}

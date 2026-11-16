@@ -4,13 +4,12 @@ import { COUNTRIES } from "@/lib/data";
 import { frameSize } from "@/lib/layout";
 import { droneOf, inAir, useProto } from "@/lib/store";
 import { world } from "@/lib/world";
-import { DashboardScreen } from "./Dashboard";
 import { RealMap } from "./RealMap";
 import { Columns, Page } from "./Screens";
 import { DroneCutout } from "./art";
 
 // Overview (touch devices): live 3D city map with drone photos, four KPI tiles, drones, flights, notifications.
-// Same layout as ios/Skyhand/OverviewView.swift. The laptop keeps its command-centre Dashboard.
+// Same layout as ios/Skyhand/OverviewView.swift, on every device.
 // All numbers are mock.
 
 function Kpi({ label, value, unit }: { label: string; value: string; unit?: string }) {
@@ -39,16 +38,16 @@ function Note({ icon, tint, title, sub, time }: { icon: React.ReactNode; tint: s
 
 export function OverviewScreen() {
   const { s } = useProto();
-  if (s.platform === "laptop") return <DashboardScreen />;
   const w = world(s);
   const { W } = frameSize(s.platform, s.orient);
   const c = COUNTRIES[s.country];
   const ready = s.drones.filter((d) => d.status === "Ready").length;
   const air = s.drones.filter((d) => inAir(s.sims[d.id].phase)).length;
   const wide = W >= 600;
+  const laptop = s.platform === "laptop";
   const duoPortrait = s.platform === "duoOpen" && s.orient === "portrait";
   const map = (
-    <div style={{ position: "relative", height: duoPortrait ? 196 : wide ? 360 : 300, borderRadius: 16, overflow: "hidden", background: "#efede8" }}>
+    <div style={{ position: "relative", height: duoPortrait ? 196 : laptop ? 440 : wide ? 360 : 300, borderRadius: 16, overflow: "hidden", background: "#efede8" }}>
       <RealMap look="clay" pitch={55} bearing={25} zoom={15} center={w.spot.home} drones={w.drones} homes={[w.myHome]} landing={w.landing} noFly={w.noFly} path={w.path} interactive={false} attribution={false} />
       <span className="chip" style={{ position: "absolute", left: 10, bottom: 10, zIndex: 2, background: "rgba(255,255,255,.88)", color: "#141414" }}><Info size={12} />Example location · drone rules not checked</span>
     </div>
@@ -99,7 +98,7 @@ export function OverviewScreen() {
   );
   return (
     <Page title="Overview" sub={`${w.spot.place}, ${w.spot.city} · max ${c.maxAltitude} m`} full={wide}>
-      <Columns left={<>{map}{kpis}</>} right={<div style={{ display: "grid", gap: 12 }}>{drones}{flights}{notes}</div>} />
+      <Columns ratio={laptop ? "1.5fr 1fr" : "1fr 1fr"} left={<>{map}{kpis}</>} right={<div style={{ display: "grid", gap: 12 }}>{drones}{flights}{notes}</div>} />
     </Page>
   );
 }
