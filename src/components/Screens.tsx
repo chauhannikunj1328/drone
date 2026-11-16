@@ -173,7 +173,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
             : <div style={{ maxWidth: full ? 1200 : 760, margin: "0 auto" }}>{children}</div>}
         </div>
         {(footer || lead) && (
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "12px 40px 16px", display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8, zIndex: 6, background: "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" }}>
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "12px 40px 16px", display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8, zIndex: 6, background: "linear-gradient(transparent, var(--grey-50) 30%)" }}>
             {lead && <div style={{ maxWidth: 760, width: "100%", margin: "0 auto" }}><FlightBanner id={lead.id} more={airborne.length - 1} /></div>}
             {footer && <div style={{ maxWidth: 760, width: "100%", margin: "0 auto" }}>{footer}</div>}
           </div>)}
@@ -202,7 +202,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
             <h1 className={portrait ? "t-large" : "t-display"} style={{ margin: "8px 0 0" }}>{title}</h1>
             {sub && <div className="t-body muted" style={{ marginTop: 4 }}>{sub}</div>}
             <div style={{ marginTop: 16, paddingBottom: 24 }}>{children}</div>
-            {(footer || lead) && <div style={{ position: "sticky", bottom: 0, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8, padding: "12px 0 12px", background: "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" }}>
+            {(footer || lead) && <div style={{ position: "sticky", bottom: 0, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8, padding: "12px 0 12px", background: "linear-gradient(transparent, var(--grey-50) 30%)" }}>
               {lead && <FlightBanner id={lead.id} more={airborne.length - 1} />}{footer}
             </div>}
           </div>
@@ -240,7 +240,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
       </div>}
       {(footer || lead) && (
         <div style={{ position: "absolute", left: safe.l, right: s.platform === "duoOpen" && s.orient === "portrait" && s.halfFold ? W / 2 + 16 : (side ? railW : 0) + safe.r, bottom: bottomBase, padding: `12px ${padX}px 10px`, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8, zIndex: 6,
-          background: "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" }}>
+          background: "linear-gradient(transparent, var(--grey-50) 30%)" }}>
           {lead && <div style={{ maxWidth: full || W < 800 ? undefined : 680, width: "100%", margin: "0 auto" }}><FlightBanner id={lead.id} more={airborne.length - 1} /></div>}
           {footer && <div style={{ maxWidth: full || W < 800 ? undefined : 680, width: "100%", margin: "0 auto" }}>{footer}</div>}
         </div>)}

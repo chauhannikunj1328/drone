@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { COUNTRIES, SKINS } from "@/lib/data";
-import { DUO_SYS_W, flyLayout, flyOrientation, frameSize, isCockpit, type Rect } from "@/lib/layout";
+import { DUO_SYS_W, flyLayout, flyOrientation, frameSize, isCockpit, safeArea, type Rect } from "@/lib/layout";
 import { Cockpit } from "./Cockpit";
+import { Hud } from "./Hud";
 import { activeAlerts, alertAction, droneOf, inAir, skinOf, startReturn, useProto } from "@/lib/store";
 import { AlertCard, HoldButton, Icon, Mock, Stick, VSlider } from "./ui";
 import { ArrowDownToLine, Camera, ChevronRight, Crosshair, Home, Keyboard, Layers, Lock, MapPin, Maximize2, Pause, Play, Satellite, Smartphone, Sparkles, Video, X } from "lucide-react";
@@ -34,7 +35,9 @@ function FlyTouch() {
   const d = droneOf(s); const sim = s.sims[s.droneId]; const skin = skinOf(s); const c = COUNTRIES[s.country];
   const fo = flyOrientation(s.platform, s.orient);
   const { W, H } = frameSize(s.platform, fo);
-  const L = flyLayout(s.platform, s.orient, s.mirror, s.halfFold).zones;
+  const lay = flyLayout(s.platform, s.orient, s.mirror, s.halfFold);
+  const L = lay.zones;
+  const sa = safeArea(s.platform, fo);
   const alerts = activeAlerts(s);
   const critical = alerts.find((a) => a.level === "critical");
   const shown = critical ? [critical] : alerts.filter((a) => a.level !== "critical").slice(0, 2);
@@ -81,13 +84,26 @@ function FlyTouch() {
         onPointerMove={(e) => { if (d.is360 && e.buttons) { const x0 = Number((e.currentTarget as HTMLElement).dataset.x ?? e.clientX); setSim((m) => { m.view = Math.round((m.view + (e.clientX - x0) * 0.6 + 360) % 360); }); (e.currentTarget as HTMLElement).dataset.x = String(e.clientX); } }}>
         <DroneView at={w.me} heading={d.is360 ? sim.view : sim.heading} height={sim.height} gimbal={sim.gimbal} dim={sim.phase === "grounded"} />
         {flying && <Crosshair size={28} strokeWidth={1.2} color="rgba(255,255,255,.7)" style={{ position: "absolute", left: "50%", top: "50%", marginLeft: -14, marginTop: -14, pointerEvents: "none" }} />}
+        {L.video && (() => {
+          const g = lay.kind === "deck" ? 52 : 64;
+          const deck = lay.kind === "deck", split = lay.kind === "split";
+          // deck (portrait): stacked under the map thumbnail. split (open Duo landscape): bottom right of the video pane.
+          // rails (phones, closed Duo): bottom corners beside the sticks, clear of the stick, shutter and Land buttons.
+          const bottomY = (L.stickL?.y ?? 0) + (L.stickL?.h ?? 140) - g;
+          const horizonAt = deck ? { right: 8, top: 76 + 60 } : split ? { right: 16 + g + 8, bottom: 24 } : { left: (L.pause?.x ?? 24) + 8, top: bottomY };
+          const compassAt = deck ? { right: 8, top: 76 + 60 + g + 6 } : split ? { right: 16, bottom: 24 } : { left: (L.record?.x ?? 0) + 60 - g, top: bottomY };
+          return <Hud w={L.video.w} h={L.video.h} heading={d.is360 ? sim.view : sim.heading} tilt={flying ? Math.sin(sim.distance / 7) * 3 + 1 : 0}
+            landing={flying ? { dist: Math.round(w.nearest.dist), name: w.nearest.name } : undefined} gauge={g} horizonAt={horizonAt} compassAt={compassAt}
+            insetL={s.platform === "duoClosed" ? 8 : sa.l + 6} insetR={s.platform === "duoClosed" ? DUO_SYS_W + 8 : split ? 6 : sa.r + 6}
+            top={deck ? 12 : 72} bottom={deck ? 12 : 72} />;
+        })()}
         {flash && <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,.55)", pointerEvents: "none" }} />}
         <div style={{ position: "absolute", left: 0, right: 0, bottom: "18%", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, pointerEvents: "none" }}>
           {d.is360 && <span className="chip"><Maximize2 size={12} />360° · drag to look · {sim.view}°</span>}
           {sim.smartMode && <span className="chip solid"><Sparkles size={12} />{sim.smartMode}{sim.smartPaused ? " · paused" : ""}</span>}
           {sim.recording && <span className="chip"><span style={{ width: 8, height: 8, borderRadius: 9999, background: "#fff", boxShadow: "0 0 0 2px rgba(255,255,255,.3)" }} />REC {String(Math.floor(recT / 60)).padStart(2, "0")}:{String(recT % 60).padStart(2, "0")}</span>}
         </div>
-        <span className="t-micro hud-text" style={{ position: "absolute", right: 12, bottom: 10, opacity: .6, pointerEvents: "none" }}>Simulated view · real map imagery</span>
+        {lay.kind !== "rails" && <span className="t-micro hud-text" style={{ position: "absolute", left: 0, right: 0, bottom: lay.kind === "deck" ? 4 : 16, textAlign: "center", opacity: .6, pointerEvents: "none" }}>Simulated view · real map imagery</span>}
         {sim.smartMode && ["Shadow Track and Follow", "Deep Track", "FocusTrack", "Cameraman"].includes(sim.smartMode) && (
           <div style={{ position: "absolute", left: "44%", top: "52%", width: 64, height: 80, border: "2px solid #fff", borderRadius: 10, boxShadow: "0 0 0 1px rgba(0,0,0,.4)" }}>
             <span className="t-cap" style={{ position: "absolute", top: -18, left: 0, whiteSpace: "nowrap", color: "#fff" }}>{d.brand === "skydio" ? "Following" : "Subject locked"}</span>
@@ -238,11 +254,11 @@ function FlyTouch() {
         </div>
       )}
       {sim.phase === "grounded" && (L.video?.h ?? H) >= 300 && (
-        <div className="z" style={{ left: (L.video?.x ?? 0) + (L.video?.w ?? W) / 2 - 150, top: (L.video?.y ?? 0) + (L.video?.h ?? H) / 2 - 110, width: 300, zIndex: 25, textAlign: "center" }}>
+        <div className="z" style={{ left: (L.video?.x ?? 0) + (L.video?.w ?? W) / 2 - 150, top: Math.max((L.video?.y ?? 0) + 56, Math.min((L.video?.y ?? 0) + (L.video?.h ?? H) / 2 - 110, (L.stickL?.y ?? H) - 208)), width: 300, zIndex: 25, textAlign: "center" }}>
           <div className="glass" style={{ padding: 18, borderRadius: 22, background: "var(--glass-strong)", boxShadow: "var(--shadow-3)" }}>
             <div className="t-over muted">{d.nickname} · {Math.round(d.battery)}%</div>
             <div className="t-title" style={{ marginTop: 2 }}>Ready to fly</div>
-            <div className="t-cap muted" style={{ margin: "4px 0 14px" }}>{skin.takeoffNote}</div>
+            <div className="t-cap muted" style={{ margin: "4px 0 14px" }}>{skin.takeoffNote}{lay.kind === "rails" ? " Simulated view, real map imagery." : ""}</div>
             {others.length > 0 && !L.panel3 && s.platform !== "duoOpen" && <div className="t-cap" style={{ margin: "-6px 0 12px", display: "flex", gap: 6, justifyContent: "center", alignItems: "center" }}><Icon kind="flying" size={11} />{others.map((o) => `${o.nickname} is flying`).join(" · ")}</div>}
             {d.brand === "antigravity" && !unlocked
               ? <button className="btn btn-primary btn-block" data-hit onClick={() => setUnlocked(true)}><Lock size={16} />Push Flight Slider up twice</button>

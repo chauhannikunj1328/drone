@@ -8,6 +8,7 @@ import { COUNTRIES } from "@/lib/data";
 import { frameSize, safeArea } from "@/lib/layout";
 import { activeAlerts, alertAction, checklist, droneOf, inAir, skinOf, startReturn, useProto } from "@/lib/store";
 import { Bars, Battery, DroneArt, StatusBar } from "./art";
+import { Hud } from "./Hud";
 import { DroneView, RealMap } from "./RealMap";
 import { world } from "@/lib/world";
 import { Key } from "./fh";
@@ -131,6 +132,9 @@ export function Cockpit() {
     <div style={{ position: "absolute", left: mapW, right: 0, top: mainY, height: mainH, overflow: "hidden", background: "#000", cursor: mouselook ? "crosshair" : undefined }}
       onMouseMove={(e) => { if (!mouselook || !flying) return; const b = e.currentTarget.getBoundingClientRect(); const ny = (e.clientY - b.top) / b.height; setSim((x) => { x.gimbal = Math.round(Math.max(0, Math.min(90, ny * 90))); }); }}>
       <DroneView at={w.me} heading={d.is360 ? m.view : m.heading} height={m.height} gimbal={m.gimbal} dim={!flying} />
+      <Hud w={W - mapW} h={mainH} heading={d.is360 ? m.view : m.heading} tilt={flying ? Math.sin(m.distance / 7) * 3 + 1 : 0}
+        landing={flying ? { dist: Math.round(w.nearest.dist), name: w.nearest.name } : undefined} gauge={laptop ? 72 : 64} horizonAt={{ left: "50%", bottom: 20, marginLeft: -(laptop ? 72 : 64) - 4 }} compassAt={{ left: "50%", bottom: 20, marginLeft: 4 }}
+        insetL={laptop ? 84 : 76} insetR={laptop ? 92 : 80} top={72} bottom={laptop ? 72 : 60} />
       {flash && <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,.5)", pointerEvents: "none" }} />}
       <div className="hud-text" style={{ position: "absolute", left: 0, right: 0, top: 0, padding: "8px 12px", display: "flex", gap: 16, fontSize: 12, fontWeight: 600, background: "linear-gradient(rgba(0,0,0,.6), transparent)" }}>
         <span>{m.videoMode ? "VIDEO 4K 30" : "PHOTO 48MP"}</span><span>ISO 100</span><span>1/500</span><span>EV 0</span><span>{skin.slider}: −{m.gimbal}°</span><span style={{ marginLeft: "auto" }}>128 GB free <Mock /></span>
