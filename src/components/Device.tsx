@@ -31,8 +31,8 @@ export function Device({ platform, orient, fly, mirror, overlays, label, maxScal
             {children}
             {platform === "iphone" && <Island landscape={o === "landscape"} />}
             {(platform === "iphone" || platform === "duoClosed" || platform === "duoOpen") && <HomeIndicator dark />}
-            {platform === "duoOpen" && <div style={{ position: "absolute", pointerEvents: "none", zIndex: 69, ...(o === "landscape" ? { left: 0, right: 0, top: H / 2 - (half ? 12 : 0.5), height: half ? 24 : 1 } : { top: 0, bottom: 0, left: W / 2 - (half ? 12 : 0.5), width: half ? 24 : 1 }),
-              background: half ? `linear-gradient(${o === "landscape" ? "180deg" : "90deg"}, rgba(0,0,0,0), rgba(0,0,0,.35) 50%, rgba(0,0,0,0))` : "rgba(255,255,255,.12)" }} />}
+            {platform === "duoOpen" && <div style={{ position: "absolute", pointerEvents: "none", zIndex: 69, ...(o === "portrait" ? { left: 0, right: 0, top: H / 2 - (half ? 12 : 0.5), height: half ? 24 : 1 } : { top: 0, bottom: 0, left: W / 2 - (half ? 12 : 0.5), width: half ? 24 : 1 }),
+              background: half ? `linear-gradient(${o === "portrait" ? "180deg" : "90deg"}, rgba(0,0,0,0), rgba(0,0,0,.35) 50%, rgba(0,0,0,0))` : "rgba(255,255,255,.12)" }} />}
             {platform === "duoClosed" && <div aria-hidden style={{ position: "absolute", right: 18, top: 18, width: 16, height: 16, borderRadius: 9999, background: "#000", boxShadow: "inset 0 0 0 3px #1a1a1a, 0 0 0 1px rgba(255,255,255,.08)", zIndex: 70, pointerEvents: "none" }} />}
             {overlays.safe && <div className="ov-safe" style={{ left: safe.l, top: safe.t, width: W - safe.l - safe.r, height: H - safe.t - safe.b }} />}
             {overlays.reserved && reservedRegions(platform, o, half).map((r, i) => <div key={i} className="ov-res" style={{ left: r.x, top: r.y, width: r.w, height: r.h }}>{r.label}</div>)}

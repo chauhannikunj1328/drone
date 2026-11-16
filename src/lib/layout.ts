@@ -56,11 +56,13 @@ export function reservedRegions(p: Platform, o: Orientation, half = false): Rese
     ? [{ x: W / 2 - 63, y: 11, w: 126, h: 37, label: "Dynamic Island", kind: "island" }]
     : [{ x: 11, y: H / 2 - 63, w: 37, h: 126, label: "Island", kind: "island" }];
   if (p === "duoClosed") return [{ x: W - 44, y: 8, w: 36, h: 36, label: "Outer camera", kind: "camera" }];
-  // The folding region is reserved only when the device is partially folded (HIG: "conditional").
-  if (p === "duoOpen" && !half) return [];
+  // Skyhand treats the fold as reserved whenever the Duo is open (user decision 2026-11-16: nothing across the fold).
+  void half;
+  // The open Duo is two outer-size halves side by side: in landscape the fold runs vertically (left | right),
+  // in portrait it runs horizontally (top / bottom). Corrected 2026-11-16 from the user's sketch.
   if (p === "duoOpen") return o === "landscape"
-    ? [{ x: 0, y: H / 2 - 12, w: W, h: 24, label: "Fold (mock 24 pt)", kind: "fold" }]
-    : [{ x: W / 2 - 12, y: 0, w: 24, h: H, label: "Fold", kind: "fold" }];
+    ? [{ x: W / 2 - 12, y: 0, w: 24, h: H, label: "Fold (24 pt mock)", kind: "fold" }]
+    : [{ x: 0, y: H / 2 - 12, w: W, h: 24, label: "Fold", kind: "fold" }];
   return [];
 }
 
@@ -105,6 +107,7 @@ export function flyLayout(p: Platform, o: Orientation, mirror: boolean, half = f
   const fo = flyOrientation(p, o);
   const { W: FW, H } = frameSize(p, fo);
   const s0 = safeArea(p, fo);
+  void half; // the open Duo always splits at the fold now; the pose only changes the drawn crease
   const duo = p === "duoClosed" || p === "duoOpen";
   // Duo: keep the HUD clear of the side system column (camera, status). Immersive full width is allowed elsewhere.
   const s = duo ? { ...s0, r: s0.r + DUO_SYS_W } : s0;
@@ -128,18 +131,21 @@ export function flyLayout(p: Platform, o: Orientation, mirror: boolean, half = f
       const pw = (W - 48) / 2;
       out.zones.panel = { x: 16, y: free, w: pw, h: room }; out.zones.panel2 = { x: 32 + pw, y: free, w: pw, h: room };
     }
-  } else if (p === "duoOpen" && half) {
-    // Partially folded: overlay arrangement puts the live view and the controls on each side of the fold.
-    const W = FW - DUO_SYS_W;
-    const halfH = H / 2 - 12; const vH = halfH - 56, vW = Math.round((vH * 16) / 9);
+  } else if (p === "duoOpen") {
+    // Open Duo, landscape: the fold runs vertically, so the HUD splits left | right and nothing crosses it.
+    // Left half: live view, status, safety cluster, left stick. Right half: map, telemetry, camera, smart modes, right stick.
+    const L = Math.round(FW / 2) - 12, R0 = Math.round(FW / 2) + 12, RW = FW - DUO_SYS_W;
     out = { kind: "split", zones: {
-      status: { x: 16, y: 8, w: W - 32, h: 44 }, alert: { x: W / 2 - 130, y: 12, w: 260, h: 36 },
-      video: { x: (W - vW) / 2, y: 56, w: vW, h: vH },
-      pause: { x: 40, y: 64, w: 72, h: 72 }, return: { x: 48, y: 152, w: 56, h: 56 }, land: { x: 48, y: 224, w: 56, h: 56 },
-      slider: { x: W - 170, y: 64, w: 44, h: 160 }, record: { x: W - 100, y: 64, w: 56, h: 56 }, shutter: { x: W - 104, y: 136, w: 64, h: 64 }, toggle: { x: W - 94, y: 216, w: 44, h: 44 },
-      stickL: { x: 40, y: H / 2 + 67, w: 140, h: 140 }, stickR: { x: W - 180, y: H / 2 + 67, w: 140, h: 140 },
-      map: { x: 200, y: H / 2 + 24, w: 230, h: 120 }, telemetry: { x: 446, y: H / 2 + 24, w: 244, h: 120 },
-      tray: { x: 200, y: H / 2 + 156, w: 490, h: 48 }, panel: { x: 200, y: H / 2 + 216, w: 490, h: 80 },
+      video: { x: 0, y: 0, w: L, h: H },
+      status: { x: 8, y: 8, w: L - 16, h: 44 }, alert: { x: 16, y: 60, w: L - 32, h: 36 },
+      pause: { x: 16, y: 64, w: 72, h: 72 }, return: { x: 24, y: 152, w: 56, h: 56 }, land: { x: 24, y: 224, w: 56, h: 56 },
+      stickL: { x: 24, y: H - 172, w: 140, h: 140 },
+      map: { x: R0 + 16, y: 16, w: RW - R0 - 152, h: 152 },
+      telemetry: { x: R0 + 16, y: 184, w: RW - R0 - 152, h: 88 },
+      slider: { x: RW - 120, y: 16, w: 44, h: 160 },
+      record: { x: RW - 64, y: 16, w: 56, h: 56 }, shutter: { x: RW - 68, y: 88, w: 64, h: 64 }, toggle: { x: RW - 58, y: 168, w: 44, h: 44 },
+      tray: { x: R0 + 16, y: 288, w: RW - R0 - 32, h: 48 }, panel: { x: R0 + 16, y: 352, w: RW - R0 - 32, h: 72 },
+      stickR: { x: RW - 156, y: H - 172, w: 140, h: 140 },
     } };
   } else if (p === "tablet" || p === "laptop") {
     const panelW = 320;

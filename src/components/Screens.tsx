@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   AlertTriangle, Camera, Car, Check, ChevronLeft, ChevronRight, Clock, Eye, FileText, Gauge, Globe, Hand, Heart, History, Info, Link2,
   Loader2, MapPin, Mountain, Navigation, Plane, Plus, Ruler, Scale, Search, Settings as SettingsIcon, ShieldCheck, Smartphone, Sparkles,
@@ -19,8 +20,11 @@ import { HangarDesk } from "./Dashboard";
 import { BRAND_ACCOUNT } from "@/lib/data";
 
 const go = (sc: Screen) => (p: Proto) => { p.screen = sc; };
-// Partially folded Duo: sheets, dialogs and banners move to one side of the fold (CSS .fold-v / .fold-h).
-export const foldClass = (s: Proto) => s.platform === "duoOpen" && s.halfFold ? (s.orient === "portrait" ? " fold-v" : " fold-h") : "";
+// Open iPhone Duo: the fold is treated as reserved in every pose, so nothing sits across it.
+// Sheets, dialogs and banners move to one side of the fold (CSS .fold-v / .fold-h).
+export const foldClass = (s: Proto) => s.platform === "duoOpen" ? (s.orient === "landscape" ? " fold-v" : " fold-h") : "";
+// Two-pane frame on the open Duo: Columns sends its right column to the second pane through this context.
+const DuoPaneCtx = createContext<{ el: HTMLDivElement | null; claim: () => void } | null>(null);
 
 // Vertical status bar for the Duo side column (time, signal, Wi-Fi, battery stacked).
 export function SideStatus() {
@@ -41,6 +45,8 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
 }) {
   const { s, up } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
+  const [paneEl, setPaneEl] = useState<HTMLDivElement | null>(null);
+  const [claimedFor, setClaimedFor] = useState("");
   const safe = safeArea(s.platform, s.orient);
   const landscapePhone = s.platform === "iphone" && s.orient === "landscape";
   // iPhone Duo: controls (and the status bar) move to the side on the outer display and on the inner display in landscape.
@@ -176,6 +182,45 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
       </div>
     );
   }
+  // ---------- iPhone Duo open: two panes, one on each side of the fold (portrait: left | right, landscape: top / bottom) ----------
+  if (s.platform === "duoOpen" && !bleed) {
+    const portrait = s.orient === "portrait";
+    const F = 12; // half of the 24 pt fold region
+    const cTop = portrait ? top : 8, cBottom = portrait ? tabH + safe.b : safe.b, cRight = portrait ? 0 : railW;
+    // Landscape: fold runs vertically, panes left | right. Portrait: fold runs horizontally, panes top / bottom.
+    const paneA: CSSProperties = portrait ? { left: 0, right: 0, top: cTop, height: H / 2 - F - cTop } : { left: 0, width: W / 2 - F, top: cTop, bottom: cBottom };
+    const paneB: CSSProperties = portrait ? { left: 0, right: 0, top: H / 2 + F, bottom: cBottom } : { left: W / 2 + F, right: cRight, top: cTop, bottom: cBottom };
+    return (
+      <div className={`light desk touch${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+        {portrait && <StatusBar platform={s.platform} landscape={false} dark />}
+        <DuoPaneCtx.Provider value={{ el: paneEl, claim: () => setClaimedFor(s.screen) }}>
+          <div className="no-scrollbar" style={{ position: "absolute", ...paneA, overflowY: "auto", padding: "8px 24px 0" }}>
+            {portrait && (back || right) && <div style={{ display: "flex", alignItems: "center", minHeight: 44, gap: 4, marginLeft: back ? -12 : 0 }}>
+              {back && <button className="btn btn-ghost" data-hit style={{ minHeight: 40, padding: "0 8px", fontWeight: 500, gap: 4 }} onClick={() => up(go(back))}><ChevronLeft size={22} />Back</button>}
+              <div style={{ flex: 1 }} />{right}
+            </div>}
+            <h1 className={portrait ? "t-large" : "t-display"} style={{ margin: "8px 0 0" }}>{title}</h1>
+            {sub && <div className="t-body muted" style={{ marginTop: 4 }}>{sub}</div>}
+            <div style={{ marginTop: 16, paddingBottom: 24 }}>{children}</div>
+            {(footer || lead) && <div style={{ position: "sticky", bottom: 0, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8, padding: "12px 0 12px", background: "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" }}>
+              {lead && <FlightBanner id={lead.id} more={airborne.length - 1} />}{footer}
+            </div>}
+          </div>
+          <div className="no-scrollbar" style={{ position: "absolute", ...paneB, overflowY: "auto", padding: portrait ? "16px 24px 24px" : "16px 24px 24px" }}>
+            <div ref={setPaneEl} />
+            {claimedFor !== s.screen && <PreflightAside />}
+          </div>
+        </DuoPaneCtx.Provider>
+        {tabBar}
+        {s.dronePicker && <DronePicker onClose={() => up((p) => { p.dronePicker = false; })} />}
+        {s.signInSheet && <SignInSheet />}
+        {s.toast && (
+          <div style={{ position: "absolute", left: 16, width: portrait ? W - 32 : W / 2 - F - 32, top: cTop + 8, zIndex: 45 }} onClick={() => up((p) => { p.toast = undefined; })}>
+            <div className="alert"><Icon kind="info" size={18} /><div className="t-cap" style={{ flex: 1 }}>{s.toast}</div><button className="act">OK</button></div>
+          </div>)}
+      </div>
+    );
+  }
   return (
     <div className={`${bleed ? "fh" : "light"} desk${desk ? "" : " touch"}${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
       {!duoSide && <StatusBar platform={s.platform} landscape={s.orient === "landscape"} dark />}
@@ -264,6 +309,9 @@ const statusIcon = (d: Drone, s: Proto): [IconKind, string] => {
 // Duo open portrait: book split around the fold. Other regular sizes: two columns.
 function Columns({ left, right, ratio = "1fr 1fr" }: { left: ReactNode; right: ReactNode; ratio?: string }) {
   const { s } = useProto();
+  const duo = useContext(DuoPaneCtx);
+  useEffect(() => { duo?.claim(); });
+  if (duo) return <>{left}{duo.el ? createPortal(right, duo.el) : null}</>;
   const { W } = frameSize(s.platform, s.orient);
   if (W < 600) return <>{left}<div style={{ height: 16 }} />{right}</>;
   const fold = s.platform === "duoOpen" && s.orient === "portrait";
@@ -673,7 +721,7 @@ export function Summary() {
   if (!f) return <Page title="Flight summary" back="hangar"><div className="card" style={{ padding: 32, textAlign: "center" }}><History size={36} color="var(--grey-400)" /><p className="t-body muted">No flight yet.</p></div></Page>;
   const mm = Math.floor(f.seconds / 60), ss = String(f.seconds % 60).padStart(2, "0");
   const d = s.drones.find((x) => x.id === f.droneId);
-  return <Page title="Flight summary" large>
+  return <Page title="Flight summary" large><Columns left={<>
     <div className="card raised" style={{ overflow: "hidden" }}>
       <div style={{ position: "relative", height: 176 }}><RealMap center={world(s).spot.home} zoom={16} homes={[world(s).myHome]} landing={world(s).landing} path={[world(s).myHome, offset(world(s).myHome, f.maxD * 0.6, f.maxD * 0.5), world(s).myHome]} interactive={false} attribution={false} />
         <span className="chip" style={{ position: "absolute", left: 12, top: 12 }}><Icon kind="landed" size={12} />Landed safely</span></div>
@@ -686,12 +734,13 @@ export function Summary() {
       <Stat k="Flight time" v={`${mm}:${ss}`} icon={<Clock size={13} />} /><Stat k="Max height" v={`${f.maxH} m`} icon={<Ruler size={13} />} />
       <Stat k="Max distance" v={`${f.maxD} m`} icon={<MapPin size={13} />} /><Stat k="Photos" v={String(f.photos)} icon={<Camera size={13} />} />
     </div>
+  </>} right={<>
     <SectionH action={<span className="t-cap muted">Mock</span>}>Media</SectionH>
     <div style={{ display: "flex", gap: 8, overflowX: "auto" }} className="no-scrollbar">{[0, 1, 2, 3, 4].map((i) => <Thumb key={i} seed={i + 1} w={92} h={68} video={i % 2 === 0} />)}</div>
     <SectionH>Alerts in this flight</SectionH>
     <div className="group">{f.alerts.length ? f.alerts.map((a) => <div key={a} className="row"><Icon kind="info" size={16} /><span className="t-label">{a}</span></div>) : <div className="row"><Icon kind="pass" size={16} /><span className="t-label">None</span></div>}</div>
     <button className="btn btn-primary btn-block" data-hit style={{ marginTop: 16 }} onClick={() => up(go("hangar"))}>Done</button>
-  </Page>;
+  </>} /></Page>;
 }
 const PAST = [
   { id: "m1", nickname: "Park drone", model: "DJI Mavic 4 Pro", place: "City Park", when: "Yesterday", time: "12:40", maxH: 64, photos: 38 },
@@ -755,7 +804,8 @@ export function Settings() {
   const { s, up } = useProto();
   const Row = ({ icon, label, sub, right }: { icon: ReactNode; label: string; sub?: ReactNode; right?: ReactNode }) =>
     <div className="row"><span className="ico">{icon}</span><div style={{ flex: 1 }}><div className="t-label" style={{ fontWeight: 500, fontSize: 16 }}>{label}</div>{sub && <div className="t-cap muted">{sub}</div>}</div>{right ?? <ChevronRight size={18} color="var(--grey-400)" />}</div>;
-  return <Page title="Settings">
+  // Two halves on wide or open-Duo screens: account and controls | general and about.
+  return <Page title="Settings"><Columns left={<>
     <button className="card" data-hit onClick={() => up(go("account"))} style={{ width: "100%", padding: 16, display: "flex", gap: 12, alignItems: "center", textAlign: "left" }}>
       <span style={{ width: 52, height: 52, borderRadius: 9999, background: s.account ? "var(--accent)" : "var(--grey-100)", color: s.account ? "var(--on-accent)" : "var(--grey-600)", display: "grid", placeItems: "center", fontWeight: 700, fontSize: 20 }}>{s.account ? s.account.name.split(" ").map((w) => w[0]).join("") : <Smartphone size={22} />}</span>
       <div style={{ flex: 1, minWidth: 0 }}><div className="t-head">{s.account ? s.account.name : "Sync across your devices"}</div><div className="t-cap muted">{s.account ? `Signed in · ${s.account.email}` : "Sign in to use the same drones on iPhone, iPad, Duo and laptop"}</div></div><ChevronRight size={18} color="var(--grey-400)" />
@@ -769,6 +819,7 @@ export function Settings() {
     {s.armStop && <div className="alert warning" style={{ marginTop: 12 }}><Icon kind="warning" size={18} /><div className="t-cap"><b>Stop motors is on.</b> A long press will stop the motors in the air.</div></div>}
     <SectionH>Maker accounts</SectionH>
     <div className="group">{Array.from(new Set(s.drones.map((d) => d.brand))).map((b) => <Row key={b} icon={<Link2 size={16} />} label={BRAND_ACCOUNT[b].label} sub={s.brandAccounts.includes(b) ? "Connected" : BRAND_ACCOUNT[b].need === "optional" ? "Optional · not connected" : "Not connected"} />)}</div>
+  </>} right={<>
     <SectionH>General</SectionH>
     <div className="group">
       <Row icon={<Gauge size={16} />} label="Experience" sub={s.experience === "beginner" ? "New to drones · Beginner speed cap on" : "Flown before · full speed modes"} />
@@ -782,7 +833,7 @@ export function Settings() {
       <Row icon={<Info size={16} />} label="Skyhand" sub="Concept by Artonest · not a real product" right={<span className="t-cap muted">v0.1</span>} />
       <Row icon={<Camera size={16} />} label="Photo credits" sub={<>{Object.entries(DRONE_PHOTO).map(([b, p]) => <span key={b} style={{ display: "block" }}>{BRANDS.find((x) => x.id === b)?.model}: {p!.author}, {p!.license}{p!.license.startsWith("CC") ? " (cropped)" : ""}, Wikimedia Commons</span>)}<span style={{ display: "block" }}>Autel EVO Max 4T: drawn render (no free photo found)</span><span style={{ display: "block" }}>Maps: © OpenStreetMap contributors, OpenFreeMap · Imagery © Esri</span></>} right={<span />} />
     </div>
-  </Page>;
+  </>} /></Page>;
 }
 
 // Desktop flight records (after FlightHub 2 "Flight Records"): summary stats and a sortable-looking table.

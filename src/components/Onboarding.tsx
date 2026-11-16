@@ -19,7 +19,8 @@ const MOCK_ACCOUNT: Account = { name: "Avery Kim", email: "avery@example.com", m
 function useSplit() {
   const { s } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
-  return (s.platform === "duoOpen" && s.orient === "portrait" && s.halfFold) || (W > H * 1.15 && W >= 640);
+  // Open Duo: always split at the fold (portrait: left | right; landscape: top / bottom, handled in Onboard).
+  return s.platform === "duoOpen" || (W > H * 1.15 && W >= 640);
 }
 function SidePicture({ step }: { step?: number }) {
   const brand: BrandId = step === 5 ? "antigravity" : "dji";
@@ -68,20 +69,23 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
   const safe = safeArea(s.platform, s.orient);
   const sbH = s.platform === "iphone" ? (s.orient === "landscape" ? 0 : 54) : s.platform === "tablet" ? 24 : 30;
   const top = Math.max(safe.t, sbH);
-  const fold = s.platform === "duoOpen" && s.orient === "portrait";
+  // Open Duo: landscape = vertical fold (picture left | steps right); portrait = horizontal fold (steps top / picture and actions below).
+  const fold = s.platform === "duoOpen" && s.orient === "landscape";
   const duoSide = sideControls(s.platform, s.orient); const sideW = duoSide ? 88 : 0;
   // In split mode the content lives in the right half (right of the fold on Duo open).
-  const leftEdge = split ? (fold ? W / 2 + 28 : Math.round(W * 0.48)) : safe.l;
+  const duoLand = s.platform === "duoOpen" && s.orient === "portrait"; // horizontal fold: content on top, picture and actions below
+  const leftEdge = duoLand ? safe.l : split ? (fold ? W / 2 + 12 : Math.round(W * 0.48)) : safe.l;
   const maxW = !split && W >= 700 ? 480 : undefined;
   return (
     <div className={`light desk touch${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--grey-50)" }}>
-      {split && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: fold ? W / 2 - 12 : Math.round(W * 0.48) - 24 }}><SidePicture step={step} /></div>}
+      {split && !duoLand && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: fold ? W / 2 - 12 : Math.round(W * 0.48) - 24 }}><SidePicture step={step} /></div>}
+      {duoLand && <div style={{ position: "absolute", left: 0, right: sideW, top: H / 2 + 12, bottom: 0 }}><SidePicture step={step} /></div>}
       {!duoSide && <StatusBar platform={s.platform} landscape={s.orient === "landscape"} dark />}
       {duoSide && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: sideW, paddingTop: s.platform === "duoClosed" ? 48 : 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, background: "rgba(22,22,22,.96)", borderLeft: "1px solid #2a2a2a", zIndex: 4 }}>
         <SideStatus />
         {back && <button data-hit aria-label="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "#262626", color: "#f2f2f2", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
       </div>}
-      <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, top: duoSide ? 16 : top, bottom: safe.b + (primary ? 132 : 16), overflowY: "auto", padding: "4px 24px 12px" }}>
+      <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, top: duoSide ? 16 : top, bottom: duoLand ? H / 2 + 12 : safe.b + (primary ? 132 : 16), overflowY: "auto", padding: "4px 24px 12px" }}>
         <div style={{ maxWidth: maxW, margin: "0 auto" }}>
           {(back || step) && (
             <div style={{ display: "flex", alignItems: "center", minHeight: 44, marginLeft: back ? -10 : 0 }}>
@@ -93,7 +97,9 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
         </div>
       </div>
       {primary && (
-        <div style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, bottom: safe.b + 12, padding: "0 24px", display: "grid", gap: 8 }}>
+        <div style={duoLand
+          ? { position: "absolute", right: sideW + 24, bottom: 24, width: 320, padding: 16, display: "grid", gap: 8, background: "rgba(30,30,30,.94)", border: "1px solid #2e2e2e", borderRadius: 12 }
+          : { position: "absolute", left: leftEdge, right: safe.r + sideW, bottom: safe.b + 12, padding: "0 24px", display: "grid", gap: 8 }}>
           <div style={{ maxWidth: maxW, width: "100%", margin: "0 auto", display: "grid", gap: 8 }}>{primary}{secondary}</div>
         </div>
       )}
