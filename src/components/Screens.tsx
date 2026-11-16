@@ -72,7 +72,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   // Not during first setup: the new user has no drones in the air yet.
   const airborne = !s.obAdding && !bleed ? s.drones.filter((d) => inAir(s.sims[d.id].phase)) : [];
   const lead = airborne.find((d) => d.id === s.droneId) ?? airborne[0];
-  const bannerH = lead ? 56 : 0, footH = footer ? 90 : 0;
+  const bannerH = lead ? 52 : 0, footH = footer ? 90 : 0;
   const deskBottom = bannerH + footH + (lead || footer ? 32 : 0); // the desktop footer block has 12 + 16 px padding
   const bottomBase = tabs && !side && !desk ? tabH + safe.b : safe.b;
   // Desktop: FlightHub-style top bar (logo, centred tabs, status on the right) instead of a sidebar.
@@ -288,14 +288,15 @@ function FlightBanner({ id, more }: { id: string; more: number }) {
   const { s, up } = useProto();
   const d = droneOf(s, id); const m = s.sims[id];
   const mine = id === s.droneId;
-  return <button data-hit onClick={() => up((p) => { p.droneId = id; p.skin = "auto"; p.screen = "fly"; })}
-    style={{ width: "100%", height: 48, borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--on-accent)", display: "flex", alignItems: "center", gap: 12, padding: "0 8px 0 16px", boxShadow: "var(--shadow-2)", textAlign: "left" }}>
-    <span style={{ width: 8, height: 8, borderRadius: 9999, background: "#fff", boxShadow: "0 0 0 4px rgba(255,255,255,.25)", flex: "none" }} />
+  // Live pill: slim and solid, so it never covers more than one line of content.
+  return <button data-hit onClick={() => up((p) => { p.droneId = id; p.skin = "auto"; p.screen = "fly"; })} aria-label={`${d.nickname} is in the air. Open`}
+    style={{ width: "100%", height: 44, borderRadius: 22, border: "none", background: "var(--sel-bg, var(--accent))", color: "var(--sel-fg, var(--on-accent))", display: "flex", alignItems: "center", gap: 10, padding: "0 6px 0 16px", boxShadow: "0 6px 18px rgba(0,0,0,.18)", textAlign: "left" }}>
+    <span style={{ width: 8, height: 8, borderRadius: 9999, background: "var(--live, #4f5bd5)", boxShadow: "0 0 0 4px color-mix(in srgb, var(--live, #4f5bd5) 30%, transparent)", flex: "none" }} />
     <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-      <b className="t-label" style={{ fontWeight: 700 }}>{d.nickname} {m.phase === "returning" ? "returning" : "in the air"}</b>
-      <span className="t-cap" style={{ opacity: .7 }}> · {m.height.toFixed(0)} m · {Math.round(d.battery)}%{m.smartMode ? ` · ${m.smartMode}` : ""}{more > 0 ? ` · +${more} more` : ""}</span>
+      <b className="t-label" style={{ fontWeight: 600 }}>{d.nickname} {m.phase === "returning" ? "returning" : "in the air"}</b>
+      <span className="t-cap" style={{ opacity: .65 }}> · {m.height.toFixed(0)} m · {Math.round(d.battery)}%{more > 0 ? ` · +${more}` : ""}</span>
     </span>
-    <span className="chip" style={{ background: "#fff", color: "#141414", border: "none" }}>{mine || !d.monitorOnly ? "Open" : "Watch"}<ChevronRight size={14} /></span>
+    <span className="chip" style={{ background: "var(--sel-fg, #fff)", color: "var(--sel-bg, #141414)", border: "none", height: 32, minHeight: 32 }}>{mine || !d.monitorOnly ? "Open" : "Watch"}<ChevronRight size={14} /></span>
   </button>;
 }
 
@@ -345,24 +346,22 @@ function DroneCard({ d }: { d: Drone }) {
   const maxH = COUNTRIES[s.country].maxAltitude;
   return (
     <button data-hit aria-label={`Select ${d.nickname}`} aria-pressed={on} onClick={() => up((p) => { p.droneId = d.id; p.skin = "auto"; })}
-      className={on ? "card sel" : "card"} style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, textAlign: "left", width: "100%", minWidth: 0, overflow: "hidden", background: on ? "var(--sel-bg)" : undefined, color: on ? "var(--sel-fg)" : undefined }}>
-      <span style={{ flex: "none" }}><DroneCutout brand={d.brand} w={80} h={54} /></span>
-      <span style={{ flex: 1, minWidth: 0, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 8 }}>
-        <span style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
-          <span style={{ minWidth: 0, flex: 1 }}><span className="t-head" style={{ display: "block", fontWeight: 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.nickname}</span><span className="t-cap" style={{ display: "block", opacity: .6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.model}</span></span>
-          <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 6, opacity: .85, whiteSpace: "nowrap", minWidth: 0, maxWidth: 104 }}><span style={{ width: 6, height: 6, borderRadius: 9999, background: col, flex: "none" }} /><span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{flying ? "Flying" : label}</span></span>
+      className={on ? "card sel" : "card"} style={{ display: "grid", gap: 10, padding: 14, textAlign: "left", width: "100%", minWidth: 0, overflow: "hidden", background: on ? "var(--sel-bg)" : undefined, color: on ? "var(--sel-fg)" : undefined }}>
+      <span style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+        <span style={{ flex: "none" }}><DroneCutout brand={d.brand} w={84} h={56} /></span>
+        <span style={{ minWidth: 0, flex: 1 }}>
+          <span className="t-head" style={{ display: "block", fontWeight: 400 }}>{d.nickname}</span>
+          <span className="t-cap" style={{ display: "block", opacity: .6 }}>{d.model}</span>
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ flex: 1, height: 3, borderRadius: 9999, background: "currentColor", opacity: .15, position: "relative" }}><span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${flying ? Math.min(100, (m.height / maxH) * 100) : 0}%`, background: "currentColor", borderRadius: 9999 }} /></span>
-          <span className="t-cap num" style={{ opacity: .7, whiteSpace: "nowrap", flex: "none" }}>{flying ? Math.round(m.height) : 0}/{maxH} m</span>
+      </span>
+      <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 6, opacity: .9 }}><span style={{ width: 6, height: 6, borderRadius: 9999, background: col }} />{flying ? "Flying" : label}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }} aria-label={`Battery ${Math.round(d.battery)} percent`}>
+          <span style={{ display: "flex", gap: 2 }}>{[0, 1, 2, 3].map((i) => <i key={i} style={{ width: 3, height: 11, borderRadius: 1, background: i < bars ? (d.battery < 30 ? "var(--warn)" : "var(--ok)") : "currentColor", opacity: i < bars ? 1 : .25 }} />)}</span>
+          <span className="num">{Math.round(d.battery)}%</span>
         </span>
-        <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 6 }} aria-label={`Battery ${Math.round(d.battery)} percent`}>
-            <span style={{ display: "flex", gap: 2 }}>{[0, 1, 2, 3].map((i) => <i key={i} style={{ width: 3, height: 11, borderRadius: 1, background: i < bars ? (d.battery < 30 ? "var(--warn)" : "var(--ok)") : "currentColor", opacity: i < bars ? 1 : .25 }} />)}</span>
-            <span className="num">{Math.round(d.battery)}%</span>
-          </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Wifi size={13} />{d.status === "Offline" ? "No link" : "Good"}</span>
-        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Wifi size={13} />{d.status === "Offline" ? "No link" : "Good"}</span>
+        <span className="num" style={{ marginLeft: "auto", opacity: .7 }}>{flying ? Math.round(m.height) : 0}/{maxH} m</span>
       </span>
     </button>
   );
@@ -799,10 +798,14 @@ export function Flights() {
     {rows.some((r) => r.today) && <><SectionH>Today</SectionH><div className="group">{rows.filter((r) => r.today).map((r, i) => row(r, i))}</div></>}
     <SectionH>Earlier</SectionH><div className="group">{rows.filter((r) => !r.today).map((r, i) => row(r, i))}</div>
   </>;
-  const detail = pick && <div className="card" style={{ overflow: "hidden", position: "sticky", top: 0 }}>
-    <div style={{ position: "relative", height: 200 }}><Thumb seed={pick.seed} w={1000} h={200} video /></div>
+  const wf = world(s);
+  const detail = pick && <div className="card" style={{ overflow: "hidden" }}>
+    <div style={{ position: "relative", height: 190, background: "#efede8" }}>
+      <RealMap look="clay" pitch={50} bearing={20} zoom={15.2} center={wf.spot.home} homes={[wf.myHome]} landing={wf.landing} interactive={false} attribution={false} />
+      <div aria-hidden style={{ position: "absolute", left: 14, bottom: 6, pointerEvents: "none" }}><DroneCutout brand={brandOf(pick.sub.split(" · ")[pick.today ? 0 : 1] ?? "") as BrandId} w={84} h={56} /></div>
+    </div>
     <div style={{ padding: 16 }}><div className="t-title">{pick.title}</div><div className="t-cap muted">{pick.sub}</div><div className="t-body" style={{ marginTop: 8 }}>{pick.meta}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}><button className="btn">Play</button><button className="btn">Share</button></div></div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}><button className="btn">Replay</button><button className="btn">Share</button></div></div>
   </div>;
   return <Page title="Flights" sub="Your flight log and media" full={wide}>
     {wide ? <Columns left={list} right={detail} /> : list}

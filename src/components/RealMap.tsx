@@ -87,8 +87,8 @@ const landEl = (name: string, grey: boolean) => `<div style="display:flex;flex-d
   <div style="font:500 12px/16px Inter,system-ui;color:#fff;background:rgba(18,18,18,.88);padding:2px 8px;border-radius:4px;white-space:nowrap">${name}</div></div>`;
 const zoneEl = (name: string) => `<div style="font:600 12px/16px Inter,system-ui;color:#fff;background:rgba(224,0,0,.85);padding:2px 8px;border-radius:4px;white-space:nowrap">${name}</div>`;
 
-const clayDrone = (d: MapDrone) => `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;opacity:${d.state === "offline" ? .55 : 1}">
-  <div style="font:500 12px/16px -apple-system,Inter,system-ui;color:#141414;background:#fff;padding:2px 8px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)">${d.label}</div>
+const clayDrone = (d: MapDrone, labels: boolean) => `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;opacity:${d.state === "offline" ? .55 : 1}">
+  ${labels || d.selected ? `<div style="font:500 12px/16px -apple-system,Inter,system-ui;color:#141414;background:#fff;padding:2px 8px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)">${d.label}</div>` : ""}
   ${d.cut ? `<img src="${d.cut}" alt="" width="64" height="38" style="object-fit:contain;filter:drop-shadow(0 8px 6px rgba(0,0,0,.3))" />` : `<div style="width:26px;height:26px;border-radius:9999px;background:#141414;border:2px solid #fff"></div>`}
   ${d.selected ? `<div style="width:8px;height:8px;background:#4f5bd5;transform:rotate(45deg)"></div>` : ""}</div>`;
 const clayHome = `<div style="width:24px;height:24px;border-radius:9999px;background:#141414;border:2px solid #fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></div>`;
@@ -98,8 +98,8 @@ const clayZone = (name: string) => `<div style="display:flex;align-items:center;
 
 type ML = typeof import("maplibre-gl");
 
-export function RealMap({ look = "sat", pitch = 0, bearing = 0, center, zoom = 16, grey = false, drones = [], homes = [], landing = [], noFly = [], path, interactive = true, tools = false, follow, onDrone, attribution = true }: {
-  look?: "sat" | "clay"; pitch?: number; bearing?: number; center: LngLat; zoom?: number; grey?: boolean; drones?: MapDrone[]; homes?: LngLat[]; landing?: MapPlace[]; noFly?: MapZone[]; path?: LngLat[];
+export function RealMap({ labels = true, look = "sat", pitch = 0, bearing = 0, center, zoom = 16, grey = false, drones = [], homes = [], landing = [], noFly = [], path, interactive = true, tools = false, follow, onDrone, attribution = true }: {
+  labels?: boolean; look?: "sat" | "clay"; pitch?: number; bearing?: number; center: LngLat; zoom?: number; grey?: boolean; drones?: MapDrone[]; homes?: LngLat[]; landing?: MapPlace[]; noFly?: MapZone[]; path?: LngLat[];
   interactive?: boolean; tools?: boolean; follow?: LngLat; onDrone?: (id: string) => void; attribution?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
@@ -157,10 +157,10 @@ export function RealMap({ look = "sat", pitch = 0, bearing = 0, center, zoom = 1
     homes.forEach((h, i) => put(`home${i}`, h, look === "clay" ? clayHome : homeEl(grey)));
     landing.forEach((l, i) => put(`land${i}`, l.at, look === "clay" ? clayLand(l.name) : landEl(l.name, grey), undefined, "top"));
     noFly.forEach((z, i) => put(`zone${i}`, z.center, look === "clay" ? clayZone(z.name) : zoneEl(z.name)));
-    drones.forEach((d) => put(`d-${d.id}`, d.at, look === "clay" ? clayDrone(d) : droneEl(d, grey), () => onDroneRef.current?.(d.id), "top"));
+    drones.forEach((d) => put(`d-${d.id}`, d.at, look === "clay" ? clayDrone(d, labels) : droneEl(d, grey), () => onDroneRef.current?.(d.id), "top"));
     marks.current.forEach((mk, k) => { if (!want.has(k)) { mk.remove(); marks.current.delete(k); } });
     requestAnimationFrame(() => { if (map.current) clampLabels(map.current, marks.current); });
-  }, [ready, drones, homes, landing, noFly, grey, look]);
+  }, [ready, drones, homes, landing, noFly, grey, look, labels]);
 
   // keep the followed point in view
   useEffect(() => {

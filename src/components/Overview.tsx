@@ -14,10 +14,10 @@ import { DroneCutout } from "./art";
 
 function Kpi({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
-    <div className="card" style={{ padding: 14, display: "grid", gap: 14 }}>
+    <div className="card" style={{ padding: 12, display: "grid", gap: 8 }}>
       <span className="t-cap muted">{label}</span>
       <span style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-        <span className="num" style={{ fontSize: 34, lineHeight: "40px", fontWeight: 400, letterSpacing: "-.02em" }}>{value}</span>
+        <span className="num" style={{ fontSize: 28, lineHeight: "32px", fontWeight: 400, letterSpacing: "-.02em" }}>{value}</span>
         {unit && <span className="t-cap muted">{unit}</span>}
       </span>
     </div>
@@ -46,14 +46,15 @@ export function OverviewScreen() {
   const wide = W >= 600;
   const laptop = s.platform === "laptop";
   const duoPortrait = s.platform === "duoOpen" && s.orient === "portrait";
+  const duoLand = s.platform === "duoOpen" && s.orient === "landscape";
   const map = (
-    <div style={{ position: "relative", height: duoPortrait ? 196 : laptop ? 440 : wide ? 360 : 300, borderRadius: 16, overflow: "hidden", background: "#efede8" }}>
-      <RealMap look="clay" pitch={55} bearing={25} zoom={15} center={w.spot.home} drones={w.drones} homes={[w.myHome]} landing={w.landing} noFly={w.noFly} path={w.path} interactive={false} attribution={false} />
+    <div style={{ position: "relative", height: duoPortrait ? 196 : duoLand ? 172 : laptop ? 440 : wide ? 360 : 300, borderRadius: 16, overflow: "hidden", background: "#efede8" }}>
+      <RealMap look="clay" labels={false} pitch={55} bearing={25} zoom={15} center={w.spot.home} drones={w.drones} homes={[w.myHome]} landing={w.landing} noFly={w.noFly} path={w.path} interactive={false} attribution={false} />
       <span className="chip" style={{ position: "absolute", left: 10, bottom: 10, zIndex: 2, background: "rgba(255,255,255,.88)", color: "#141414" }}><Info size={12} />Example location · drone rules not checked</span>
     </div>
   );
   const kpis = (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
       <Kpi label="Ready to fly" value={String(ready)} unit={`/${s.drones.length}`} />
       <Kpi label="In the air" value={String(air)} />
       <Kpi label="Avg. flight time" value="18.4" unit="min" />
