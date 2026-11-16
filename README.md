@@ -26,20 +26,19 @@ Two apps share one design, in the SwiftUI / iOS style, based on a style study of
 
 The flight screens (Fly, cockpit) are dark glass over the live view in every version.
 
-- **Web prototype (this folder):** the way to preview iPhone Duo, because Xcode has no Duo simulator. Switch versions in the sidebar on port 3000, with the V1 / V2 / V3 buttons on the device apps, or with `?look=v2` in the URL. It covers all devices (iPhone, iPad, iPhone Duo, laptop). Styles are in `src/app/looks.css`.
+- **Web prototype (this folder):** the way to preview iPhone Duo, because Xcode has no Duo simulator. Switch versions with the V1 / V2 / V3 buttons on the device apps, or with `?look=v2` in the URL. It covers all devices (iPhone, iPad, iPhone Duo, laptop). Styles are in `src/app/looks.css`.
 - **Native SwiftUI app:** `ios/Skyhand` (open `Skyhand.xcodeproj` in Xcode). Main flow only. Settings > iPhone Duo preview shows the Duo sizes and fold on an iPad simulator.
 
 ## Run it
 
 ```bash
 npm install
-npm run dev        # full prototype with test sidebar on http://localhost:3000
+npm run dev        # private server on 127.0.0.1:3999 (nothing is public on 3000)
 npm run devices    # one standalone app per device (needs the dev server running)
 ```
 
 | Address | App |
 |---|---|
-| http://localhost:3000 | Full prototype with the test sidebar (screens, events, overlays) |
 | http://localhost:4001 | iPhone (rotate) |
 | http://localhost:4002 | iPad (rotate) |
 | http://localhost:4003 | iPhone Duo (open/close, rotate) |

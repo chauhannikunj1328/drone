@@ -29,8 +29,28 @@ function satelliteStyle(buildings: boolean): StyleSpecification {
   };
 }
 
+// "Clay" look: a light, muted 3D city (like the native Overview map): pale ground, blue water, white extruded buildings.
+function clayStyle(): StyleSpecification {
+  return {
+    version: 8,
+    glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+    sources: { omt: { type: "vector", url: OMT, attribution: ATTR_OSM } },
+    layers: [
+      { id: "bg", type: "background", paint: { "background-color": "#efede8" } },
+      { id: "park", type: "fill", source: "omt", "source-layer": "park", paint: { "fill-color": "#e1e8d6" } } as never,
+      { id: "wood", type: "fill", source: "omt", "source-layer": "landcover", filter: ["==", "class", "wood"], paint: { "fill-color": "#dfe7d2" } } as never,
+      { id: "water", type: "fill", source: "omt", "source-layer": "water", paint: { "fill-color": "#bfe3f4" } } as never,
+      { id: "road-case", type: "line", source: "omt", "source-layer": "transportation", filter: ["in", "class", "primary", "secondary", "tertiary", "minor", "service", "trunk"], paint: { "line-color": "#dcd9d2", "line-width": ["interpolate", ["linear"], ["zoom"], 13, 1.2, 18, 9] } } as never,
+      { id: "road", type: "line", source: "omt", "source-layer": "transportation", filter: ["in", "class", "primary", "secondary", "tertiary", "minor", "service", "trunk"], paint: { "line-color": "#ffffff", "line-width": ["interpolate", ["linear"], ["zoom"], 13, .6, 18, 7] } } as never,
+      { id: "b3d", type: "fill-extrusion", source: "omt", "source-layer": "building", minzoom: 14,
+        paint: { "fill-extrusion-color": "#fbfaf8", "fill-extrusion-height": ["coalesce", ["get", "render_height"], 8], "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0], "fill-extrusion-opacity": 0.96, "fill-extrusion-vertical-gradient": true } } as never,
+    ],
+    light: { anchor: "viewport", color: "#ffffff", intensity: 0.55, position: [1.4, 210, 38] },
+  } as StyleSpecification;
+}
+
 export type DroneState = "air" | "ready" | "notready" | "offline";
-export interface MapDrone { id: string; label: string; at: LngLat; heading: number; state: DroneState; selected?: boolean }
+export interface MapDrone { id: string; label: string; at: LngLat; heading: number; state: DroneState; selected?: boolean; cut?: string }
 export interface MapPlace { at: LngLat; name: string }
 export interface MapZone { name: string; ring: LngLat[]; center: LngLat }
 
@@ -51,10 +71,19 @@ const landEl = (name: string, grey: boolean) => `<div style="display:flex;flex-d
   <div style="font:500 12px/16px Inter,system-ui;color:#fff;background:rgba(18,18,18,.88);padding:2px 8px;border-radius:4px;white-space:nowrap">${name}</div></div>`;
 const zoneEl = (name: string) => `<div style="font:600 12px/16px Inter,system-ui;color:#fff;background:rgba(224,0,0,.85);padding:2px 8px;border-radius:4px;white-space:nowrap">${name}</div>`;
 
+const clayDrone = (d: MapDrone) => `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;opacity:${d.state === "offline" ? .55 : 1}">
+  <div style="font:500 12px/16px -apple-system,Inter,system-ui;color:#141414;background:#fff;padding:2px 8px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)">${d.label}</div>
+  ${d.cut ? `<img src="${d.cut}" alt="" width="64" height="38" style="object-fit:contain;filter:drop-shadow(0 8px 6px rgba(0,0,0,.3))" />` : `<div style="width:26px;height:26px;border-radius:9999px;background:#141414;border:2px solid #fff"></div>`}
+  ${d.selected ? `<div style="width:8px;height:8px;background:#4f5bd5;transform:rotate(45deg)"></div>` : ""}</div>`;
+const clayHome = `<div style="width:24px;height:24px;border-radius:9999px;background:#141414;border:2px solid #fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></div>`;
+const clayLand = (name: string) => `<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:14px;height:14px;background:#4f5bd5;border:2px solid #fff;transform:rotate(45deg);box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>
+  <div style="font:500 12px/16px -apple-system,Inter,system-ui;color:#141414;background:#fff;padding:2px 8px;border-radius:4px;white-space:nowrap">${name}</div></div>`;
+const clayZone = (name: string) => `<div style="display:flex;align-items:center;gap:6px;font:500 12px/16px -apple-system,Inter,system-ui;color:#fff;background:#d9534f;padding:2px 8px;border-radius:4px;white-space:nowrap">⚠ ${name}</div>`;
+
 type ML = typeof import("maplibre-gl");
 
-export function RealMap({ center, zoom = 16, grey = false, drones = [], homes = [], landing = [], noFly = [], path, interactive = true, tools = false, follow, onDrone, attribution = true }: {
-  center: LngLat; zoom?: number; grey?: boolean; drones?: MapDrone[]; homes?: LngLat[]; landing?: MapPlace[]; noFly?: MapZone[]; path?: LngLat[];
+export function RealMap({ look = "sat", pitch = 0, bearing = 0, center, zoom = 16, grey = false, drones = [], homes = [], landing = [], noFly = [], path, interactive = true, tools = false, follow, onDrone, attribution = true }: {
+  look?: "sat" | "clay"; pitch?: number; bearing?: number; center: LngLat; zoom?: number; grey?: boolean; drones?: MapDrone[]; homes?: LngLat[]; landing?: MapPlace[]; noFly?: MapZone[]; path?: LngLat[];
   interactive?: boolean; tools?: boolean; follow?: LngLat; onDrone?: (id: string) => void; attribution?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
@@ -72,14 +101,14 @@ export function RealMap({ center, zoom = 16, grey = false, drones = [], homes = 
     import("maplibre-gl").then((m) => {
       if (dead || !box.current) return;
       lib.current = m;
-      const mp = new m.Map({ container: box.current, style: satelliteStyle(true), center, zoom, interactive, attributionControl: attribution ? { compact: true } : false, maxPitch: 85, fadeDuration: 0 });
+      const mp = new m.Map({ container: box.current, style: look === "clay" ? clayStyle() : satelliteStyle(true), center, zoom, pitch, bearing, interactive, attributionControl: attribution ? { compact: true } : false, maxPitch: 85, fadeDuration: 0 });
       map.current = mp;
       mp.on("load", () => {
         mp.addSource("zones", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-        mp.addLayer({ id: "zones-fill", type: "fill", source: "zones", paint: { "fill-color": grey ? "#000" : "#e00000", "fill-opacity": 0.18 } });
-        mp.addLayer({ id: "zones-line", type: "line", source: "zones", paint: { "line-color": grey ? "#fff" : "#ff3b30", "line-width": 2, "line-dasharray": [3, 2] } });
+        mp.addLayer({ id: "zones-fill", type: "fill", source: "zones", paint: { "fill-color": look === "clay" ? "#d9534f" : grey ? "#000" : "#e00000", "fill-opacity": look === "clay" ? 0.16 : 0.18 } });
+        mp.addLayer({ id: "zones-line", type: "line", source: "zones", paint: { "line-color": look === "clay" ? "#d9534f" : grey ? "#fff" : "#ff3b30", "line-width": 2, "line-dasharray": [3, 2] } });
         mp.addSource("path", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-        mp.addLayer({ id: "path", type: "line", source: "path", paint: { "line-color": grey ? "#fff" : "#2880f0", "line-width": 3, "line-dasharray": [1, 2] } });
+        mp.addLayer({ id: "path", type: "line", source: "path", paint: look === "clay" ? { "line-color": "#4f5bd5", "line-width": 3 } : { "line-color": grey ? "#fff" : "#2880f0", "line-width": 3, "line-dasharray": [1, 2] } });
         setReady(true);
       });
     });
@@ -106,12 +135,12 @@ export function RealMap({ center, zoom = 16, grey = false, drones = [], homes = 
         mk = new m.Marker({ element: el, anchor }).setLngLat(at).addTo(mp); marks.current.set(key, mk);
       } else { mk.setLngLat(at); const el = mk.getElement(); if (el.innerHTML !== html) el.innerHTML = html; }
     };
-    homes.forEach((h, i) => put(`home${i}`, h, homeEl(grey)));
-    landing.forEach((l, i) => put(`land${i}`, l.at, landEl(l.name, grey), undefined, "top"));
-    noFly.forEach((z, i) => put(`zone${i}`, z.center, zoneEl(z.name)));
-    drones.forEach((d) => put(`d-${d.id}`, d.at, droneEl(d, grey), () => onDroneRef.current?.(d.id), "top"));
+    homes.forEach((h, i) => put(`home${i}`, h, look === "clay" ? clayHome : homeEl(grey)));
+    landing.forEach((l, i) => put(`land${i}`, l.at, look === "clay" ? clayLand(l.name) : landEl(l.name, grey), undefined, "top"));
+    noFly.forEach((z, i) => put(`zone${i}`, z.center, look === "clay" ? clayZone(z.name) : zoneEl(z.name)));
+    drones.forEach((d) => put(`d-${d.id}`, d.at, look === "clay" ? clayDrone(d) : droneEl(d, grey), () => onDroneRef.current?.(d.id), "top"));
     marks.current.forEach((mk, k) => { if (!want.has(k)) { mk.remove(); marks.current.delete(k); } });
-  }, [ready, drones, homes, landing, noFly, grey]);
+  }, [ready, drones, homes, landing, noFly, grey, look]);
 
   // keep the followed point in view
   useEffect(() => {
@@ -125,7 +154,7 @@ export function RealMap({ center, zoom = 16, grey = false, drones = [], homes = 
   const tool = (label: string, title: string, run: () => void, on?: boolean) =>
     <button className={`fh-tool${on ? " on" : ""}`} title={title} aria-label={title} onClick={run}>{label}</button>;
   return (
-    <div style={{ position: "absolute", inset: 0, filter: grey ? "grayscale(1)" : undefined, background: "#1b1f24" }}>
+    <div style={{ position: "absolute", inset: 0, filter: grey ? "grayscale(1)" : undefined, background: look === "clay" ? "#efede8" : "#1b1f24" }}>
       <div ref={box} style={{ position: "absolute", inset: 0 }} />
       {tools && (
         <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, zIndex: 3 }}>

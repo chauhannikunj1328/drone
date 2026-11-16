@@ -221,3 +221,13 @@ export function DroneHero({ brand, height, bg }: { brand: BrandId; height: numbe
   if (!p) return <div style={{ height, display: "grid", placeItems: "center", background: bg }}><DroneArt brand={brand} size={Math.round(height * 1.5)} view="hero" /></div>;
   return <div role="img" aria-label={`${brand} drone photo by ${p.author}, ${p.license}`} style={{ height, backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: p.pos, filter: desk ? undefined : "grayscale(1)" }} />;
 }
+
+// Cut-out drone photo (background removed) for cards and map pins, in the Air Dropper style. Autel has no free photo, so it keeps the drawing.
+export function DroneCutout({ brand, w = 96, h = 64 }: { brand: BrandId; w?: number; h?: number }) {
+  const p = DRONE_PHOTO[brand];
+  if (!p) return <div style={{ width: w, height: h, display: "grid", placeItems: "center" }}><DroneArt brand={brand} size={Math.round(Math.min(w, h * 1.5))} art /></div>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- small local cut-out
+    <img src={p.cut} alt={`${brand} drone (photo: ${p.author}, ${p.license}, cut out)`} width={w} height={h} style={{ width: w, height: h, objectFit: "contain", display: "block", filter: "drop-shadow(0 6px 8px rgba(0,0,0,.22))" }} />
+  );
+}

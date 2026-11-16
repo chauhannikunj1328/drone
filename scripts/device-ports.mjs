@@ -1,11 +1,10 @@
-// Opens one localhost port per device app, all served by the one Next dev server on :3000.
+// Opens one localhost port per device app, all served by one Next dev server that listens only on 127.0.0.1:3999 (nothing is public on 3000).
 //   4001 iPhone · 4002 iPad · 4003 iPhone Duo · 4004 Laptop
-// (4000s, not 3001+, because Next.js moves to 3001 by itself when 3000 is busy.)
-// Usage: npm run dev (port 3000) and, in another terminal, npm run devices.
+// Usage: npm run dev (private port 3999) and, in another terminal, npm run devices.
 import http from "node:http";
 import net from "node:net";
 
-const TARGET = { host: "127.0.0.1", port: Number(process.env.SKYHAND_TARGET_PORT ?? 3000) };
+const TARGET = { host: "127.0.0.1", port: Number(process.env.SKYHAND_TARGET_PORT ?? 3999) };
 const DEVICES = [
   [4001, "iphone", "iPhone"],
   [4002, "ipad", "iPad"],

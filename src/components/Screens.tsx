@@ -6,10 +6,10 @@ import {
   Loader2, MapPin, Mountain, Navigation, Plane, Plus, Ruler, Scale, Search, Settings as SettingsIcon, ShieldCheck, Smartphone, Sparkles,
   Trees, Users, Warehouse, Wifi, LayoutDashboard, Grid2x2, UserRound,
 } from "lucide-react";
-import { BRANDS, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type CountryCode, type Drone } from "@/lib/data";
+import { BRANDS, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type BrandId, type CountryCode, type Drone } from "@/lib/data";
 import { frameSize, hasCommandCentre, safeArea, sideControls } from "@/lib/layout";
 import { checklist, defaultMode, droneOf, inAir, isRedFor, useProto, type Proto, type Screen, type UseCase } from "@/lib/store";
-import { Battery, DroneArt, DroneHero, PhotoCredit, Scene, StatusBar, Thumb } from "./art";
+import { Battery, DroneArt, DroneHero, PhotoCredit, Scene, StatusBar, Thumb , DroneCutout } from "./art";
 import { ALERTS, DRONE_PHOTO } from "@/lib/data";
 import { Icon, Mock, type IconKind } from "./ui";
 import { MakerSignIn, SignInSheet } from "./Onboarding";
@@ -57,8 +57,8 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   const isLarge = large ?? !back;
   const tabsList: [string, Screen, ReactNode][] = [
     // Fly is not a tab: flying is an action on a chosen drone (from Hangar), not a place.
-    ...(hasCommandCentre(s.platform) ? [["Dashboard", "dashboard", <LayoutDashboard key="d" size={22} strokeWidth={1.8} />] as [string, Screen, ReactNode]] : []),
-    ["Hangar", "hangar", <Warehouse key="h" size={22} strokeWidth={1.8} />],
+    [s.platform === "laptop" ? "Dashboard" : "Overview", "dashboard", <LayoutDashboard key="d" size={22} strokeWidth={1.8} />],
+    [s.platform === "laptop" ? "Hangar" : "Drones", "hangar", <Warehouse key="h" size={22} strokeWidth={1.8} />],
     ...(hasCommandCentre(s.platform) ? [["Watch", "watch", <Grid2x2 key="w" size={22} strokeWidth={1.8} />] as [string, Screen, ReactNode]] : []),
     ["Flights", "flights", <History key="fl" size={22} strokeWidth={1.8} />], ["Rules", "rules", <Scale key="r" size={22} strokeWidth={1.8} />],
     ["Settings", "settings", <SettingsIcon key="s" size={22} strokeWidth={1.8} />],
@@ -307,7 +307,7 @@ const statusIcon = (d: Drone, s: Proto): [IconKind, string] => {
 };
 
 // Duo open portrait: book split around the fold. Other regular sizes: two columns.
-function Columns({ left, right, ratio = "1fr 1fr" }: { left: ReactNode; right: ReactNode; ratio?: string }) {
+export function Columns({ left, right, ratio = "1fr 1fr" }: { left: ReactNode; right: ReactNode; ratio?: string }) {
   const { s } = useProto();
   const duo = useContext(DuoPaneCtx);
   useEffect(() => { duo?.claim(); });
@@ -331,6 +331,41 @@ function FlagChip({ level }: { level: "few" | "rules" | "cant" }) {
 }
 
 // ---------- Hangar ----------
+// Drone card (Air Dropper fleet card): cut-out photo, name and model, status, altitude bar, battery bars, link. Selected = solid black card.
+function DroneCard({ d }: { d: Drone }) {
+  const { s, up } = useProto();
+  const [ic, label] = statusIcon(d, s);
+  const on = d.id === s.droneId;
+  const m = s.sims[d.id];
+  const flying = inAir(m.phase);
+  const col = flying ? "var(--live)" : d.status === "Ready" ? "var(--ok)" : d.status === "Offline" ? "var(--text-3)" : "var(--warn)";
+  const bars = Math.max(1, Math.ceil(d.battery / 25));
+  const maxH = COUNTRIES[s.country].maxAltitude;
+  return (
+    <button data-hit aria-label={`Select ${d.nickname}`} aria-pressed={on} onClick={() => up((p) => { p.droneId = d.id; p.skin = "auto"; })}
+      className={on ? "card sel" : "card"} style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, textAlign: "left", width: "100%", minWidth: 0, overflow: "hidden", background: on ? "var(--sel-bg)" : undefined, color: on ? "var(--sel-fg)" : undefined }}>
+      <span style={{ flex: "none" }}><DroneCutout brand={d.brand} w={80} h={54} /></span>
+      <span style={{ flex: 1, minWidth: 0, display: "grid", gap: 8 }}>
+        <span style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
+          <span style={{ minWidth: 0, flex: 1 }}><span className="t-head" style={{ display: "block", fontWeight: 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.nickname}</span><span className="t-cap" style={{ display: "block", opacity: .6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.model}</span></span>
+          <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 6, opacity: .85, whiteSpace: "nowrap", minWidth: 0, maxWidth: 104 }}><span style={{ width: 6, height: 6, borderRadius: 9999, background: col, flex: "none" }} /><span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{flying ? "Flying" : label}</span></span>
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ flex: 1, height: 3, borderRadius: 9999, background: "currentColor", opacity: .15, position: "relative" }}><span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${flying ? Math.min(100, (m.height / maxH) * 100) : 0}%`, background: "currentColor", borderRadius: 9999 }} /></span>
+          <span className="t-cap num" style={{ opacity: .7, whiteSpace: "nowrap", flex: "none" }}>{flying ? Math.round(m.height) : 0}/{maxH} m</span>
+        </span>
+        <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }} aria-label={`Battery ${Math.round(d.battery)} percent`}>
+            <span style={{ display: "flex", gap: 2 }}>{[0, 1, 2, 3].map((i) => <i key={i} style={{ width: 3, height: 11, borderRadius: 1, background: i < bars ? (d.battery < 30 ? "var(--warn)" : "var(--ok)") : "currentColor", opacity: i < bars ? 1 : .25 }} />)}</span>
+            <span className="num">{Math.round(d.battery)}%</span>
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Wifi size={13} />{d.status === "Offline" ? "No link" : "Good"}</span>
+        </span>
+      </span>
+    </button>
+  );
+}
+
 export function Hangar() {
   const { s, up } = useProto();
   if (s.platform === "laptop") return <HangarDesk />;
@@ -351,8 +386,9 @@ export function Hangar() {
         </div>
         <span className="chip soft"><Icon kind={ic} size={12} />{label}</span>
       </div>
-      <div style={{ margin: "12px -16px 8px", overflow: "hidden" }}>
-        <DroneHero brand={sel.brand} height={176} bg="radial-gradient(ellipse at 50% 60%, var(--grey-0) 0, var(--grey-100) 70%)" />
+      <div style={{ margin: "8px 0 4px", height: 180, position: "relative", display: "grid", placeItems: "center" }}>
+        <span aria-hidden style={{ position: "absolute", left: "6%", right: "6%", bottom: 14, height: 40, borderRadius: "50%", border: "1px solid var(--text-3)", opacity: .45 }} />
+        <DroneCutout brand={sel.brand} w={Math.min(300, W - 96)} h={150} />
       </div>
       <PhotoCredit brand={sel.brand} style={{ display: "block", marginBottom: 8 }} />
       <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr 1fr" : "repeat(3, 1fr)", gap: 8 }}>
@@ -381,35 +417,19 @@ export function Hangar() {
           <button className="act" data-hit onClick={() => up(go("rules"))}>Rules</button>
         </div>)}
       <SectionH action={<span className="t-cap muted">{s.drones.length} drones</span>}>Your fleet</SectionH>
-      <div className="group">
-        {s.drones.map((d) => {
-          const [dic, dl] = statusIcon(d, s);
-          const on = d.id === s.droneId;
-          return (
-            <div key={d.id} className="row" style={{ background: on ? "var(--grey-50)" : undefined, boxShadow: on ? "inset 3px 0 0 var(--grey-900)" : undefined }}>
-              <button data-hit aria-label={`Select ${d.nickname}`} onClick={() => up((p) => { p.droneId = d.id; p.skin = "auto"; })}
-                style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, background: "none", border: "none", textAlign: "left", padding: 0 }}>
-                <span style={{ width: 60, height: 52, borderRadius: 12, background: "var(--grey-100)", display: "grid", placeItems: "center", flex: "none" }}><DroneArt brand={d.brand} size={56} /></span>
-                <span style={{ minWidth: 0 }}>
-                  <span className="t-head" style={{ display: "block" }}>{d.nickname}</span>
-                  <span className="t-cap muted" style={{ display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.model}</span>
-                  <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden" }}><Icon kind={dic} size={12} />{dl}<span className="muted" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontWeight: 500 }}>· <Battery pct={d.battery} size={9} /> {Math.round(d.battery)}%</span></span>
-                </span>
-              </button>
-              <ChevronRight size={18} color="var(--grey-400)" />
-            </div>);
-        })}
-        <button className="row" data-hit onClick={() => up(go("add-brand"))}>
-          <span style={{ width: 60, height: 52, borderRadius: 12, border: "1.5px dashed var(--grey-300)", display: "grid", placeItems: "center", flex: "none" }}><Plus size={20} /></span>
+      <div style={{ display: "grid", gap: 12 }}>
+        {s.drones.map((d) => <DroneCard key={d.id} d={d} />)}
+        <button className="card" data-hit onClick={() => up(go("add-brand"))} style={{ display: "flex", alignItems: "center", gap: 14, padding: 14, textAlign: "left", width: "100%", minHeight: 76 }}>
+          <span style={{ width: 96, height: 56, borderRadius: 12, border: "1.5px dashed var(--text-3)", display: "grid", placeItems: "center", flex: "none" }}><Plus size={20} /></span>
           <span style={{ flex: 1 }}><span className="t-head" style={{ display: "block" }}>Add a drone</span><span className="t-cap muted">DJI, Antigravity, Parrot, Autel, Skydio</span></span>
-          <ChevronRight size={18} color="var(--grey-400)" />
+          <ChevronRight size={18} color="var(--text-3)" />
         </button>
       </div>
     </div>
   );
   return <Page full footer={W < 600 && !inAir(s.sims[sel.id].phase) ? <DroneAction d={sel} block /> : undefined} title="Your drones" sub={<span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><MapPin size={14} />{c.name}</span>}
     right={<button className="icon-btn" data-hit aria-label="Add a drone" onClick={() => up(go("add-brand"))}><Plus size={20} /></button>}>
-    <Columns left={hero} right={list} ratio="1.05fr 1fr" />
+    {W < 600 ? list : <Columns left={hero} right={list} ratio="1.05fr 1fr" />}
   </Page>;
 }
 
@@ -758,14 +778,25 @@ export function Flights() {
   ];
   const wide = W >= 600; // regular width (inner Duo display, iPad): list + detail; compact: list only
   const pick = rows.find((r) => r.k === sel) ?? rows[0];
-  const row = (r: typeof rows[number]) => <button key={r.k} className="row" data-hit onClick={() => setSel(r.k)} style={{ background: wide && pick?.k === r.k ? "var(--fh-blue-soft)" : undefined }}>
-    <Thumb seed={r.seed} w={72} h={56} video />
-    <div style={{ flex: 1, minWidth: 0 }}><div className="t-head">{r.title}</div><div className="t-cap muted">{r.sub}</div><div className="t-cap num" style={{ marginTop: 4 }}>{r.meta}</div></div>
-    {!wide && <ChevronRight size={18} color="var(--grey-400)" />}</button>;
+  const brandOf = (model: string) => s.drones.find((d) => d.model === model)?.brand ?? "dji";
+  const row = (r: typeof rows[number], i: number) => {
+    const on = (wide ? pick?.k === r.k : false);
+    const model = r.sub.split(" · ")[r.today ? 0 : 1] ?? "";
+    const prog = r.today ? 1 : [1, 1, .4][i % 3];
+    return <button key={r.k} data-hit onClick={() => setSel(r.k)} className="sel-row" style={{ display: "flex", gap: 14, padding: 14, margin: 4, width: "calc(100% - 8px)", textAlign: "left", borderRadius: 12, alignItems: "flex-start",
+      background: on ? "var(--sel-bg)" : "transparent", color: on ? "var(--sel-fg)" : undefined }}>
+      <span style={{ paddingTop: 6 }}><DroneCutout brand={brandOf(model) as BrandId} w={84} h={56} /></span>
+      <span style={{ flex: 1, minWidth: 0, display: "grid", gap: 8 }}>
+        <span style={{ display: "flex", justifyContent: "space-between" }}><span className="t-head" style={{ fontWeight: 400 }}>{r.title}</span><ChevronRight size={16} style={{ opacity: .4 }} /></span>
+        <span className="t-cap" style={{ display: "flex", alignItems: "center", gap: 6, opacity: .85 }}><span style={{ width: 6, height: 6, borderRadius: 9999, background: prog < 1 ? "var(--danger)" : "var(--text-3)" }} />{prog < 1 ? "Returned early" : "Landed"}</span>
+        <RouteTrack progress={prog} />
+        <span className="t-cap" style={{ display: "flex", justifyContent: "space-between", gap: 8, whiteSpace: "nowrap" }}><span>Home point<br /><span style={{ opacity: .55 }}>{r.meta.split(" · ")[0]}</span></span><span style={{ textAlign: "right", overflow: "hidden", textOverflow: "ellipsis" }}>{r.sub.split(" · ")[0]}<br /><span style={{ opacity: .55 }}>{r.meta.split(" · ")[1]}</span></span></span>
+      </span></button>;
+  };
   const list = <>
     <div className="seg" style={{ marginBottom: 8 }}><button className="on">All</button><button>Videos</button><button>Photos</button></div>
-    {rows.some((r) => r.today) && <><SectionH>Today</SectionH><div className="group">{rows.filter((r) => r.today).map(row)}</div></>}
-    <SectionH>Earlier</SectionH><div className="group">{rows.filter((r) => !r.today).map(row)}</div>
+    {rows.some((r) => r.today) && <><SectionH>Today</SectionH><div className="group">{rows.filter((r) => r.today).map((r, i) => row(r, i))}</div></>}
+    <SectionH>Earlier</SectionH><div className="group">{rows.filter((r) => !r.today).map((r, i) => row(r, i))}</div>
   </>;
   const detail = pick && <div className="card" style={{ overflow: "hidden", position: "sticky", top: 0 }}>
     <div style={{ position: "relative", height: 200 }}><Thumb seed={pick.seed} w={1000} h={200} video /></div>
@@ -867,4 +898,19 @@ function FlightsDesk() {
       </table>
     </div>
   </Page>;
+}
+
+
+// Route track (Air Dropper mission row): dot at the start, solid line to a diamond (progress), faint line to the end.
+function RouteTrack({ progress }: { progress: number }) {
+  const x = Math.max(4, Math.min(96, progress * 100));
+  return (
+    <span role="img" aria-label={`Route ${Math.round(progress * 100)} percent`} style={{ position: "relative", display: "block", height: 12 }}>
+      <span style={{ position: "absolute", left: 0, right: 0, top: 5, height: 1.5, background: "currentColor", opacity: .18 }} />
+      <span style={{ position: "absolute", left: 0, top: 5, height: 1.5, width: `${x}%`, background: "currentColor" }} />
+      <span style={{ position: "absolute", left: 0, top: 3, width: 6, height: 6, borderRadius: 9999, background: "currentColor" }} />
+      <span style={{ position: "absolute", right: 0, top: 3.5, width: 5, height: 5, borderRadius: 9999, background: "currentColor", opacity: .25 }} />
+      <span style={{ position: "absolute", left: `calc(${x}% - 4px)`, top: 2, width: 8, height: 8, background: "currentColor", transform: "rotate(45deg)" }} />
+    </span>
+  );
 }

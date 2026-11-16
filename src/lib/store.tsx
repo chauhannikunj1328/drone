@@ -161,6 +161,7 @@ export function ProtoProvider({ children, lockPlatform }: { children: ReactNode;
     const q = new URLSearchParams(window.location.search);
     up((d) => {
       const rec = d as unknown as Record<string, unknown>;
+      const scr = q.get("screen"); if (scr) { rec.screen = scr; rec.onboarded = true; }
       for (const k of KEYS_IN_URL) { if (lockPlatform && k === "platform") continue; const v = q.get(k); if (v !== null) rec[k] = v === "true" ? true : v === "false" ? false : v; }
     });
   }, [up, lockPlatform]);

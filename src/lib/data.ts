@@ -49,12 +49,12 @@ export const BRAND_ACCOUNT: Record<BrandId, { label: string; need: "required" | 
 
 // ---------- Real drone photos (Wikimedia Commons, free licences; cropped and resized for the app) ----------
 // Autel EVO Max 4T has no free-licence photo yet, so it keeps the drawn render.
-export interface DronePhoto { src: string; pos: string; author: string; license: string; source: string }
+export interface DronePhoto { cut: string; src: string; pos: string; author: string; license: string; source: string }
 export const DRONE_PHOTO: Partial<Record<BrandId, DronePhoto>> = {
-  dji: { src: "/drones/dji.jpg", pos: "62% 45%", author: "C.Stadler/Bwag", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:DJI_-_Drohne_Mavic_4_Pro.JPG" },
-  antigravity: { src: "/drones/antigravity.jpg", pos: "50% 40%", author: "ZLEA", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Antigravity_DE001_A1_(1-17-2026).jpg" },
-  parrot: { src: "/drones/parrot.jpg", pos: "45% 45%", author: "ZLEA", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Parrot_PF728330_ANAFI_Ai_(FA3KP379LP)_(2-25-2024).jpg" },
-  skydio: { src: "/drones/skydio.jpg", pos: "52% 50%", author: "Alexander Kubitza", license: "Public domain", source: "https://commons.wikimedia.org/wiki/File:Skydio_X10_in_flight.jpg" },
+  dji: { cut: "/drones/cut-dji.png", src: "/drones/dji.jpg", pos: "62% 45%", author: "C.Stadler/Bwag", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:DJI_-_Drohne_Mavic_4_Pro.JPG" },
+  antigravity: { cut: "/drones/cut-antigravity.png", src: "/drones/antigravity.jpg", pos: "50% 40%", author: "ZLEA", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Antigravity_DE001_A1_(1-17-2026).jpg" },
+  parrot: { cut: "/drones/cut-parrot.png", src: "/drones/parrot.jpg", pos: "45% 45%", author: "ZLEA", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Parrot_PF728330_ANAFI_Ai_(FA3KP379LP)_(2-25-2024).jpg" },
+  skydio: { cut: "/drones/cut-skydio.png", src: "/drones/skydio.jpg", pos: "52% 50%", author: "Alexander Kubitza", license: "Public domain", source: "https://commons.wikimedia.org/wiki/File:Skydio_X10_in_flight.jpg" },
 };
 
 // ---------- Skins (official names from 07 section 5) ----------
