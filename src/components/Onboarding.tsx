@@ -93,7 +93,7 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
         <SideStatus />
         {back && <button data-hit aria-label="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "var(--raised, #262626)", color: "var(--text, #f2f2f2)", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
       </div>}
-      <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, top: duoSide ? 16 : top, bottom: duoLand ? H / 2 + 12 : safe.b + (primary ? (secondary ? 132 : 92) : 16), overflowY: "auto", padding: "4px 24px 12px" }}>
+      <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, top: duoSide ? 16 : top, bottom: duoLand ? H / 2 + 12 : safe.b + (primary ? (secondary ? 132 : 84) : 16), overflowY: "auto", padding: "4px 24px 12px", WebkitMaskImage: "linear-gradient(transparent 0, #000 10px, #000 calc(100% - 20px), transparent 100%)", maskImage: "linear-gradient(transparent 0, #000 10px, #000 calc(100% - 20px), transparent 100%)" }}>
         <div style={{ maxWidth: maxW, margin: "0 auto" }}>
           {(back || step) && (
             <div style={{ display: "flex", alignItems: "center", minHeight: 44, marginLeft: back ? -10 : 0 }}>
@@ -116,8 +116,10 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
     </div>
   );
 }
-const H1 = ({ children }: { children: ReactNode }) => <h1 className="t-display" style={{ margin: "16px 0 8px" }}>{children}</h1>;
-const Lead = ({ children }: { children: ReactNode }) => <p className="t-body muted" style={{ margin: "0 0 16px" }}>{children}</p>;
+// Short screens (landscape phones, the Duo in landscape): tighter spacing so a step fits without scrolling.
+function useShort() { const { s } = useProto(); return frameSize(s.platform, s.orient).H < 700 || (s.platform === "duoOpen" && s.orient === "portrait"); } // the open Duo in portrait keeps the steps in its top half
+const H1 = ({ children }: { children: ReactNode }) => { const short = useShort(); return <h1 className="t-display" style={{ margin: short ? "4px 0 4px" : "16px 0 8px", fontSize: short ? 28 : undefined, lineHeight: short ? "34px" : undefined }}>{children}</h1>; };
+const Lead = ({ children }: { children: ReactNode }) => { const short = useShort(); return <p className="t-body muted" style={{ margin: short ? "0 0 8px" : "0 0 16px", fontSize: short ? 15 : undefined, lineHeight: short ? "20px" : undefined }}>{children}</p>; };
 
 // ---------- S60 Welcome ----------
 export function Welcome() {
@@ -151,23 +153,26 @@ export function Welcome() {
 // ---------- S61 Before you start ----------
 export function ObSafety() {
   const { s, up } = useProto();
-  const rows: [ReactNode, string, string][] = [
-    [<Eye key="e" size={20} />, "Keep it in sight", "A screen is not line of sight. Watch the drone with your own eyes, or add an observer next to you."],
-    [<Globe key="g" size={20} />, "Rules change by country", "Skyhand checks the rules where you fly and shows when it last checked. It is a guide, not legal advice."],
-    [<ShieldCheck key="s" size={20} />, "You are the pilot", "Pause, Return and Land are always on screen. You stay responsible for every flight."],
+  const short = useShort();
+  const rows: [ReactNode, string, string, string][] = [
+    [<Eye key="e" size={20} />, "Keep it in sight", "A screen is not line of sight. Watch the drone with your own eyes, or add an observer next to you.", "Watch the drone with your own eyes, or add an observer."],
+    [<Globe key="g" size={20} />, "Rules change by country", "Skyhand checks the rules where you fly and shows when it last checked. It is a guide, not legal advice.", "Skyhand shows each country's rules and when it checked. Not legal advice."],
+    [<ShieldCheck key="s" size={20} />, "You are the pilot", "Pause, Return and Land are always on screen. You stay responsible for every flight.", "Pause, Return and Land are always on screen. You stay responsible."],
   ];
   return (
     <Onboard step={1} back="welcome" primary={<button className="btn btn-primary btn-block" data-hit onClick={() => up(go("ob-perms"))}>I understand</button>}>
       <H1>Before you start</H1>
       <Lead>Three things that keep every flight safe.</Lead>
-      <div style={{ display: "grid", gap: 12 }}>
-        {rows.map(([ic, t, d]) => (
-          <div key={t} style={{ display: "flex", gap: 16, alignItems: "flex-start", padding: 16, borderRadius: 16, background: "var(--card-bg, var(--grey-50))" }}>
-            <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center", flex: "none" }}>{ic}</span>
-            <div><div className="t-head">{t}</div><div className="t-cap muted" style={{ marginTop: 4, fontSize: 14, lineHeight: "18px" }}>{d}</div></div>
+      <div style={{ display: "grid", gap: short ? 8 : 12 }}>
+        {rows.map(([ic, t, d, ds]) => (
+          <div key={t} style={{ display: "flex", gap: short ? 12 : 16, alignItems: "flex-start", padding: short ? 12 : 16, borderRadius: 16, background: "var(--card-bg, var(--grey-50))" }}>
+            <span style={{ width: short ? 32 : 40, height: short ? 32 : 40, borderRadius: short ? 10 : 12, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center", flex: "none" }}>{ic}</span>
+            <div><div className="t-head">{t}</div><div className="t-cap muted" style={{ marginTop: 2, fontSize: 14, lineHeight: "18px" }}>{short ? ds : d}</div></div>
           </div>))}
       </div>
-      <div className="alert" style={{ marginTop: 16 }}><Icon kind="info" size={18} /><div className="t-cap">Skyhand is a concept by Artonest, not a real product. Drone makers have not approved it.</div></div>
+      {short
+        ? <p className="t-cap muted" style={{ margin: "8px 0 0" }}>Skyhand is a concept by Artonest, not a real product. Drone makers have not approved it.</p>
+        : <div className="alert" style={{ marginTop: 16 }}><Icon kind="info" size={18} /><div className="t-cap">Skyhand is a concept by Artonest, not a real product. Drone makers have not approved it.</div></div>}
       {s.account && <p className="t-cap muted" style={{ marginTop: 12 }}>Signed in as {s.account.email}. Your drones will appear after this.</p>}
     </Onboard>
   );
