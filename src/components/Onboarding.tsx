@@ -26,7 +26,7 @@ function SidePicture({ step }: { step?: number }) {
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "var(--grey-300)" }}>
       <Scene heading={30 + (step ?? 0) * 40} height={20 + (step ?? 0) * 6} />
-      <div style={{ position: "absolute", left: "50%", top: "34%", transform: "translate(-50%, -50%)", filter: "drop-shadow(0 14px 18px rgba(0,0,0,.35))" }}><DroneArt brand={brand} size={190} view="hero" /></div>
+      <div style={{ position: "absolute", left: "50%", top: "34%", transform: "translate(-50%, -50%)", filter: "drop-shadow(0 14px 18px rgba(0,0,0,.35))" }}><DroneArt brand={brand} size={190} view="hero" art /></div>
       <div style={{ position: "absolute", left: 22, bottom: 22, right: 22, color: "#fff" }} className="hud-text">
         <div className="t-over" style={{ opacity: .85 }}>Skyhand · concept by Artonest</div>
         <div className="t-title" style={{ marginTop: 4 }}>Fly from your screen</div>
@@ -112,7 +112,7 @@ export function Welcome() {
       secondary={<button className="btn btn-ghost btn-block" data-hit onClick={() => up((p) => { p.signInSheet = true; })}><span style={{ textAlign: "center" }}>Already use Skyhand? <b>Sign in</b></span></button>}>
       {!split && <div style={{ position: "relative", height: heroH, borderRadius: 16, overflow: "hidden", marginTop: 8, background: "var(--grey-300)" }}>
         <Scene heading={30} height={24} />
-        <div style={{ position: "absolute", left: "50%", top: "30%", transform: "translate(-50%, -50%)", filter: "drop-shadow(0 12px 16px rgba(0,0,0,.35))" }}><DroneArt brand="dji" size={150} view="hero" /></div>
+        <div style={{ position: "absolute", left: "50%", top: "30%", transform: "translate(-50%, -50%)", filter: "drop-shadow(0 12px 16px rgba(0,0,0,.35))" }}><DroneArt brand="dji" size={150} view="hero" art /></div>
         <span className="chip" style={{ position: "absolute", left: 12, top: 12 }}><Sparkles size={12} />Concept by Artonest</span>
       </div>}
       <div className="t-over muted" style={{ marginTop: s.platform === "laptop" ? 0 : split ? Math.max(24, H * 0.18) : 22 }}>{s.platform === "laptop" ? "Welcome" : "Skyhand"}</div>

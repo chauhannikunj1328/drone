@@ -8,7 +8,8 @@ import {
 import { BRANDS, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type CountryCode, type Drone } from "@/lib/data";
 import { frameSize, hasCommandCentre, safeArea } from "@/lib/layout";
 import { checklist, defaultMode, droneOf, inAir, isRedFor, useProto, type Proto, type Screen, type UseCase } from "@/lib/store";
-import { Battery, DroneArt, Scene, StatusBar, Thumb } from "./art";
+import { Battery, DroneArt, DroneHero, PhotoCredit, Scene, StatusBar, Thumb } from "./art";
+import { DRONE_PHOTO } from "@/lib/data";
 import { Icon, Mock, type IconKind } from "./ui";
 import { MakerSignIn, SignInSheet } from "./Onboarding";
 import { RealMap } from "./RealMap";
@@ -268,9 +269,10 @@ export function Hangar() {
         </div>
         <span className="chip soft"><Icon kind={ic} size={12} />{label}</span>
       </div>
-      <div style={{ margin: "12px -16px", height: 150, background: "radial-gradient(ellipse at 50% 60%, var(--grey-0) 0, var(--grey-100) 70%)", display: "grid", placeItems: "center" }}>
-        <DroneArt brand={sel.brand} size={250} view="hero" />
+      <div style={{ margin: "12px -16px 8px", overflow: "hidden" }}>
+        <DroneHero brand={sel.brand} height={176} bg="radial-gradient(ellipse at 50% 60%, var(--grey-0) 0, var(--grey-100) 70%)" />
       </div>
+      <PhotoCredit brand={sel.brand} style={{ display: "block", marginBottom: 8 }} />
       <div style={{ display: "grid", gridTemplateColumns: narrow ? "1fr 1fr" : "repeat(3, 1fr)", gap: 8 }}>
         {[["Battery", `${Math.round(sel.battery)}%`, <Battery key="b" pct={sel.battery} size={11} />], ["Weight", `${sel.weightGrams} g`, sel.weightIsMock ? <Mock key="m" /> : null], ["Firmware", sel.firmwareOk ? "Current" : "Update", null]].slice(0, narrow ? 2 : 3).map(([k, v, x]) => (
           <div key={k as string} style={{ background: "var(--grey-50)", borderRadius: 12, padding: "12px 12px" }}>
@@ -413,7 +415,7 @@ export function Capability() {
     [<Link2 key="l" size={16} />, "Maker account", s.brandAccounts.includes(b.id) ? `${BRAND_ACCOUNT[b.id].label} connected` : `${BRAND_ACCOUNT[b.id].label} not connected`],
   ];
   return <Page title="What it can do" back="add-model" tabs={!s.obAdding}>
-    <div style={{ textAlign: "center" }}><DroneArt brand={b.id} size={220} view="hero" /><div className="t-title">{b.model}</div></div>
+    <div style={{ textAlign: "center", display: "grid", justifyItems: "center", gap: 8 }}><DroneArt brand={b.id} size={320} view="hero" /><PhotoCredit brand={b.id} /><div className="t-title">{b.model}</div></div>
     {notSold && <div className="alert warning" style={{ marginTop: 12 }}><Icon kind="limited" size={18} /><div className="t-cap">Limited in this country: Skydio is mostly sold in the US.</div></div>}
     <div className="group" style={{ marginTop: 16 }}>{rows.map(([i, t, d]) => <div key={t} className="row"><span className="ico">{i}</span><div style={{ flex: 1 }}><div className="t-label">{t}</div><div className="t-cap muted">{d}</div></div></div>)}</div>
     <button className="btn btn-primary btn-block" data-hit style={{ marginTop: 16 }} onClick={() => up((p) => {
@@ -730,6 +732,7 @@ export function Settings() {
     <SectionH>About</SectionH>
     <div className="group">
       <Row icon={<Info size={16} />} label="Skyhand" sub="Concept by Artonest · not a real product" right={<span className="t-cap muted">v0.1</span>} />
+      <Row icon={<Camera size={16} />} label="Photo credits" sub={<>{Object.entries(DRONE_PHOTO).map(([b, p]) => <span key={b} style={{ display: "block" }}>{BRANDS.find((x) => x.id === b)?.model}: {p!.author}, {p!.license}{p!.license.startsWith("CC") ? " (cropped)" : ""}, Wikimedia Commons</span>)}<span style={{ display: "block" }}>Autel EVO Max 4T: drawn render (no free photo found)</span><span style={{ display: "block" }}>Maps: © OpenStreetMap contributors, OpenFreeMap · Imagery © Esri</span></>} right={<span />} />
     </div>
   </Page>;
 }

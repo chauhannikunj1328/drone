@@ -1,7 +1,7 @@
 "use client";
 // Greyscale illustrations for the high-fidelity wireframe: camera scene, map, drone pictures, system bars.
 // Pure black, white and grey. No photos, no colour.
-import type { BrandId } from "@/lib/data";
+import { DRONE_PHOTO, type BrandId } from "@/lib/data";
 import type { Platform } from "@/lib/layout";
 import { useDesk } from "@/lib/store";
 
@@ -116,8 +116,15 @@ export function MapArt({ distance = 0, heading = 0, compact = false, zones = fal
 }
 
 /* ---------- Drone pictures (greyscale product renders, per brand silhouette) ---------- */
-export function DroneArt({ brand, size = 120, view = "top" }: { brand: BrandId; size?: number; view?: "top" | "hero" }) {
+export function DroneArt({ brand, size = 120, view = "top", art = false }: { brand: BrandId; size?: number; view?: "top" | "hero"; art?: boolean }) {
   const desk = useDesk();
+  // Real photo when a free-licence one exists (colour on desktop, greyscale on the wireframe devices).
+  const photo = DRONE_PHOTO[brand];
+  if (photo && !art) return (
+    // eslint-disable-next-line @next/next/no-img-element -- small local photos, no optimisation needed
+    <img src={photo.src} alt={`${brand} drone (photo: ${photo.author}, ${photo.license})`} width={size} height={Math.round(size * (view === "hero" ? 0.62 : 0.8))}
+      style={{ width: size, height: Math.round(size * (view === "hero" ? 0.62 : 0.8)), objectFit: "cover", objectPosition: photo.pos, borderRadius: size > 100 ? 8 : 4, display: "block", filter: desk ? undefined : "grayscale(1)" }} />
+  );
   const id = `g${brand}${view}${desk ? "c" : ""}`;
   const arm = desk ? "#6e7682" : undefined; // lighter arms on dark desktop panels
   const prop = (x: number, y: number, r = 34) => (
@@ -200,4 +207,17 @@ export function Battery({ pct, size = 14 }: { pct: number; size?: number }) {
   const w = Math.max(0, Math.min(1, pct / 100)) * 18;
   return <svg width={size * 1.9} height={size} viewBox="0 0 27 14" aria-hidden><rect x=".75" y=".75" width="22.5" height="12.5" rx="3.5" stroke="currentColor" strokeOpacity=".55" strokeWidth="1.5" fill="none" />
     <rect x="3" y="3" width={w} height="8" rx="1.5" fill="currentColor" />{pct <= 25 && <path d="M3 3 L21 11" stroke="currentColor" strokeWidth="0" />}<rect x="24.5" y="5" width="2" height="4" rx="1" fill="currentColor" opacity=".55" /></svg>;
+}
+
+// Photographer credit for a drone photo (required by the CC BY-SA licence).
+export function PhotoCredit({ brand, style }: { brand: BrandId; style?: React.CSSProperties }) {
+  const p = DRONE_PHOTO[brand]; if (!p) return null;
+  return <a href={p.source} target="_blank" rel="noreferrer" className="t-cap muted" style={{ textDecoration: "none", ...style }}>Photo: {p.author} · {p.license}{p.license.startsWith("CC") ? " · cropped" : ""}</a>;
+}
+
+// Full-width drone banner: the real photo filling the box, or the render centred for drones without a free photo.
+export function DroneHero({ brand, height, bg }: { brand: BrandId; height: number; bg?: string }) {
+  const desk = useDesk(); const p = DRONE_PHOTO[brand];
+  if (!p) return <div style={{ height, display: "grid", placeItems: "center", background: bg }}><DroneArt brand={brand} size={Math.round(height * 1.5)} view="hero" /></div>;
+  return <div role="img" aria-label={`${brand} drone photo by ${p.author}, ${p.license}`} style={{ height, backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: p.pos, filter: desk ? undefined : "grayscale(1)" }} />;
 }

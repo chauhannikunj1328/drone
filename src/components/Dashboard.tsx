@@ -6,7 +6,7 @@ import { ChevronRight, Grid2x2, MapPin, Maximize2, Navigation, Plus, Square, Wif
 import { BRAND_ACCOUNT, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type Drone } from "@/lib/data";
 import { frameSize } from "@/lib/layout";
 import { activeAlerts, droneOf, inAir, startReturn, useProto, type Proto } from "@/lib/store";
-import { Battery, DroneArt, Scene } from "./art";
+import { Battery, DroneArt, DroneHero, PhotoCredit, Scene } from "./art";
 import { BigStat, Bars7, Panel, Ring, Swatch, type RingSeg } from "./fh";
 import { DroneView, RealMap } from "./RealMap";
 import { world } from "@/lib/world";
@@ -222,7 +222,8 @@ export function HangarDesk() {
         <div className="fh-label" style={{ textTransform: "uppercase", letterSpacing: ".06em" }}>Selected</div>
         <div style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}>{sel.nickname}</div>
         <div className="fh-label">{sel.model} · {SKINS[sel.brand].appCopied} layout</div>
-        <div style={{ margin: "12px -16px", height: 150, background: "radial-gradient(ellipse at 50% 60%, #3a3f46 0, #1b1d21 80%)", display: "grid", placeItems: "center" }}><DroneArt brand={sel.brand} size={230} view="hero" /></div>
+        <div style={{ margin: "16px -16px 8px", overflow: "hidden" }}><DroneHero brand={sel.brand} height={200} bg="radial-gradient(ellipse at 50% 60%, #3a3f46 0, #1b1d21 80%)" /></div>
+        <PhotoCredit brand={sel.brand} style={{ display: "block", marginTop: -4, marginBottom: 12 }} />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
           {[["Status", BUCKET[b].label], ["Battery", `${Math.round(sel.battery)}%`], ["Height", inAir(m.phase) ? `${m.height.toFixed(0)} m` : "—"]].map(([k, v]) => <div key={k} className="fh-panel" style={{ padding: "8px 12px" }}><div className="fh-label">{k}</div><div style={{ fontWeight: 700, fontSize: 16 }}>{v}</div></div>)}
         </div>

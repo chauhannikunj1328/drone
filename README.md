@@ -46,3 +46,18 @@ The device apps are served by the same Next.js server through a small proxy (`sc
 | `src/components/Shell.tsx` | Test sidebar and standalone device app frame |
 
 Stack: Next.js 15 (App Router), React 19, TypeScript strict, Tailwind CSS v4, lucide-react icons. Black, white and grey only.
+
+## Credits
+
+Drone photos come from Wikimedia Commons, cropped and resized for the app. CC BY-SA 4.0 adaptations are shared under the same licence.
+
+| Drone | Photo | Licence |
+|---|---|---|
+| DJI Mavic 4 Pro | [C.Stadler/Bwag](https://commons.wikimedia.org/wiki/File:DJI_-_Drohne_Mavic_4_Pro.JPG) | CC BY-SA 4.0 |
+| Antigravity A1 | [ZLEA](https://commons.wikimedia.org/wiki/File:Antigravity_DE001_A1_(1-17-2026).jpg) | CC BY-SA 4.0 |
+| Parrot ANAFI Ai | [ZLEA](https://commons.wikimedia.org/wiki/File:Parrot_PF728330_ANAFI_Ai_(FA3KP379LP)_(2-25-2024).jpg) | CC BY-SA 4.0 |
+| Skydio X10 | [Alexander Kubitza](https://commons.wikimedia.org/wiki/File:Skydio_X10_in_flight.jpg) | Public domain |
+| Autel EVO Max 4T | Drawn render (no free-licence photo found) | — |
+
+Maps: © OpenStreetMap contributors · OpenFreeMap. Satellite imagery © Esri, Maxar, Earthstar Geographics. Map engine: MapLibre GL.
+Brand and product names belong to their owners. Skyhand is not affiliated with any drone maker.
