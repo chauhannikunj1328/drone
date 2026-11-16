@@ -136,6 +136,8 @@ interface Ctx { s: Proto; up: (f: (d: Proto) => void) => void; input: React.Muta
 export interface Input { lx: number; ly: number; rx: number; ry: number; throttle: boolean; slider: number; }
 const C = createContext<Ctx | null>(null);
 export const useProto = () => useContext(C)!;
+// Desktop (laptop) uses the high-fidelity colour theme after DJI FlightHub 2; other devices stay greyscale.
+export const useDesk = () => useContext(C)?.s.platform === "laptop";
 
 const KEYS_IN_URL: (keyof Proto)[] = ["platform", "orient", "droneId", "country", "mirror", "skin"];
 

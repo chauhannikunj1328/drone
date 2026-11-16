@@ -3,6 +3,7 @@
 // Greyscale only: status is carried by fill, pattern, border and label, never colour.
 import type { CSSProperties, ReactNode } from "react";
 import { MapArt } from "./art";
+import { useDesk } from "@/lib/store";
 
 export function Panel({ title, right, children, style, pad = 14 }: { title?: ReactNode; right?: ReactNode; children: ReactNode; style?: CSSProperties; pad?: number }) {
   return (
@@ -14,21 +15,22 @@ export function Panel({ title, right, children, style, pad = 14 }: { title?: Rea
 }
 
 export function Sparkline({ data, w = 84, h = 26, fill = true }: { data: number[]; w?: number; h?: number; fill?: boolean }) {
+  const desk = useDesk(); const line = desk ? "#2880f0" : "rgba(255,255,255,.85)";
   const max = Math.max(...data, 1), min = Math.min(...data, 0);
   const pts = data.map((v, i) => [(i / (data.length - 1)) * w, h - 2 - ((v - min) / (max - min || 1)) * (h - 4)]);
   const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
   return (
     <svg width={w} height={h} aria-hidden style={{ display: "block" }}>
-      {fill && <path d={`${d} L${w} ${h} L0 ${h} Z`} fill="rgba(255,255,255,.08)" />}
-      <path d={d} fill="none" stroke="rgba(255,255,255,.85)" strokeWidth="1.5" strokeLinejoin="round" />
-      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="2.5" fill="#fff" />
+      {fill && <path d={`${d} L${w} ${h} L0 ${h} Z`} fill={desk ? "rgba(40,128,240,.18)" : "rgba(255,255,255,.08)"} />}
+      <path d={d} fill="none" stroke={line} strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="2.5" fill={desk ? "#2880f0" : "#fff"} />
     </svg>
   );
 }
 
 export function Bars7({ data, w = 120, h = 40 }: { data: number[]; w?: number; h?: number }) {
-  const max = Math.max(...data, 1); const bw = w / data.length;
-  return <svg width={w} height={h} aria-hidden>{data.map((v, i) => <rect key={i} x={i * bw + 2} y={h - (v / max) * (h - 2)} width={bw - 4} height={(v / max) * (h - 2)} rx="2" fill={i === data.length - 1 ? "#fff" : "rgba(255,255,255,.35)"} />)}</svg>;
+  const max = Math.max(...data, 1); const bw = w / data.length; const desk = useDesk();
+  return <svg width={w} height={h} aria-hidden>{data.map((v, i) => <rect key={i} x={i * bw + 2} y={h - (v / max) * (h - 2)} width={bw - 4} height={(v / max) * (h - 2)} rx="2" fill={i === data.length - 1 ? (desk ? "#35c2d6" : "#fff") : (desk ? "rgba(40,128,240,.55)" : "rgba(255,255,255,.35)")} />)}</svg>;
 }
 
 export function BigStat({ label, value, unit, spark, sub }: { label: string; value: string; unit?: string; spark?: number[]; sub?: string }) {
@@ -48,8 +50,9 @@ export function BigStat({ label, value, unit, spark, sub }: { label: string; val
 export type RingSeg = { label: string; value: number; style: "solid" | "light" | "hatch" | "dash" };
 export function Ring({ segs, size = 112, center, sub }: { segs: RingSeg[]; size?: number; center: string; sub: string }) {
   const r = size / 2 - 9, c = 2 * Math.PI * r, total = segs.reduce((a, b) => a + b.value, 0) || 1;
-  let off = 0;
-  const stroke = (st: RingSeg["style"]) => st === "solid" ? "#fff" : st === "light" ? "rgba(255,255,255,.55)" : st === "hatch" ? "url(#ringHatch)" : "rgba(255,255,255,.25)";
+  let off = 0; const desk = useDesk();
+  const DESK: Record<RingSeg["style"], string> = { solid: "#18e888", light: "#2880f0", hatch: "#f7c600", dash: "#5c5c5c" };
+  const stroke = (st: RingSeg["style"]) => desk ? DESK[st] : st === "solid" ? "#fff" : st === "light" ? "rgba(255,255,255,.55)" : st === "hatch" ? "url(#ringHatch)" : "rgba(255,255,255,.25)";
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`${center} ${sub}`}>
       <defs><pattern id="ringHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="rgba(255,255,255,.18)" /><line x1="0" y1="0" x2="0" y2="5" stroke="#fff" strokeWidth="2" /></pattern></defs>
@@ -66,6 +69,8 @@ export function Ring({ segs, size = 112, center, sub }: { segs: RingSeg[]; size?
   );
 }
 export function Swatch({ st }: { st: RingSeg["style"] }) {
+  const desk = useDesk();
+  if (desk) return <span style={{ width: 10, height: 10, borderRadius: 3, background: ({ solid: "#18e888", light: "#2880f0", hatch: "#f7c600", dash: "#5c5c5c" } as Record<string, string>)[st], flex: "none" }} />;
   const bg = st === "solid" ? "#fff" : st === "light" ? "rgba(255,255,255,.55)" : st === "hatch" ? "repeating-linear-gradient(45deg,#fff 0 2px,rgba(255,255,255,.18) 2px 4px)" : "transparent";
   return <span style={{ width: 10, height: 10, borderRadius: 3, background: bg, border: st === "dash" ? "1.5px dashed rgba(255,255,255,.7)" : "none", flex: "none" }} />;
 }
@@ -81,7 +86,8 @@ export function Key({ k, on, wide, label }: { k: string; on?: boolean; wide?: bo
 
 // Dark map: our greyscale illustration map, inverted for the dark command-centre theme.
 export function DarkMap({ distance = 0, heading = 0, zones = true, compact = false, bare = true }: { distance?: number; heading?: number; zones?: boolean; compact?: boolean; bare?: boolean }) {
-  return <div style={{ position: "absolute", inset: 0, filter: "invert(1) brightness(.78) contrast(1.05)" }}><MapArt distance={distance} heading={heading} zones={zones} compact={compact} bare={bare} /></div>;
+  const desk = useDesk(); // desktop: satellite-style colour map; elsewhere the greyscale map inverted
+  return <div style={{ position: "absolute", inset: 0, filter: desk ? undefined : "invert(1) brightness(.78) contrast(1.05)" }}><MapArt distance={distance} heading={heading} zones={zones} compact={compact} bare={bare} /></div>;
 }
 
 export function MapTools({ heading = 0, onRecenter }: { heading?: number; onRecenter?: () => void }) {

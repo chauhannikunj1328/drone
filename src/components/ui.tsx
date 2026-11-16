@@ -6,7 +6,7 @@ import type { AlertDef } from "@/lib/data";
 export type IconKind = "info" | "warning" | "critical" | "ready" | "notready" | "offline" | "locked" | "flying" | "returning" | "landed" | "pending" | "pass" | "connecting" | "limited";
 export function Icon({ kind, size = 16 }: { kind: IconKind; size?: number }) {
   const s = size, c = s / 2, sw = 1.6;
-  const common = { width: s, height: s, viewBox: `0 0 ${s} ${s}`, "aria-hidden": true } as const;
+  const common = { width: s, height: s, viewBox: `0 0 ${s} ${s}`, "aria-hidden": true, className: `ic ic-${kind}` } as const;
   switch (kind) {
     case "info": return <svg {...common}><circle cx={c} cy={c} r={c - 1} fill="none" stroke="currentColor" strokeWidth={sw} /><text x={c} y={c + 4} textAnchor="middle" fontSize={s * 0.6} fontWeight={700} fill="currentColor">i</text></svg>;
     case "warning": case "notready": return <svg {...common}><polygon points={`${c},1.5 ${s - 1.5},${s - 1.5} 1.5,${s - 1.5}`} fill="none" stroke="currentColor" strokeWidth={sw} /><text x={c} y={s - 3.5} textAnchor="middle" fontSize={s * 0.55} fontWeight={700} fill="currentColor">!</text></svg>;

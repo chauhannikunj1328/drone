@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { ChevronRight, Grid2x2, MapPin, Maximize2, Navigation, Plus, Square, Wifi } from "lucide-react";
 import { BRAND_ACCOUNT, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type Drone } from "@/lib/data";
 import { frameSize } from "@/lib/layout";
-import { activeAlerts, droneOf, inAir, startReturn, useProto, type Proto } from "@/lib/store";
+import { activeAlerts, droneOf, inAir, startReturn, useDesk, useProto, type Proto } from "@/lib/store";
 import { Battery, DroneArt, Scene } from "./art";
 import { BigStat, Bars7, DarkMap, MapTools, Panel, Ring, Swatch, type RingSeg } from "./fh";
 import { Page, droneActionFor } from "./Screens";
@@ -28,11 +28,13 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 
 function DroneMarker({ d, onClick, selected }: { d: Drone; onClick: () => void; selected?: boolean }) {
   const { s } = useProto(); const p = spotOf(s, d); const m = s.sims[d.id]; const b = bucketOf(s, d);
+  const desk = useDesk();
+  const pin = desk ? ({ air: ["#18e888", "#0c0c0c"], ready: ["#2880f0", "#fff"], notready: ["#f7c600", "#0c0c0c"], offline: ["#4a4a4a", "#d0d0d0"] } as Record<Bucket, string[]>)[b] : null;
   return (
     <button onClick={onClick} aria-label={`${d.nickname}, ${BUCKET[b].label}`} style={{ position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)", background: "none", border: "none", padding: 0, zIndex: selected ? 4 : 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-      <span style={{ width: 30, height: 30, borderRadius: 9999, display: "grid", placeItems: "center", background: b === "air" ? "#fff" : "rgba(18,18,18,.92)", color: b === "air" ? "#111" : "#fff",
-        border: b === "offline" ? "1.5px dashed rgba(255,255,255,.7)" : "1.5px solid rgba(255,255,255,.85)", backgroundImage: b === "notready" ? "var(--hatch-dark)" : undefined, boxShadow: selected ? "0 0 0 4px rgba(255,255,255,.35)" : "0 4px 10px rgba(0,0,0,.5)" }}>
-        {b === "air" ? <Navigation size={14} fill="#111" style={{ transform: `rotate(${m.heading}deg)` }} /> : <Icon kind={b === "ready" ? "ready" : b === "offline" ? "offline" : "notready"} size={14} />}
+      <span style={{ width: 30, height: 30, borderRadius: 9999, display: "grid", placeItems: "center", background: pin ? pin[0] : b === "air" ? "#fff" : "rgba(18,18,18,.92)", color: pin ? pin[1] : b === "air" ? "#111" : "#fff",
+        border: pin ? "2px solid rgba(255,255,255,.9)" : b === "offline" ? "1.5px dashed rgba(255,255,255,.7)" : "1.5px solid rgba(255,255,255,.85)", backgroundImage: !pin && b === "notready" ? "var(--hatch-dark)" : undefined, boxShadow: selected ? `0 0 0 4px ${pin ? "rgba(40,128,240,.5)" : "rgba(255,255,255,.35)"}` : "0 4px 10px rgba(0,0,0,.5)" }}>
+        {b === "air" ? <Navigation size={14} fill={pin ? pin[1] : "#111"} style={{ transform: `rotate(${m.heading}deg)` }} /> : pin ? <b style={{ fontSize: 13, lineHeight: 1 }}>{b === "ready" ? "✓" : b === "notready" ? "!" : "–"}</b> : <Icon kind={b === "ready" ? "ready" : b === "offline" ? "offline" : "notready"} size={14} />}
       </span>
       <span className="fh-chip" style={{ height: 22, padding: "0 8px", fontSize: 11 }}>{d.nickname}{b === "air" ? ` · ${m.height.toFixed(0)} m` : ""}</span>
     </button>
@@ -172,10 +174,10 @@ export function WatchScreen() {
       )}
       {/* slim rail: layout presets and display settings */}
       <div style={{ position: "absolute", left: listW, top: 0, bottom: 0, width: 48, borderRight: "1px solid rgba(255,255,255,.08)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 12, background: "#111" }}>
-        <button className="fh-tool" aria-pressed={s.watchGrid === 1} title="1 view" style={s.watchGrid === 1 ? { background: "#fff", color: "#111" } : undefined} onClick={() => up((p) => { p.watchGrid = 1; })}><Square size={15} /></button>
-        <button className="fh-tool" aria-pressed={s.watchGrid === 4} title="4 views" style={s.watchGrid === 4 ? { background: "#fff", color: "#111" } : undefined} onClick={() => up((p) => { p.watchGrid = 4; })}><Grid2x2 size={15} /></button>
+        <button className={`fh-tool${s.watchGrid === 1 ? " on" : ""}`} aria-pressed={s.watchGrid === 1} title="1 view" onClick={() => up((p) => { p.watchGrid = 1; })}><Square size={15} /></button>
+        <button className={`fh-tool${s.watchGrid === 4 ? " on" : ""}`} aria-pressed={s.watchGrid === 4} title="4 views" onClick={() => up((p) => { p.watchGrid = 4; })}><Grid2x2 size={15} /></button>
         <span style={{ height: 1, width: 24, background: "rgba(255,255,255,.12)", margin: "4px 0" }} />
-        <button className="fh-tool" title="Show flight info on video" style={s.osd ? { background: "#fff", color: "#111" } : undefined} onClick={() => up((p) => { p.osd = !p.osd; })}>OSD</button>
+        <button className={`fh-tool${s.osd ? " on" : ""}`} title="Show flight info on video" onClick={() => up((p) => { p.osd = !p.osd; })}>OSD</button>
         <button className="fh-tool" title="Fill or fit video" onClick={() => up((p) => { p.fill = !p.fill; })}>{s.fill ? "Fill" : "Fit"}</button>
       </div>
       <div style={{ position: "absolute", left: listW + 48, right: 0, top: 0, bottom: 0, padding: 8, display: "grid", gap: 8, gridTemplateColumns: s.watchGrid === 1 ? "1fr" : "1fr 1fr", gridTemplateRows: s.watchGrid === 1 ? "1fr" : "1fr 1fr" }}>
@@ -243,7 +245,7 @@ export function HangarDesk() {
         <div className="fh-label" style={{ textTransform: "uppercase", letterSpacing: ".06em" }}>Selected</div>
         <div style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>{sel.nickname}</div>
         <div className="fh-label">{sel.model} · {SKINS[sel.brand].appCopied} layout</div>
-        <div style={{ margin: "12px -16px", height: 150, background: "radial-gradient(ellipse at 50% 60%, #f2f2f2 0, #bdbdbd 80%)", display: "grid", placeItems: "center" }}><DroneArt brand={sel.brand} size={230} view="hero" /></div>
+        <div style={{ margin: "12px -16px", height: 150, background: "radial-gradient(ellipse at 50% 60%, #3a3f46 0, #1b1d21 80%)", display: "grid", placeItems: "center" }}><DroneArt brand={sel.brand} size={230} view="hero" /></div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
           {[["Status", BUCKET[b].label], ["Battery", `${Math.round(sel.battery)}%`], ["Height", inAir(m.phase) ? `${m.height.toFixed(0)} m` : "—"]].map(([k, v]) => <div key={k} className="fh-panel" style={{ padding: "8px 10px" }}><div className="fh-label">{k}</div><div style={{ fontWeight: 700, fontSize: 15 }}>{v}</div></div>)}
         </div>

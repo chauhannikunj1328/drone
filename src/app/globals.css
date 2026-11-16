@@ -14,6 +14,8 @@
   --shadow-3: 0 18px 48px rgba(0,0,0,.22), 0 4px 12px rgba(0,0,0,.12);
   --hatch-light: repeating-linear-gradient(45deg, var(--grey-200) 0 1px, transparent 1px 7px);
   --hatch-dark: repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0 1px, transparent 1px 7px);
+  /* Accent: grey on phones and tablets (greyscale wireframe), DJI blue on desktop (.desk) */
+  --accent: var(--grey-900); --on-accent: #ffffff;
 }
 
 html, body { height: 100%; }
@@ -197,3 +199,86 @@ button:disabled { cursor: not-allowed; }
 .fh .seg button { color: rgba(255,255,255,.8); }
 .fh .seg button.on { background: #fff; color: #111; }
 .fh-btn.primary[disabled] { background: rgba(255,255,255,.08); background-image: var(--hatch-dark); color: rgba(255,255,255,.6); border-color: rgba(255,255,255,.2); }
+
+
+/* =====================================================================================
+   DESKTOP THEME (.desk) — high-fidelity colour design after DJI FlightHub 2.
+   Colours sampled from DJI's own FlightHub 2 screenshots (Nov 2026):
+   panel #1E1E1E · control #343434 · input #101010 · blue #2880F0 · green #18E888 · red #E00000.
+   ===================================================================================== */
+.desk {
+  --grey-0: #1e1e1e; --grey-25: #181818; --grey-50: #121212; --grey-100: #262626; --grey-150: #2e2e2e; --grey-200: #383838; --grey-300: #4a4a4a;
+  --grey-400: #7c7c7c; --grey-500: #9a9a9a; --grey-600: #b4b4b4; --grey-700: #d0d0d0; --grey-800: #e4e4e4; --grey-900: #f2f2f2; --grey-950: #0c0c0c;
+  --accent: #2880f0; --on-accent: #ffffff;
+  --fh-blue: #2880f0; --fh-blue-soft: rgba(40,128,240,.16); --fh-green: #18e888; --fh-red: #e00000; --fh-yellow: #f7c600; --fh-orange: #ff8a00; --fh-input: #101010;
+  --shadow-1: 0 1px 0 rgba(255,255,255,.03); --shadow-2: 0 10px 30px rgba(0,0,0,.45); --shadow-3: 0 24px 60px rgba(0,0,0,.6);
+  --hatch-light: repeating-linear-gradient(45deg, rgba(255,255,255,.08) 0 1px, transparent 1px 7px);
+  color-scheme: dark;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+}
+.desk .card { border-radius: 10px; border-color: #2e2e2e; }
+.desk .group { border-radius: 10px; border-color: #2e2e2e; }
+.desk .row + .row { border-top-color: #2a2a2a; }
+.desk .row .ico { background: #262626; color: #d0d0d0; border-radius: 8px; }
+.desk .btn { border-radius: 8px; min-height: 44px; background: #343434; border-color: #3c3c3c; color: #f2f2f2; box-shadow: none; }
+.desk .btn:hover:not(:disabled) { background: #3d3d3d; }
+.desk .btn-primary { background: var(--fh-blue); border-color: var(--fh-blue); color: #fff; }
+.desk .btn-primary:hover:not(:disabled) { background: #3a8cf5; }
+.desk .btn-ghost { background: transparent; border-color: transparent; color: #cfcfcf; }
+.desk .btn[disabled] { background: #262626; background-image: var(--hatch-light); color: #6f6f6f; border-color: #2e2e2e; }
+.desk .chip { background: #262626; border-color: #343434; color: #e4e4e4; }
+.desk .chip.soft { background: #262626; }
+.desk .chip.solid { background: var(--fh-blue); border-color: var(--fh-blue); color: #fff; }
+.desk .chip.dashed { border-color: var(--fh-yellow); color: var(--fh-yellow); }
+.desk .switch { background: #3a3a3a; }
+.desk .switch.on { background: var(--fh-blue); }
+.desk .switch::after { background: #f2f2f2; }
+.desk .stepper i { background: #2e2e2e; }
+.desk .stepper i.on { background: var(--fh-blue); }
+.desk .meter { background: #2e2e2e; }
+.desk .meter > i { background: var(--fh-green); }
+.desk .seg { background: #262626; }
+.desk .seg button { color: #b4b4b4; }
+.desk .seg button.on { background: var(--fh-blue); color: #fff; }
+.desk .icon-btn { background: #262626; color: #f2f2f2; }
+.desk .sheet { background: #1e1e1e; color: #f2f2f2; border: 1px solid #2e2e2e; }
+.desk .sheet::before { background: #4a4a4a; }
+.desk .sheet-back { background: rgba(0,0,0,.6); }
+.desk input { background: var(--fh-input) !important; color: #f2f2f2; border-color: #343434 !important; }
+.desk .light .alert, .desk.light .alert, .desk .alert { background: #1e1e1e; color: #f2f2f2; border: 1px solid #343434; backdrop-filter: none; }
+.desk .alert.warning { border: 1px solid rgba(247,198,0,.55); background: rgba(247,198,0,.08); background-image: none; }
+.desk .alert.critical { border: 1px solid rgba(224,0,0,.7); background: rgba(224,0,0,.12); box-shadow: inset 4px 0 0 var(--fh-red); }
+.desk .alert .act { background: #343434; color: #fff; }
+.desk .alert.critical .act { background: var(--fh-red); color: #fff; }
+.desk .alert.warning .act { background: var(--fh-yellow); color: #111; }
+.desk .muted { color: #9a9a9a; }
+.desk .t-over { letter-spacing: .06em; }
+/* status icons in colour on desktop (shape still carries the meaning) */
+.desk .ic-pass, .desk .ic-ready { color: var(--fh-green); }
+.desk .ic-warning, .desk .ic-notready { color: var(--fh-yellow); }
+.desk .ic-critical { color: #ff3b30; }
+.desk .ic-info, .desk .ic-flying, .desk .ic-returning, .desk .ic-connecting { color: var(--fh-blue); }
+.desk .ic-offline, .desk .ic-pending { color: #7c7c7c; }
+.desk .ic-limited, .desk .ic-locked { color: var(--fh-orange); }
+/* command-centre components in colour */
+.desk .fh, .desk.fh { background: #0c0c0c; }
+.desk .fh-panel { background: rgba(30,30,30,.92); border-color: #2e2e2e; border-radius: 8px; }
+.desk .fh-panel-h { border-bottom-color: #2a2a2a; }
+.desk .fh-btn { background: #343434; border-color: #3c3c3c; }
+.desk .fh-btn.primary { background: var(--fh-blue); border-color: var(--fh-blue); color: #fff; }
+.desk .fh-btn.primary[disabled] { background: #262626; background-image: var(--hatch-dark); color: #7c7c7c; border-color: #2e2e2e; }
+.desk .fh-chip { background: rgba(30,30,30,.92); border-color: #343434; }
+.desk .fh-chip.on { background: var(--fh-blue); border-color: var(--fh-blue); color: #fff; }
+.desk .fh-key { background: #262626; border-color: #4a4a4a; }
+.desk .fh-key.on { background: var(--fh-blue); border-color: var(--fh-blue); color: #fff; }
+.desk .fh-tool { background: rgba(30,30,30,.92); border-color: #343434; }
+.desk .fh-field b { background: var(--fh-input); border-color: #2e2e2e; }
+.desk .fh .seg button.on { background: var(--fh-blue); color: #fff; }
+.desk .fh-val { color: var(--fh-green); }
+.desk .ctl.pause { background: #f2f2f2; color: #111; }
+.desk .ctl.safety { background: #343434; border: 1px solid #3c3c3c; backdrop-filter: none; }
+.desk .ctl.safety.active { background: #f2f2f2; color: #111; }
+.desk .ctl { color: #f2f2f2; }
+.desk .ctl.pause, .desk .ctl.safety.active { color: #111; }
+.fh-tool.on { background: #fff; color: #111; }
+.desk .fh-tool.on { background: var(--fh-blue); border-color: var(--fh-blue); color: #fff; }

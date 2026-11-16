@@ -3,12 +3,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle, Camera, Car, Check, ChevronLeft, ChevronRight, Clock, Eye, FileText, Gauge, Globe, Hand, Heart, History, Info, Link2,
   Loader2, MapPin, Mountain, Navigation, Plane, Plus, Ruler, Scale, Search, Settings as SettingsIcon, ShieldCheck, Smartphone, Sparkles,
-  Trees, Users, Warehouse, Wifi, LayoutDashboard, Grid2x2,
+  Trees, Users, Warehouse, Wifi, LayoutDashboard, Grid2x2, UserRound,
 } from "lucide-react";
 import { BRANDS, COUNTRIES, FLAG_WORD, SKINS, requiredDocs, type CountryCode, type Drone } from "@/lib/data";
 import { frameSize, hasCommandCentre, safeArea } from "@/lib/layout";
 import { checklist, defaultMode, droneOf, inAir, isRedFor, useProto, type Proto, type Screen, type UseCase } from "@/lib/store";
-import { Battery, DroneArt, MapArt, StatusBar, Thumb } from "./art";
+import { Battery, DroneArt, MapArt, Scene, StatusBar, Thumb } from "./art";
 import { Icon, Mock, type IconKind } from "./ui";
 import { MakerSignIn, SignInSheet } from "./Onboarding";
 import { HangarDesk } from "./Dashboard";
@@ -40,7 +40,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   ];
   const tabH = 50;
   const desk = s.platform === "laptop";
-  const railW = desk ? 232 : 84;
+  const railW = 84;
   const isOn = (sc: Screen) => s.screen === sc || (sc === "hangar" && (s.screen.startsWith("pf-") || ["add-brand", "add-model", "capability", "summary"].includes(s.screen)));
   // In-flight banner: any drone in the air stays one tap away from every page.
   // Not during first setup: the new user has no drones in the air yet.
@@ -48,13 +48,24 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   const lead = airborne.find((d) => d.id === s.droneId) ?? airborne[0];
   const bannerH = lead ? 56 : 0, footH = footer ? 90 : 0;
   const bottomBase = tabs && !side && !desk ? tabH + safe.b : safe.b;
+  // Desktop: FlightHub-style top bar (logo, centred tabs, status on the right) instead of a sidebar.
+  const topH = 56;
   const tabBar = tabs && desk ? (
-    <nav aria-label="Sections" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: railW, background: "#161616", color: "#fff", borderRight: "1px solid rgba(255,255,255,.08)", padding: "14px 12px", display: "flex", flexDirection: "column", gap: 2, zIndex: 6 }}>
-      <div style={{ display: "flex", gap: 7, marginBottom: 22, paddingLeft: 4 }}>{[0, 1, 2].map((i) => <span key={i} style={{ width: 12, height: 12, borderRadius: 9999, background: ["#5c5c5c", "#9e9e9e", "#bdbdbd"][i] }} />)}</div>
-      <div className="t-over" style={{ padding: "0 10px 6px", color: "rgba(255,255,255,.5)" }}>Skyhand</div>
-      {tabsList.map(([t, sc, ic]) => { const on = isOn(sc); return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined}
-        style={{ display: "flex", alignItems: "center", gap: 10, height: 36, padding: "0 10px", borderRadius: 8, border: "none", background: on ? "#fff" : "transparent", fontSize: 14, fontWeight: on ? 600 : 500, color: on ? "#111" : "rgba(255,255,255,.7)", textAlign: "left" }}>{ic}{t}</button>; })}
-      <div style={{ marginTop: "auto", color: "rgba(255,255,255,.45)" }} className="t-cap">Concept by Artonest</div>
+    <nav aria-label="Sections" style={{ position: "absolute", left: 0, right: 0, top: 0, height: topH, background: "#161616", color: "#f2f2f2", borderBottom: "1px solid #2a2a2a", padding: "0 20px", display: "flex", alignItems: "center", gap: 24, zIndex: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 220 }}>
+        <span style={{ width: 30, height: 30, borderRadius: 8, background: "var(--fh-blue)", display: "grid", placeItems: "center" }}><Navigation size={16} color="#fff" fill="#fff" /></span>
+        <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-.01em" }}>Skyhand</span>
+        <span style={{ fontSize: 11, color: "#7c7c7c", border: "1px solid #343434", borderRadius: 4, padding: "1px 6px" }}>Concept</span>
+      </div>
+      <div style={{ flex: 1, display: "flex", justifyContent: "center", gap: 4, height: "100%" }}>
+        {tabsList.filter(([, sc]) => sc !== "settings").map(([t, sc]) => { const on = isOn(sc); return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined}
+          style={{ height: "100%", padding: "0 16px", border: "none", borderBottom: on ? "2px solid var(--fh-blue)" : "2px solid transparent", background: "transparent", fontSize: 14, fontWeight: on ? 600 : 500, color: on ? "#fff" : "#9a9a9a" }}>{t}</button>; })}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 220, justifyContent: "flex-end" }}>
+        <span className="chip" style={{ height: 30 }}><MapPin size={12} />{COUNTRIES[s.country].name}</span>
+        <button className="icon-btn" aria-label="Settings" title="Settings" style={{ width: 34, height: 34, background: isOn("settings") ? "var(--fh-blue)" : "#262626" }} onClick={() => up(go("settings"))}><SettingsIcon size={16} /></button>
+        <button aria-label="Account" title={s.account ? s.account.email : "Sign in"} onClick={() => up(go("account"))} style={{ width: 34, height: 34, borderRadius: 9999, border: "1px solid #343434", background: s.account ? "var(--fh-blue)" : "#262626", color: "#fff", fontSize: 12, fontWeight: 700 }}>{s.account ? s.account.name.split(" ").map((w) => w[0]).join("") : <UserRound size={15} />}</button>
+      </div>
     </nav>
   ) : tabs && (
     <nav aria-label="Tabs" style={side
@@ -70,11 +81,69 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   );
   const regular = W >= 600;
   const padX = regular ? 28 : 18;
+  const overlays = <>
+      {s.dronePicker && <DronePicker onClose={() => up((p) => { p.dronePicker = false; })} />}
+      {s.signInSheet && <SignInSheet />}
+      {s.toast && s.screen !== "fly" && (
+        <div style={{ position: "absolute", left: 16, right: 16, top: (desk ? topH : top) + 8, zIndex: 45 }} onClick={() => up((p) => { p.toast = undefined; })}>
+          <div className="alert" style={{ maxWidth: 520, margin: "0 auto" }}><Icon kind="info" size={18} /><div className="t-cap" style={{ flex: 1 }}>{s.toast}</div><button className="act">OK</button></div>
+        </div>)}
+  </>;
+  // ---------- Desktop page layouts (high-fidelity, after FlightHub 2) ----------
+  if (desk && !bleed && !tabs) {
+    // Setup pages without navigation (first drone, can't-fly-here): same aerial frame as the start screens.
+    return (
+      <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "#0c0c0c" }}>
+        <div style={{ position: "absolute", inset: 0 }}><Scene heading={260} height={30} /></div>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(8,10,14,.82), rgba(8,10,14,.45))" }} />
+        <div style={{ position: "absolute", left: 40, top: 32, display: "flex", alignItems: "center", gap: 10, color: "#fff" }}>
+          <span style={{ width: 34, height: 34, borderRadius: 9, background: "var(--fh-blue)", display: "grid", placeItems: "center", fontWeight: 800 }}>S</span><span style={{ fontSize: 18, fontWeight: 700 }}>Skyhand</span>
+        </div>
+        <div className="no-scrollbar" style={{ position: "absolute", left: "50%", top: 88, maxHeight: H - 128, transform: "translateX(-50%)", width: 640, overflowY: "auto", background: "rgba(30,30,30,.95)", border: "1px solid #2e2e2e", borderRadius: 12, padding: "20px 32px 28px", boxShadow: "0 30px 80px rgba(0,0,0,.6)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 36 }}>
+            {back && <button className="icon-btn" data-hit aria-label="Back" style={{ width: 32, height: 32 }} onClick={() => up(go(back))}><ChevronLeft size={18} /></button>}
+            <div className="t-title" style={{ flex: 1 }}>{title}</div>{right}
+          </div>
+          {sub && <div className="t-body muted" style={{ marginTop: 2 }}>{sub}</div>}
+          <div style={{ marginTop: 14 }}>{children}</div>
+        </div>
+        {overlays}
+      </div>
+    );
+  }
+  if (desk && !bleed) {
+    // Pages with navigation: top bar, a header band with title and actions, then a wide content area.
+    return (
+      <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+        <div style={{ position: "absolute", left: 0, right: 0, top: topH, height: 76, borderBottom: "1px solid #262626", background: "#161616", padding: "0 40px", display: "flex", alignItems: "center", gap: 14 }}>
+          {back && <button className="icon-btn" data-hit aria-label="Back" style={{ width: 34, height: 34 }} onClick={() => up(go(back))}><ChevronLeft size={18} /></button>}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="t-cap muted">{back ? "Skyhand / " + (back === "hangar" ? "Hangar" : back.startsWith("pf-") ? "Before you fly" : back) : "Skyhand"}</div>
+            <div className="t-title" style={{ marginTop: 2 }}>{title}</div>
+          </div>
+          {sub && <div className="t-body muted" style={{ maxWidth: 420, textAlign: "right" }}>{sub}</div>}
+          {right}
+        </div>
+        <div className="no-scrollbar" style={{ position: "absolute", left: 0, right: 0, top: topH + 76, bottom: bannerH + footH, overflowY: "auto", padding: "28px 40px 40px" }}>
+          {s.screen.startsWith("pf-")
+            ? <div style={{ maxWidth: 1160, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: 32, alignItems: "start" }}><div>{children}</div><PreflightAside /></div>
+            : <div style={{ maxWidth: full ? 1200 : 760, margin: "0 auto" }}>{children}</div>}
+        </div>
+        {(footer || lead) && (
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "12px 40px 14px", display: "grid", gap: 8, zIndex: 6, background: "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" }}>
+            {lead && <div style={{ maxWidth: 760, width: "100%", margin: "0 auto" }}><FlightBanner id={lead.id} more={airborne.length - 1} /></div>}
+            {footer && <div style={{ maxWidth: 760, width: "100%", margin: "0 auto" }}>{footer}</div>}
+          </div>)}
+        {tabBar}
+        {overlays}
+      </div>
+    );
+  }
   return (
-    <div className={bleed ? "fh" : "light"} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
+    <div className={`${bleed ? "fh" : "light"}${desk ? " desk" : ""}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
       <StatusBar platform={s.platform} landscape={s.orient === "landscape"} dark={bleed} />
-      {bleed && <div className="fh" style={{ position: "absolute", left: safe.l + (desk && tabs ? railW : 0), right: (side ? railW : 0) + safe.r, top: desk ? 0 : top, bottom: bottomBase, overflow: "hidden" }}>{children}</div>}
-      {!bleed && <div className="no-scrollbar" style={{ position: "absolute", left: safe.l + (desk && tabs ? railW : 0), right: (side ? railW : 0) + safe.r, top: desk ? 24 : top, bottom: bottomBase + bannerH + footH, overflowY: "auto", padding: `4px ${padX}px 28px` }}>
+      {bleed && <div className="fh" style={{ position: "absolute", left: safe.l, right: (side ? railW : 0) + safe.r, top: desk ? (tabs ? topH : 0) : top, bottom: bottomBase, overflow: "hidden" }}>{children}</div>}
+      {!bleed && <div className="no-scrollbar" style={{ position: "absolute", left: safe.l, right: (side ? railW : 0) + safe.r, top: desk ? (tabs ? topH + 16 : 24) : top, bottom: bottomBase + bannerH + footH, overflowY: "auto", padding: `4px ${padX}px 28px` }}>
         <div style={{ maxWidth: full || W < 800 ? undefined : 680, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", minHeight: 44, gap: 4, marginLeft: back ? -10 : 0 }}>
           {back && <button className="btn btn-ghost" data-hit style={{ minHeight: 40, padding: "0 6px", fontWeight: 500, gap: 2 }} onClick={() => up(go(back))}><ChevronLeft size={22} />Back</button>}
@@ -88,8 +157,8 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
         </div>
       </div>}
       {(footer || lead) && (
-        <div style={{ position: "absolute", left: safe.l + (desk && tabs ? railW : 0), right: s.platform === "duoOpen" && s.orient === "portrait" ? W / 2 + 16 : (side ? railW : 0) + safe.r, bottom: bottomBase, padding: `12px ${padX}px 10px`, display: "grid", gap: 8, zIndex: 6,
-          background: "linear-gradient(rgba(245,245,245,0), var(--grey-50) 30%)" }}>
+        <div style={{ position: "absolute", left: safe.l, right: s.platform === "duoOpen" && s.orient === "portrait" ? W / 2 + 16 : (side ? railW : 0) + safe.r, bottom: bottomBase, padding: `12px ${padX}px 10px`, display: "grid", gap: 8, zIndex: 6,
+          background: desk ? "linear-gradient(rgba(18,18,18,0), var(--grey-50) 30%)" : "linear-gradient(rgba(245,245,245,0), var(--grey-50) 30%)" }}>
           {lead && <div style={{ maxWidth: full || W < 800 ? undefined : 680, width: "100%", margin: "0 auto" }}><FlightBanner id={lead.id} more={airborne.length - 1} /></div>}
           {footer && <div style={{ maxWidth: full || W < 800 ? undefined : 680, width: "100%", margin: "0 auto" }}>{footer}</div>}
         </div>)}
@@ -97,10 +166,37 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
       {s.dronePicker && <DronePicker onClose={() => up((p) => { p.dronePicker = false; })} />}
       {s.signInSheet && <SignInSheet />}
       {s.toast && s.screen !== "fly" && (
-        <div style={{ position: "absolute", left: 16, right: 16, top: top + 8, zIndex: 45 }} onClick={() => up((p) => { p.toast = undefined; })}>
+        <div style={{ position: "absolute", left: 16, right: 16, top: (desk ? topH : top) + 8, zIndex: 45 }} onClick={() => up((p) => { p.toast = undefined; })}>
           <div className="alert" style={{ maxWidth: 520, margin: "0 auto" }}><Icon kind="info" size={18} /><div className="t-cap" style={{ flex: 1 }}>{s.toast}</div><button className="act">OK</button></div>
         </div>)}
     </div>
+  );
+}
+
+// Desktop pre-flight side panel: what you are about to fly, where, and how close you are to ready.
+function PreflightAside() {
+  const { s } = useProto(); const d = droneOf(s); const c = COUNTRIES[s.country];
+  const items = checklist(s); const passed = items.filter((i) => i.state === "pass").length; const blocked = items.some((i) => i.state === "block");
+  return (
+    <aside style={{ position: "sticky", top: 0, display: "grid", gap: 12 }}>
+      <div className="card" style={{ overflow: "hidden" }}>
+        <div style={{ position: "relative", height: 170 }}><MapArt distance={0} zones /><span className="chip" style={{ position: "absolute", left: 10, top: 10 }}><MapPin size={12} />{c.name}</span></div>
+        <div style={{ padding: 14, display: "flex", gap: 12, alignItems: "center" }}>
+          <span style={{ width: 64, height: 50, borderRadius: 8, background: "var(--grey-100)", display: "grid", placeItems: "center" }}><DroneArt brand={d.brand} size={60} /></span>
+          <div style={{ flex: 1, minWidth: 0 }}><div className="t-head">{d.nickname}</div><div className="t-cap muted">{d.model} · {Math.round(d.battery)}% · {SKINS[d.brand].appCopied}</div></div>
+        </div>
+      </div>
+      <div className="card" style={{ padding: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span className="t-over muted">Readiness</span><span className="t-cap" style={{ color: blocked ? "#ff3b30" : "var(--fh-green)", fontWeight: 700 }}>{blocked ? "Not ready" : "Ready"}</span></div>
+        <div className="meter" style={{ marginTop: 10 }}><i style={{ width: `${(passed / items.length) * 100}%`, background: blocked ? "#ff3b30" : undefined }} /></div>
+        <div className="t-cap muted" style={{ marginTop: 6 }}>{passed} of {items.length} checks passed</div>
+      </div>
+      <div className="card" style={{ padding: 14, display: "grid", gap: 8 }}>
+        <div className="t-over muted">Rules · {c.name}</div>
+        <div style={{ display: "flex", gap: 22 }}><div><div className="t-cap muted">Max height</div><div className="t-title num">{c.maxAltitude} m</div></div><div><div className="t-cap muted">Status</div><div className="t-head" style={{ marginTop: 4 }}>{FLAG_WORD[c.level]}</div></div></div>
+        <div className="t-cap muted">{c.verification} · {c.source}</div>
+      </div>
+    </aside>
   );
 }
 
@@ -109,7 +205,7 @@ function FlightBanner({ id, more }: { id: string; more: number }) {
   const d = droneOf(s, id); const m = s.sims[id];
   const mine = id === s.droneId;
   return <button data-hit onClick={() => up((p) => { p.droneId = id; p.skin = "auto"; p.screen = "fly"; })}
-    style={{ width: "100%", height: 48, borderRadius: 14, border: "none", background: "var(--grey-900)", color: "#fff", display: "flex", alignItems: "center", gap: 10, padding: "0 8px 0 14px", boxShadow: "var(--shadow-2)", textAlign: "left" }}>
+    style={{ width: "100%", height: 48, borderRadius: 14, border: "none", background: "var(--accent)", color: "var(--on-accent)", display: "flex", alignItems: "center", gap: 10, padding: "0 8px 0 14px", boxShadow: "var(--shadow-2)", textAlign: "left" }}>
     <span style={{ width: 8, height: 8, borderRadius: 9999, background: "#fff", boxShadow: "0 0 0 4px rgba(255,255,255,.25)", flex: "none" }} />
     <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
       <b className="t-label" style={{ fontWeight: 700 }}>{d.nickname} {m.phase === "returning" ? "returning" : "in the air"}</b>
@@ -142,7 +238,7 @@ function SectionH({ children, action }: { children: ReactNode; action?: ReactNod
   return <div className="section-h" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}><span className="t-over muted">{children}</span>{action}</div>;
 }
 function CodeBadge({ code, size = 36 }: { code: string; size?: number }) {
-  return <span style={{ width: size, height: size, borderRadius: 10, background: "var(--grey-900)", color: "var(--grey-0)", display: "grid", placeItems: "center", fontWeight: 800, fontSize: size * 0.34, letterSpacing: ".04em", flex: "none" }}>{code}</span>;
+  return <span style={{ width: size, height: size, borderRadius: 10, background: "var(--accent)", color: "var(--grey-0)", display: "grid", placeItems: "center", fontWeight: 800, fontSize: size * 0.34, letterSpacing: ".04em", flex: "none" }}>{code}</span>;
 }
 function FlagChip({ level }: { level: "few" | "rules" | "cant" }) {
   return <span className={`chip ${level === "rules" ? "dashed" : level === "cant" ? "solid" : "soft"}`}><Icon kind={level === "cant" ? "critical" : level === "rules" ? "warning" : "pass"} size={12} />{FLAG_WORD[level]}</span>;
@@ -391,7 +487,7 @@ export function PfCountry() {
           <CodeBadge code={x.code} size={32} />
           <span style={{ flex: 1, minWidth: 0 }}><span className="t-label" style={{ display: "block", fontWeight: 600 }}>{x.name}</span><span className="t-cap muted">{FLAG_WORD[x.level]} · max {x.maxAltitude} m</span></span>
           {x.level === "cant" && <Icon kind="critical" size={16} />}
-          <span style={{ width: 24, height: 24, borderRadius: 9999, border: s.country === x.code ? "none" : "1.5px solid var(--grey-300)", background: s.country === x.code ? "var(--grey-900)" : "transparent", display: "grid", placeItems: "center", color: "#fff" }}>{s.country === x.code && <Check size={15} strokeWidth={3} />}</span>
+          <span style={{ width: 24, height: 24, borderRadius: 9999, border: s.country === x.code ? "none" : "1.5px solid var(--grey-300)", background: s.country === x.code ? "var(--accent)" : "transparent", display: "grid", placeItems: "center", color: "var(--on-accent)" }}>{s.country === x.code && <Check size={15} strokeWidth={3} />}</span>
         </button>))}
     </div>
     {c.redForVisitors && <div className="group" style={{ marginTop: 12 }}><div className="row"><span className="ico"><MapPin size={16} /></span><span className="t-label" style={{ flex: 1 }}>I live in {c.name}</span>
@@ -412,7 +508,7 @@ export function PfUseCase() {
       {opts.map(([k, l, sub, ic]) => {
         const on = s.useCase === k;
         return <button key={k} data-hit onClick={() => up((p) => { p.useCase = k; })}
-          style={{ textAlign: "left", padding: 16, borderRadius: 18, minHeight: 120, display: "flex", flexDirection: "column", justifyContent: "space-between", border: on ? "2px solid var(--grey-900)" : "1px solid var(--grey-150)", background: on ? "var(--grey-900)" : "var(--grey-0)", color: on ? "#fff" : undefined, boxShadow: "var(--shadow-1)" }}>
+          style={{ textAlign: "left", padding: 16, borderRadius: 18, minHeight: 120, display: "flex", flexDirection: "column", justifyContent: "space-between", border: on ? "2px solid var(--accent)" : "1px solid var(--grey-150)", background: on ? "var(--accent)" : "var(--grey-0)", color: on ? "var(--on-accent)" : undefined, boxShadow: "var(--shadow-1)" }}>
           <span style={{ display: "flex", justifyContent: "space-between" }}>{ic}{on && <Check size={18} strokeWidth={3} />}</span>
           <span><span className="t-head" style={{ display: "block" }}>{l}</span><span className="t-cap" style={{ opacity: .65 }}>{sub}</span></span>
         </button>;
@@ -426,7 +522,7 @@ export function PfRedFlag() {
   const { s, up } = useProto(); const c = COUNTRIES[s.country];
   return <Page title="" back="pf-usecase" tabs={false}>
     <div style={{ textAlign: "center", padding: "8px 0 4px" }}>
-      <div style={{ width: 84, height: 84, borderRadius: 9999, background: "var(--grey-900)", color: "#fff", display: "grid", placeItems: "center", margin: "0 auto" }}><AlertTriangle size={40} strokeWidth={1.8} /></div>
+      <div style={{ width: 84, height: 84, borderRadius: 9999, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center", margin: "0 auto" }}><AlertTriangle size={40} strokeWidth={1.8} /></div>
       <div className="t-display" style={{ marginTop: 14 }}>You can&apos;t fly this drone here</div>
       <div style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 8 }}><CodeBadge code={c.code} size={24} /><span className="t-cap muted">{c.name} · {c.verification} · {c.source}</span></div>
     </div>
@@ -461,7 +557,7 @@ export function PfChecklist() {
   return <Page title="Before you fly" back="pf-usecase" large>
     <Steps n={3} /><DroneStrip />
     <div className="card raised" style={{ padding: 16, display: "flex", gap: 14, alignItems: "center", marginBottom: 14 }}>
-      <div style={{ width: 56, height: 56, borderRadius: 9999, background: blocked ? "var(--grey-0)" : "var(--grey-900)", border: blocked ? "3px solid var(--grey-900)" : "none", color: blocked ? "var(--grey-900)" : "#fff", display: "grid", placeItems: "center" }}>
+      <div style={{ width: 56, height: 56, borderRadius: 9999, background: blocked ? "var(--grey-0)" : "var(--accent)", border: blocked ? "3px solid var(--grey-900)" : "none", color: blocked ? "var(--grey-900)" : "#fff", display: "grid", placeItems: "center" }}>
         {blocked ? <AlertTriangle size={26} /> : <ShieldCheck size={28} />}</div>
       <div style={{ flex: 1 }}><div className="t-title">{blocked ? "Not ready" : warns ? "Ready, with warnings" : "Ready to fly"}</div>
         <div className="t-cap muted">{passed} of {items.length} passed · {warns} warning{warns === 1 ? "" : "s"}</div>
@@ -483,7 +579,7 @@ export function PfSight() {
   return <Page title="Keep it in sight" back="pf-checklist" large>
     <Steps n={4} />
     <div style={{ height: 150, borderRadius: 18, background: "linear-gradient(var(--grey-200), var(--grey-50))", position: "relative", overflow: "hidden", marginBottom: 16 }}>
-      <div style={{ position: "absolute", left: "18%", bottom: 18, width: 54, height: 54, borderRadius: 9999, background: "var(--grey-900)", color: "#fff", display: "grid", placeItems: "center" }}><Eye size={26} /></div>
+      <div style={{ position: "absolute", left: "18%", bottom: 18, width: 54, height: 54, borderRadius: 9999, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center" }}><Eye size={26} /></div>
       <svg style={{ position: "absolute", inset: 0 }} width="100%" height="100%"><line x1="26%" y1="68%" x2="72%" y2="28%" stroke="var(--grey-900)" strokeWidth="2" strokeDasharray="4 6" /></svg>
       <div style={{ position: "absolute", right: "16%", top: 18 }}><DroneArt brand={droneOf(s).brand} size={80} /></div>
     </div>
@@ -565,6 +661,7 @@ const PAST = [
 ];
 export function Flights() {
   const { s } = useProto();
+  if (s.platform === "laptop") return <FlightsDesk />;
   return <Page title="Flights" sub="Your flight log and media">
     <div className="seg" style={{ marginBottom: 6 }}><button className="on">All</button><button>Videos</button><button>Photos</button></div>
     {s.flights.length > 0 && <><SectionH>Today</SectionH>
@@ -607,7 +704,7 @@ export function Settings() {
     <div className="row"><span className="ico">{icon}</span><div style={{ flex: 1 }}><div className="t-label" style={{ fontWeight: 500, fontSize: 15 }}>{label}</div>{sub && <div className="t-cap muted">{sub}</div>}</div>{right ?? <ChevronRight size={18} color="var(--grey-400)" />}</div>;
   return <Page title="Settings">
     <button className="card" data-hit onClick={() => up(go("account"))} style={{ width: "100%", padding: 14, display: "flex", gap: 12, alignItems: "center", textAlign: "left" }}>
-      <span style={{ width: 52, height: 52, borderRadius: 9999, background: s.account ? "var(--grey-900)" : "var(--grey-100)", color: s.account ? "#fff" : "var(--grey-600)", display: "grid", placeItems: "center", fontWeight: 700, fontSize: 18 }}>{s.account ? s.account.name.split(" ").map((w) => w[0]).join("") : <Smartphone size={22} />}</span>
+      <span style={{ width: 52, height: 52, borderRadius: 9999, background: s.account ? "var(--accent)" : "var(--grey-100)", color: s.account ? "var(--on-accent)" : "var(--grey-600)", display: "grid", placeItems: "center", fontWeight: 700, fontSize: 18 }}>{s.account ? s.account.name.split(" ").map((w) => w[0]).join("") : <Smartphone size={22} />}</span>
       <div style={{ flex: 1, minWidth: 0 }}><div className="t-head">{s.account ? s.account.name : "Sync across your devices"}</div><div className="t-cap muted">{s.account ? `Signed in · ${s.account.email}` : "Sign in to use the same drones on iPhone, iPad, Duo and laptop"}</div></div><ChevronRight size={18} color="var(--grey-400)" />
     </button>
     <SectionH>Controls</SectionH>
@@ -630,6 +727,39 @@ export function Settings() {
     <SectionH>About</SectionH>
     <div className="group">
       <Row icon={<Info size={16} />} label="Skyhand" sub="Concept by Artonest · not a real product" right={<span className="t-cap muted">v0.1</span>} />
+    </div>
+  </Page>;
+}
+
+// Desktop flight records (after FlightHub 2 "Flight Records"): summary stats and a sortable-looking table.
+function FlightsDesk() {
+  const { s } = useProto();
+  const rows = [
+    ...s.flights.map((f, i) => ({ k: f.id, seed: i + 2, place: f.useCase === "Park" ? "City Park" : f.useCase, drone: f.nickname, model: f.model, when: "Today", time: `${Math.floor(f.seconds / 60)}:${String(f.seconds % 60).padStart(2, "0")}`, maxH: f.maxH, photos: f.photos, alerts: f.alerts.length, country: f.country })),
+    ...PAST.map((f, i) => ({ k: f.id, seed: i + 5, place: f.place, drone: f.nickname, model: f.model, when: f.when, time: f.time, maxH: f.maxH, photos: f.photos, alerts: i === 1 ? 1 : 0, country: "United States" })),
+  ];
+  const th: React.CSSProperties = { textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#9a9a9a", borderBottom: "1px solid #2a2a2a" };
+  const td: React.CSSProperties = { padding: "10px 14px", borderBottom: "1px solid #242424", fontSize: 13, verticalAlign: "middle" };
+  return <Page title="Flight records" full sub="Every flight, its media and alerts" right={<button className="btn btn-sm">Export report <Mock /></button>}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 18 }}>
+      {[["Flights", String(rows.length), ""], ["Flight time", "5.4", "h"], ["Distance", "43", "km"], ["Photos and videos", String(rows.reduce((a, r) => a + r.photos, 0)), ""]].map(([k, v, u]) => (
+        <div key={k} className="card" style={{ padding: "14px 16px" }}><div className="t-cap muted">{k}</div><div className="num" style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>{v}<span className="t-cap muted"> {u}</span></div></div>))}
+    </div>
+    <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
+      <div className="seg" style={{ width: 320 }}><button className="on">All</button><button>Videos</button><button>Photos</button></div>
+      <div style={{ flex: 1 }} /><div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--fh-input)", border: "1px solid #2e2e2e", borderRadius: 8, padding: "0 12px", height: 36, width: 260 }}><Search size={14} color="#7c7c7c" /><span className="t-cap muted">Search place or drone</span></div>
+    </div>
+    <div className="card" style={{ overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead><tr><th style={th}>Flight</th><th style={th}>Drone</th><th style={th}>Date</th><th style={th}>Duration</th><th style={th}>Max height</th><th style={th}>Media</th><th style={th}>Alerts</th><th style={th} /></tr></thead>
+        <tbody>{rows.map((r) => <tr key={r.k}>
+          <td style={td}><div style={{ display: "flex", gap: 12, alignItems: "center" }}><Thumb seed={r.seed} w={64} h={42} video /><div><div style={{ fontWeight: 600 }}>{r.place}</div><div className="t-cap muted">{r.country}</div></div></div></td>
+          <td style={td}><div>{r.drone}</div><div className="t-cap muted">{r.model}</div></td>
+          <td style={td}>{r.when}</td><td style={td} className="num">{r.time}</td><td style={td} className="num">{r.maxH} m</td><td style={td} className="num">{r.photos}</td>
+          <td style={td}>{r.alerts ? <span className="chip dashed" style={{ minHeight: 22 }}><Icon kind="warning" size={11} />{r.alerts}</span> : <span className="t-cap" style={{ color: "var(--fh-green)" }}>None</span>}</td>
+          <td style={{ ...td, textAlign: "right" }}><button className="btn btn-sm">Open</button></td>
+        </tr>)}</tbody>
+      </table>
     </div>
   </Page>;
 }

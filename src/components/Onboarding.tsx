@@ -39,10 +39,35 @@ function SidePicture({ step }: { step?: number }) {
 function Onboard({ step, back, children, primary, secondary }: { step?: number; back?: Screen; children: ReactNode; primary?: ReactNode; secondary?: ReactNode }) {
   const { s, up } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
+  const split = useSplit(); // hook: keep before the desktop early return
+  // Desktop: FlightHub-style start — full-screen aerial view with a centred dark card.
+  if (s.platform === "laptop") return (
+    <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "#0c0c0c" }}>
+      <div style={{ position: "absolute", inset: 0 }}><Scene heading={40 + (step ?? 0) * 35} height={36 + (step ?? 0) * 6} /></div>
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(8,10,14,.85) 0%, rgba(8,10,14,.55) 45%, rgba(8,10,14,.2) 100%)" }} />
+      <div style={{ position: "absolute", left: 40, top: 32, display: "flex", alignItems: "center", gap: 10, color: "#fff" }}>
+        <span style={{ width: 34, height: 34, borderRadius: 9, background: "var(--fh-blue)", display: "grid", placeItems: "center", fontWeight: 800 }}>S</span>
+        <span style={{ fontSize: 18, fontWeight: 700 }}>Skyhand</span><span style={{ fontSize: 11, color: "#bdbdbd", border: "1px solid rgba(255,255,255,.25)", borderRadius: 4, padding: "1px 6px" }}>Concept by Artonest</span>
+      </div>
+      <div style={{ position: "absolute", left: 40, bottom: 36, color: "rgba(255,255,255,.75)", maxWidth: 520 }}>
+        <div style={{ fontSize: 40, lineHeight: "46px", fontWeight: 700, color: "#fff", letterSpacing: "-.02em" }}>Fly from your screen.</div>
+        <div style={{ fontSize: 15, marginTop: 8 }}>Watch and fly DJI, Antigravity, Parrot, Autel and Skydio drones from your laptop. No goggles, no remote.</div>
+      </div>
+      <div className="no-scrollbar" style={{ position: "absolute", right: 64, top: "50%", transform: "translateY(-50%)", width: 460, maxHeight: H - 80, overflowY: "auto", background: "rgba(30,30,30,.94)", border: "1px solid #2e2e2e", borderRadius: 12, padding: "28px 32px", boxShadow: "0 30px 80px rgba(0,0,0,.6)", backdropFilter: "blur(12px)" }}>
+        {(back || step) && <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          {back && <button className="icon-btn" data-hit aria-label="Back" style={{ width: 32, height: 32 }} onClick={() => up(go(back))}><ChevronLeft size={18} /></button>}
+          {step && <><div className="stepper" style={{ flex: 1 }}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= step ? "on" : ""} />)}</div><span className="t-cap muted">Step {step} of 5</span></>}
+        </div>}
+        {children}
+        {primary && <div style={{ display: "grid", gap: 6, marginTop: 22 }}>{primary}{secondary}</div>}
+      </div>
+      {s.permAsk && <PermAlert />}
+      {s.signInSheet && <SignInSheet />}
+    </div>
+  );
   const safe = safeArea(s.platform, s.orient);
-  const sbH = s.platform === "iphone" ? (s.orient === "landscape" ? 0 : 54) : s.platform === "tablet" ? 24 : s.platform === "laptop" ? 0 : 30;
-  const top = Math.max(safe.t, sbH) + (s.platform === "laptop" ? 24 : 0);
-  const split = useSplit();
+  const sbH = s.platform === "iphone" ? (s.orient === "landscape" ? 0 : 54) : s.platform === "tablet" ? 24 : 30;
+  const top = Math.max(safe.t, sbH);
   const fold = s.platform === "duoOpen" && s.orient === "portrait";
   // In split mode the content lives in the right half (right of the fold on Duo open).
   const leftEdge = split ? (fold ? W / 2 + 28 : Math.round(W * 0.48)) : safe.l;
@@ -80,7 +105,7 @@ export function Welcome() {
   const { s, up } = useProto();
   const { W, H } = frameSize(s.platform, s.orient);
   const heroH = Math.min(W >= 700 ? 540 : 340, Math.round(H * (W > H ? 0.42 : 0.44)));
-  const split = useSplit();
+  const split = useSplit() || s.platform === "laptop";
   return (
     <Onboard
       primary={<button className="btn btn-primary btn-block" data-hit onClick={() => up(go("ob-safety"))}>Get started</button>}
@@ -90,9 +115,14 @@ export function Welcome() {
         <div style={{ position: "absolute", left: "50%", top: "30%", transform: "translate(-50%, -50%)", filter: "drop-shadow(0 12px 16px rgba(0,0,0,.35))" }}><DroneArt brand="dji" size={150} view="hero" /></div>
         <span className="chip" style={{ position: "absolute", left: 12, top: 12 }}><Sparkles size={12} />Concept by Artonest</span>
       </div>}
-      <div className="t-over muted" style={{ marginTop: split ? Math.max(24, H * 0.18) : 22 }}>Skyhand</div>
-      <h1 className="t-large" style={{ margin: "4px 0 8px" }}>Fly from your screen</h1>
-      <p className="t-body muted" style={{ margin: 0 }}>Watch and fly your drone from iPhone, iPad, iPhone Duo or laptop. No goggles, no remote. Controls follow your drone&apos;s own controller.</p>
+      <div className="t-over muted" style={{ marginTop: s.platform === "laptop" ? 0 : split ? Math.max(24, H * 0.18) : 22 }}>{s.platform === "laptop" ? "Welcome" : "Skyhand"}</div>
+      {s.platform === "laptop" ? <>
+        <h1 className="t-display" style={{ margin: "4px 0 8px" }}>Set up Skyhand</h1>
+        <p className="t-body muted" style={{ margin: 0 }}>Five short steps: safety, access, country, experience and your first drone. You can fly in about two minutes.</p>
+      </> : <>
+        <h1 className="t-large" style={{ margin: "4px 0 8px" }}>Fly from your screen</h1>
+        <p className="t-body muted" style={{ margin: 0 }}>Watch and fly your drone from iPhone, iPad, iPhone Duo or laptop. No goggles, no remote. Controls follow your drone&apos;s own controller.</p>
+      </>}
       <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
         {BRANDS.map((b) => <span key={b.id} className="chip soft">{b.name}</span>)}
       </div>
@@ -115,7 +145,7 @@ export function ObSafety() {
       <div style={{ display: "grid", gap: 12 }}>
         {rows.map(([ic, t, d]) => (
           <div key={t} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: 14, borderRadius: 18, background: "var(--grey-50)" }}>
-            <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--grey-900)", color: "#fff", display: "grid", placeItems: "center", flex: "none" }}>{ic}</span>
+            <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center", flex: "none" }}>{ic}</span>
             <div><div className="t-head">{t}</div><div className="t-cap muted" style={{ marginTop: 2, fontSize: 13, lineHeight: "18px" }}>{d}</div></div>
           </div>))}
       </div>
@@ -188,7 +218,7 @@ export function ObCountry() {
       <H1>Where do you fly?</H1>
       <Lead>{auto ? "We found your country from your location. Rules and limits follow it." : "Location is off, so choose your country. Rules and limits follow it."}</Lead>
       <div className="card raised" style={{ padding: 16, display: "flex", gap: 12, alignItems: "center", marginBottom: 14 }}>
-        <span style={{ width: 48, height: 48, borderRadius: 12, background: "var(--grey-900)", color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>{c.code}</span>
+        <span style={{ width: 48, height: 48, borderRadius: 12, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center", fontWeight: 800 }}>{c.code}</span>
         <div style={{ flex: 1 }}><div className="t-cap muted">{auto ? "Detected" : "Selected"} <MapPin size={11} style={{ verticalAlign: -1 }} /></div><div className="t-head">{c.name}</div><div className="t-cap muted">Max height {c.maxAltitude} m · {c.verification}</div></div>
         <span className={`chip ${c.level === "rules" ? "dashed" : c.level === "cant" ? "solid" : "soft"}`}>{FLAG_WORD[c.level]}</span>
       </div>
@@ -215,7 +245,7 @@ export function ObYou() {
     const on = s.experience === k;
     return <button key={k} data-hit onClick={() => up((p) => { p.experience = k; })} style={{ textAlign: "left", padding: 16, borderRadius: 18, border: on ? "2px solid var(--grey-900)" : "1px solid var(--grey-200)", background: on ? "var(--grey-50)" : "var(--grey-0)", display: "flex", gap: 12, alignItems: "center" }}>
       <span style={{ flex: 1 }}><span className="t-head" style={{ display: "block" }}>{t}</span><span className="t-cap muted">{d}</span></span>
-      <span style={{ width: 24, height: 24, borderRadius: 9999, border: on ? "none" : "1.5px solid var(--grey-300)", background: on ? "var(--grey-900)" : "transparent", color: "#fff", display: "grid", placeItems: "center" }}>{on && <Check size={15} strokeWidth={3} />}</span>
+      <span style={{ width: 24, height: 24, borderRadius: 9999, border: on ? "none" : "1.5px solid var(--grey-300)", background: on ? "var(--accent)" : "transparent", color: "var(--on-accent)", display: "grid", placeItems: "center" }}>{on && <Check size={15} strokeWidth={3} />}</span>
     </button>;
   };
   return (
@@ -239,7 +269,7 @@ export function ObYou() {
 export function ObDrone() {
   const { up } = useProto();
   const card = (icon: ReactNode, t: string, d: string, run: (p: Proto) => void, primary?: boolean) => (
-    <button data-hit onClick={() => up(run)} style={{ textAlign: "left", padding: 18, borderRadius: 20, border: primary ? "none" : "1px solid var(--grey-200)", background: primary ? "var(--grey-900)" : "var(--grey-0)", color: primary ? "#fff" : "var(--grey-900)", display: "flex", gap: 14, alignItems: "center", boxShadow: "var(--shadow-1)" }}>
+    <button data-hit onClick={() => up(run)} style={{ textAlign: "left", padding: 18, borderRadius: 20, border: primary ? "none" : "1px solid var(--grey-200)", background: primary ? "var(--accent)" : "var(--grey-0)", color: primary ? "#fff" : "var(--grey-900)", display: "flex", gap: 14, alignItems: "center", boxShadow: "var(--shadow-1)" }}>
       <span style={{ width: 52, height: 52, borderRadius: 14, background: primary ? "rgba(255,255,255,.14)" : "var(--grey-100)", display: "grid", placeItems: "center", flex: "none" }}>{icon}</span>
       <span style={{ flex: 1 }}><span className="t-head" style={{ display: "block" }}>{t}</span><span className="t-cap" style={{ opacity: .7 }}>{d}</span></span>
       <ChevronRight size={20} style={{ opacity: .6 }} />
@@ -270,7 +300,7 @@ export function MakerSignIn({ brand, onDone }: { brand: BrandId; onDone: () => v
   return (
     <div className="card" style={{ padding: 16, textAlign: "left", marginTop: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--grey-900)", color: "#fff", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 12 }}>{name.slice(0, 3).toUpperCase()}</span>
+        <span style={{ width: 40, height: 40, borderRadius: 12, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 12 }}>{name.slice(0, 3).toUpperCase()}</span>
         <div style={{ flex: 1 }}><div className="t-head">{a.label}</div><div className="t-cap muted">{a.need === "required" ? "Needed by " + name : a.need === "optional" ? "Optional" : "Sign-in steps not checked"} · {a.verification}</div></div>
       </div>
       <p className="t-cap muted" style={{ margin: "10px 0 12px", fontSize: 13, lineHeight: "18px" }}>{a.why} You sign in on {name}&apos;s page; Skyhand never sees your password (concept, mocked).</p>
@@ -328,7 +358,7 @@ export function AccountScreen() {
         <p className="t-cap muted" style={{ marginTop: 12, textAlign: "center" }}>Skyhand works without an account. Flying never needs one.</p>
       </> : <>
         <div className="card" style={{ padding: 16, display: "flex", gap: 12, alignItems: "center" }}>
-          <span style={{ width: 52, height: 52, borderRadius: 9999, background: "var(--grey-900)", color: "#fff", display: "grid", placeItems: "center", fontWeight: 700 }}>{a.name.split(" ").map((w) => w[0]).join("")}</span>
+          <span style={{ width: 52, height: 52, borderRadius: 9999, background: "var(--accent)", color: "var(--on-accent)", display: "grid", placeItems: "center", fontWeight: 700 }}>{a.name.split(" ").map((w) => w[0]).join("")}</span>
           <div style={{ flex: 1, minWidth: 0 }}><div className="t-head">{a.name}</div><div className="t-cap muted" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{a.email} · {a.method === "Apple" ? "Sign in with Apple" : "Email"}</div></div>
         </div>
         <div className="section-h t-over muted">Synced devices · mock</div>
