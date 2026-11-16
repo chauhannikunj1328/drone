@@ -96,7 +96,7 @@ export function Cockpit() {
 
   // ---------- top bar ----------
   const top = (
-    <div style={{ position: "absolute", left: 0, right: 0, top: topY, height: topH, display: "flex", alignItems: "center", gap: 12, padding: "0 12px", background: "#161616", borderBottom: "1px solid rgba(255,255,255,.08)", zIndex: 10 }}>
+    <div style={{ position: "absolute", left: 0, right: 0, top: topY, height: topH, display: "flex", alignItems: "center", gap: 12, padding: "0 12px", background: "var(--bar, #161616)", borderBottom: "1px solid rgba(255,255,255,.08)", zIndex: 10 }}>
       <button className="fh-tool" aria-label={flying ? "Leave cockpit" : "Back to Hangar"} title="Leave cockpit" onClick={leave}><ChevronLeft size={18} /></button>
       <button aria-label={`${d.nickname}. Change drone`} onClick={() => up((p) => { p.dronePicker = true; })} style={{ display: "flex", alignItems: "center", gap: 8, height: 38, padding: "0 12px 0 4px", borderRadius: 8, border: "1px solid rgba(255,255,255,.12)", background: "rgba(255,255,255,.05)", color: "#fff", textAlign: "left" }}>
         <span style={{ width: 34, height: 28, borderRadius: 8, background: "rgba(255,255,255,.9)", display: "grid", placeItems: "center" }}><DroneArt brand={d.brand} size={32} /></span>

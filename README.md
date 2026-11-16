@@ -14,6 +14,21 @@ A clickable, high-fidelity **greyscale wireframe** for a concept app that lets y
 - **First launch:** welcome, safety, permissions, country, experience, first drone. Maker sign-in happens inside Add a drone. The optional Skyhand account is only for sync across devices.
 - **Platforms:** iPhone, iPad, iPhone Duo (open and closed), laptop.
 
+## Creative design versions (this branch: `creative-design`)
+
+There are three visual styles with the same layout and flows. They are based on a style study of the Dribbble shot "SuperPower – Smart Health Tracking Web App" by RonDesignLab. No artwork from the shot is used.
+
+| Version | Style |
+|---|---|
+| V1 Frost | Light frosted glass, pill shapes, dot-matrix numbers, deep green and tan |
+| V2 Mission | Dark teal mission control, glass tiles, cyan hairlines, grid backdrop |
+| V3 Frost + Mission | V1 on app screens, V2 on flight views |
+
+**To switch versions:**
+- On port 3000, use the sidebar's "Design version".
+- On port 4003 (iPhone Duo), use the V1 / V2 / V3 buttons.
+- Or add `?look=v2` to the URL.
+
 ## Run it
 
 ```bash

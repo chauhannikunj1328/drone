@@ -29,7 +29,7 @@ const DuoPaneCtx = createContext<{ el: HTMLDivElement | null; claim: () => void 
 // Vertical status bar for the Duo side column (time, signal, Wi-Fi, battery stacked).
 export function SideStatus() {
   return (
-    <div aria-label="Status bar" style={{ display: "grid", justifyItems: "center", gap: 8, color: "#f2f2f2", fontSize: 12, fontWeight: 600 }}>
+    <div aria-label="Status bar" style={{ display: "grid", justifyItems: "center", gap: 8, color: "var(--text, #f2f2f2)", fontSize: 12, fontWeight: 600 }}>
       <span className="num">9:41</span>
       <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#f2f2f2" /><rect x="5" y="5" width="3" height="6" rx="1" fill="#f2f2f2" /><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#f2f2f2" /><rect x="15" y="0" width="3" height="11" rx="1" fill="#f2f2f2" /></svg>
       <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="#f2f2f2" strokeOpacity=".4" fill="none" /><rect x="2.5" y="2.5" width="16" height="7" rx="2" fill="#f2f2f2" /></svg>
@@ -78,7 +78,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   // Desktop: FlightHub-style top bar (logo, centred tabs, status on the right) instead of a sidebar.
   const topH = 56;
   const tabBar = tabs && desk ? (
-    <nav aria-label="Sections" style={{ position: "absolute", left: 0, right: 0, top: 0, height: topH, background: "#161616", color: "#f2f2f2", borderBottom: "1px solid #2a2a2a", padding: "0 24px", display: "flex", alignItems: "center", gap: 24, zIndex: 20 }}>
+    <nav aria-label="Sections" style={{ position: "absolute", left: 0, right: 0, top: 0, height: topH, background: "var(--bar, #161616)", color: "var(--text, #f2f2f2)", borderBottom: "1px solid var(--line-2, #2a2a2a)", padding: "0 24px", display: "flex", alignItems: "center", gap: 24, zIndex: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 220 }}>
         <span style={{ width: 30, height: 30, borderRadius: 8, background: "var(--fh-blue)", display: "grid", placeItems: "center" }}><Navigation size={16} color="#fff" fill="#fff" /></span>
         <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-.01em" }}>Skyhand</span>
@@ -86,7 +86,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
       </div>
       <div style={{ flex: 1, display: "flex", justifyContent: "center", gap: 4, height: "100%" }}>
         {tabsList.filter(([, sc]) => sc !== "settings").map(([t, sc]) => { const on = isOn(sc); return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined}
-          style={{ height: "100%", padding: "0 16px", border: "none", borderBottom: on ? "2px solid var(--fh-blue)" : "2px solid transparent", background: "transparent", fontSize: 14, fontWeight: on ? 600 : 500, color: on ? "#fff" : "#9a9a9a" }}>{t}</button>; })}
+          style={{ height: "100%", padding: "0 16px", border: "none", borderBottom: on ? "2px solid var(--fh-blue)" : "2px solid transparent", background: "transparent", fontSize: 14, fontWeight: on ? 600 : 500, color: on ? "var(--text, #fff)" : "var(--text-2, #9a9a9a)" }}>{t}</button>; })}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 220, justifyContent: "flex-end" }}>
         <span className="chip" style={{ height: 30 }}><MapPin size={12} />{COUNTRIES[s.country].name}</span>
@@ -96,28 +96,28 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
     </nav>
   ) : duoSide ? (
     // Duo side column, top to bottom: outer camera, vertical status bar, navigation (Back) and the prominent action, then the tab bar.
-    <nav aria-label="Controls" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: railW, paddingTop: s.platform === "duoClosed" ? 48 : 12, paddingBottom: 16, borderLeft: "1px solid #2a2a2a", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "rgba(22,22,22,.96)", zIndex: 6 }}>
+    <nav aria-label="Controls" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: railW, paddingTop: s.platform === "duoClosed" ? 48 : 12, paddingBottom: 16, borderLeft: "1px solid var(--line-2, #2a2a2a)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "var(--bar-glass, rgba(22,22,22,.96))", zIndex: 6 }}>
       <SideStatus />
       {(back || right) && <div style={{ display: "grid", gap: 8, justifyItems: "center", marginTop: 8 }}>
-        {back && <button data-hit aria-label="Back" title="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "#262626", color: "#f2f2f2", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
+        {back && <button data-hit aria-label="Back" title="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "var(--raised, #262626)", color: "var(--text, #f2f2f2)", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
         {right}
       </div>}
       <div style={{ flex: 1 }} />
       {tabs && tabsList.filter(([, sc]) => !task || isOn(sc)).map(([t, sc, ic]) => {
         const on = isOn(sc);
         return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined} title={t}
-          style={{ width: 72, minHeight: 56, border: "none", borderRadius: 12, background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: on ? "var(--fh-blue)" : "rgba(255,255,255,.55)", fontSize: 12, fontWeight: on ? 600 : 500 }}>
+          style={{ width: 72, minHeight: 56, border: "none", borderRadius: 12, background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: on ? "var(--fh-blue)" : "var(--tab-off, rgba(255,255,255,.55))", fontSize: 12, fontWeight: on ? 600 : 500 }}>
           {ic}{t}</button>;
       })}
     </nav>
   ) : tabs && (
     <nav aria-label="Tabs" style={side
-      ? { position: "absolute", right: 0, top: sbH, bottom: 0, width: railW + safe.r, paddingRight: safe.r, borderLeft: "1px solid #2a2a2a", display: "flex", flexDirection: "column", justifyContent: "center", gap: 4, background: "rgba(22,22,22,.96)", backdropFilter: "blur(20px)" }
-      : { position: "absolute", left: 0, right: 0, bottom: 0, height: tabH + safe.b, paddingBottom: safe.b, borderTop: "1px solid #2a2a2a", display: "flex", background: "rgba(22,22,22,.96)", backdropFilter: "blur(20px)", zIndex: 5 }}>
+      ? { position: "absolute", right: 0, top: sbH, bottom: 0, width: railW + safe.r, paddingRight: safe.r, borderLeft: "1px solid var(--line-2, #2a2a2a)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 4, background: "var(--bar-glass, rgba(22,22,22,.96))", backdropFilter: "blur(20px)" }
+      : { position: "absolute", left: 0, right: 0, bottom: 0, height: tabH + safe.b, paddingBottom: safe.b, borderTop: "1px solid var(--line-2, #2a2a2a)", display: "flex", background: "var(--bar-glass, rgba(22,22,22,.96))", backdropFilter: "blur(20px)", zIndex: 5 }}>
       {tabsList.map(([t, sc, ic]) => {
         const on = isOn(sc);
         return <button key={t} data-hit onClick={() => up(go(sc))} aria-current={on ? "page" : undefined}
-          style={{ flex: side ? undefined : 1, minHeight: 48, border: "none", background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: on ? "var(--fh-blue)" : "rgba(255,255,255,.55)", fontSize: 12, fontWeight: on ? 600 : 500 }}>
+          style={{ flex: side ? undefined : 1, minHeight: 48, border: "none", background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: on ? "var(--fh-blue)" : "var(--tab-off, rgba(255,255,255,.55))", fontSize: 12, fontWeight: on ? 600 : 500 }}>
           {ic}{t}</button>;
       })}
     </nav>
@@ -136,7 +136,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
   if (desk && !bleed && !tabs) {
     // Setup pages without navigation (first drone, can't-fly-here): same aerial frame as the start screens.
     return (
-      <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "#0c0c0c" }}>
+      <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--app-bg, #0c0c0c)" }}>
         <div style={{ position: "absolute", inset: 0 }}><Scene heading={260} height={30} /></div>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(8,10,14,.82), rgba(8,10,14,.45))" }} />
         <div style={{ position: "absolute", left: 40, top: 32, display: "flex", alignItems: "center", gap: 12, color: "#fff" }}>
@@ -158,7 +158,7 @@ export function Page({ title, back, children, tabs = true, large, right, sub, fu
     // Pages with navigation: top bar, a header band with title and actions, then a wide content area.
     return (
       <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
-        <div style={{ position: "absolute", left: 0, right: 0, top: topH, height: 72, borderBottom: "1px solid #262626", background: "#161616", padding: "0 32px", display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ position: "absolute", left: 0, right: 0, top: topH, height: 72, borderBottom: "1px solid var(--line-2, #262626)", background: "var(--bar, #161616)", padding: "0 32px", display: "flex", alignItems: "center", gap: 16 }}>
           {back && <button className="icon-btn" data-hit aria-label="Back" style={{ width: 34, height: 34 }} onClick={() => up(go(back))}><ChevronLeft size={18} /></button>}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="t-cap muted">{back ? "Skyhand / " + (back === "hangar" ? "Hangar" : back.startsWith("pf-") ? "Before you fly" : back) : "Skyhand"}</div>
@@ -843,7 +843,7 @@ function FlightsDesk() {
     ...s.flights.map((f, i) => ({ k: f.id, seed: i + 2, place: f.useCase === "Park" ? "City Park" : f.useCase, drone: f.nickname, model: f.model, when: "Today", time: `${Math.floor(f.seconds / 60)}:${String(f.seconds % 60).padStart(2, "0")}`, maxH: f.maxH, photos: f.photos, alerts: f.alerts.length, country: f.country })),
     ...PAST.map((f, i) => ({ k: f.id, seed: i + 5, place: f.place, drone: f.nickname, model: f.model, when: f.when, time: f.time, maxH: f.maxH, photos: f.photos, alerts: i === 1 ? 1 : 0, country: "United States" })),
   ];
-  const th: React.CSSProperties = { textAlign: "left", padding: "12px 16px", fontSize: 12, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "#9a9a9a", borderBottom: "1px solid #2a2a2a" };
+  const th: React.CSSProperties = { textAlign: "left", padding: "12px 16px", fontSize: 12, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--text-2, #9a9a9a)", borderBottom: "1px solid var(--line-2, #2a2a2a)" };
   const td: React.CSSProperties = { padding: "12px 16px", borderBottom: "1px solid #242424", fontSize: 14, verticalAlign: "middle" };
   return <Page title="Flight records" full sub="Every flight, its media and alerts" right={<button className="btn btn-sm">Export report <Mock /></button>}>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>

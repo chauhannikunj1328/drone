@@ -43,7 +43,7 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
   const split = useSplit(); // hook: keep before the desktop early return
   // Desktop: FlightHub-style start — full-screen aerial view with a centred dark card.
   if (s.platform === "laptop") return (
-    <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "#0c0c0c" }}>
+    <div className="light desk" style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--app-bg, #0c0c0c)" }}>
       <div style={{ position: "absolute", inset: 0 }}><Scene heading={40 + (step ?? 0) * 35} height={36 + (step ?? 0) * 6} /></div>
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(8,10,14,.85) 0%, rgba(8,10,14,.55) 45%, rgba(8,10,14,.2) 100%)" }} />
       <div style={{ position: "absolute", left: 40, top: 32, display: "flex", alignItems: "center", gap: 12, color: "#fff" }}>
@@ -77,13 +77,13 @@ function Onboard({ step, back, children, primary, secondary }: { step?: number; 
   const leftEdge = duoLand ? safe.l : split ? (fold ? W / 2 + 12 : Math.round(W * 0.48)) : safe.l;
   const maxW = !split && W >= 700 ? 480 : undefined;
   return (
-    <div className={`light desk touch${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--grey-50)" }}>
+    <div className={`light desk touch${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden", background: "var(--app-bg, var(--grey-50))" }}>
       {split && !duoLand && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: fold ? W / 2 - 12 : Math.round(W * 0.48) - 24 }}><SidePicture step={step} /></div>}
       {duoLand && <div style={{ position: "absolute", left: 0, right: sideW, top: H / 2 + 12, bottom: 0 }}><SidePicture step={step} /></div>}
       {!duoSide && <StatusBar platform={s.platform} landscape={s.orient === "landscape"} dark />}
-      {duoSide && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: sideW, paddingTop: s.platform === "duoClosed" ? 48 : 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, background: "rgba(22,22,22,.96)", borderLeft: "1px solid #2a2a2a", zIndex: 4 }}>
+      {duoSide && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: sideW, paddingTop: s.platform === "duoClosed" ? 48 : 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, background: "var(--bar-glass, rgba(22,22,22,.96))", borderLeft: "1px solid var(--line-2, #2a2a2a)", zIndex: 4 }}>
         <SideStatus />
-        {back && <button data-hit aria-label="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "#262626", color: "#f2f2f2", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
+        {back && <button data-hit aria-label="Back" onClick={() => up(go(back))} style={{ width: 48, height: 48, borderRadius: 9999, border: "none", background: "var(--raised, #262626)", color: "var(--text, #f2f2f2)", display: "grid", placeItems: "center" }}><ChevronLeft size={22} /></button>}
       </div>}
       <div className="no-scrollbar" style={{ position: "absolute", left: leftEdge, right: safe.r + sideW, top: duoSide ? 16 : top, bottom: duoLand ? H / 2 + 12 : safe.b + (primary ? 132 : 16), overflowY: "auto", padding: "4px 24px 12px" }}>
         <div style={{ maxWidth: maxW, margin: "0 auto" }}>

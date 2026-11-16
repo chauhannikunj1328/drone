@@ -133,7 +133,7 @@ export function WatchScreen() {
   return (
     <Page title="Watch" bleed>
       {listW > 0 && (
-        <div className="no-scrollbar" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: listW, borderRight: "1px solid rgba(255,255,255,.08)", background: "#141414", overflowY: "auto" }}>
+        <div className="no-scrollbar" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: listW, borderRight: "1px solid var(--hair, rgba(255,255,255,.08))", background: "var(--surface-2, #141414)", overflowY: "auto" }}>
           <div style={{ padding: "16px 16px 8px" }}><div style={{ fontWeight: 700 }}>Watch wall</div><div className="fh-label">Control one, watch the rest</div></div>
           {groups.map(([g, list]) => <div key={g}>
             <div className="fh-label" style={{ padding: "12px 16px 4px", textTransform: "uppercase", letterSpacing: ".06em" }}>{g} ({list.length})</div>
@@ -150,7 +150,7 @@ export function WatchScreen() {
         </div>
       )}
       {/* slim rail: layout presets and display settings */}
-      <div style={{ position: "absolute", left: listW, top: 0, bottom: 0, width: 48, borderRight: "1px solid rgba(255,255,255,.08)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 12, background: "#111" }}>
+      <div style={{ position: "absolute", left: listW, top: 0, bottom: 0, width: 48, borderRight: "1px solid var(--hair, rgba(255,255,255,.08))", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 12, background: "#111" }}>
         <button className={`fh-tool${s.watchGrid === 1 ? " on" : ""}`} aria-pressed={s.watchGrid === 1} title="1 view" onClick={() => up((p) => { p.watchGrid = 1; })}><Square size={15} /></button>
         <button className={`fh-tool${s.watchGrid === 4 ? " on" : ""}`} aria-pressed={s.watchGrid === 4} title="4 views" onClick={() => up((p) => { p.watchGrid = 4; })}><Grid2x2 size={15} /></button>
         <span style={{ height: 1, width: 24, background: "rgba(255,255,255,.12)", margin: "4px 0" }} />
@@ -200,7 +200,7 @@ export function HangarDesk() {
   const reconnect = () => { up((p) => { const x = droneOf(p, sel.id); x.status = "Not ready"; x.statusReason = "connecting"; }); setTimeout(() => up((p) => { const x = droneOf(p, sel.id); x.status = "Ready"; x.statusReason = undefined; }), 1500); };
   return (
     <Page title="Hangar" bleed>
-      <div className="no-scrollbar" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 320, borderRight: "1px solid rgba(255,255,255,.08)", background: "#141414", overflowY: "auto" }}>
+      <div className="no-scrollbar" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 320, borderRight: "1px solid var(--hair, rgba(255,255,255,.08))", background: "var(--surface-2, #141414)", overflowY: "auto" }}>
         <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center" }}>
           <div style={{ flex: 1 }}><div style={{ fontSize: 20, fontWeight: 700 }}>Your drones</div><div className="fh-label"><MapPin size={11} style={{ verticalAlign: -1 }} /> {c.name} · {s.drones.length} drones</div></div>
           <button className="fh-tool" aria-label="Add a drone" onClick={() => up((p) => { p.screen = "add-brand"; })}><Plus size={16} /></button>
@@ -218,7 +218,7 @@ export function HangarDesk() {
         <RealMap center={w.spot.home} zoom={16} drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} tools onDrone={(id) => up((p) => { p.droneId = id; p.skin = "auto"; })} />
         <div className="fh-panel" style={{ position: "absolute", left: 16, top: 16, padding: "8px 12px", zIndex: 5 }}><div style={{ fontWeight: 600 }}>{w.spot.place}, {w.spot.city}</div><div className="fh-label">Home points and landing spots · example location</div></div>
       </div>
-      <div className="no-scrollbar" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 360, borderLeft: "1px solid rgba(255,255,255,.08)", background: "#141414", overflowY: "auto", padding: 16 }}>
+      <div className="no-scrollbar" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 360, borderLeft: "1px solid var(--hair, rgba(255,255,255,.08))", background: "var(--surface-2, #141414)", overflowY: "auto", padding: 16 }}>
         <div className="fh-label" style={{ textTransform: "uppercase", letterSpacing: ".06em" }}>Selected</div>
         <div style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}>{sel.nickname}</div>
         <div className="fh-label">{sel.model} · {SKINS[sel.brand].appCopied} layout</div>

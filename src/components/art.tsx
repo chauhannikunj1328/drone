@@ -174,23 +174,23 @@ export function Thumb({ seed = 0, w = 64, h = 48, video = false }: { seed?: numb
 /* ---------- System bars ---------- */
 export function StatusBar({ platform, dark = false, landscape = false }: { platform: Platform; dark?: boolean; landscape?: boolean }) {
   if (platform === "laptop" || (platform === "iphone" && landscape)) return null;
-  const c = dark ? "#fff" : "#141414";
+  const c = dark ? "var(--sys-fg, #fff)" : "#141414";
   const h = platform === "iphone" ? 54 : platform === "tablet" ? 24 : 30;
   const pad = platform === "iphone" ? "18px 34px 0 46px" : "0 20px";
   return (
     <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: h, display: "flex", alignItems: platform === "iphone" ? "flex-start" : "center", justifyContent: "space-between", padding: pad, color: c, zIndex: 3, pointerEvents: "none", fontWeight: 600, fontSize: platform === "iphone" ? 17 : 13 }}>
       <span className="num">9:41</span>
       <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill={c} /><rect x="5" y="5" width="3" height="6" rx="1" fill={c} /><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill={c} /><rect x="15" y="0" width="3" height="11" rx="1" fill={c} /></svg>
-        <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.5 L5.6 8 A3.4 3.4 0 0 1 10.4 8 Z" fill={c} /><path d="M3.3 5.8 A6.6 6.6 0 0 1 12.7 5.8" stroke={c} strokeWidth="1.8" fill="none" /><path d="M1 3.4 A10 10 0 0 1 15 3.4" stroke={c} strokeWidth="1.8" fill="none" /></svg>
-        <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke={c} strokeOpacity=".4" fill="none" /><rect x="2.5" y="2.5" width="16" height="7" rx="2" fill={c} /><rect x="24" y="4" width="1.5" height="4" rx=".75" fill={c} fillOpacity=".4" /></svg>
+        <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor" /><rect x="5" y="5" width="3" height="6" rx="1" fill="currentColor" /><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="currentColor" /><rect x="15" y="0" width="3" height="11" rx="1" fill="currentColor" /></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.5 L5.6 8 A3.4 3.4 0 0 1 10.4 8 Z" fill="currentColor" /><path d="M3.3 5.8 A6.6 6.6 0 0 1 12.7 5.8" stroke="currentColor" strokeWidth="1.8" fill="none" /><path d="M1 3.4 A10 10 0 0 1 15 3.4" stroke="currentColor" strokeWidth="1.8" fill="none" /></svg>
+        <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" strokeOpacity=".4" fill="none" /><rect x="2.5" y="2.5" width="16" height="7" rx="2" fill="currentColor" /><rect x="24" y="4" width="1.5" height="4" rx=".75" fill="currentColor" fillOpacity=".4" /></svg>
       </span>
     </div>
   );
 }
 
 export function HomeIndicator({ dark = false }: { dark?: boolean }) {
-  return <div style={{ position: "absolute", left: "50%", bottom: 8, width: 134, height: 5, marginLeft: -67, borderRadius: 9999, background: dark ? "#fff" : "#141414", opacity: .9, zIndex: 70, pointerEvents: "none" }} />;
+  return <div style={{ position: "absolute", left: "50%", bottom: 8, width: 134, height: 5, marginLeft: -67, borderRadius: 9999, background: dark ? "var(--home-fg, #fff)" : "#141414", opacity: .9, zIndex: 70, pointerEvents: "none" }} />;
 }
 
 export function Island({ landscape = false }: { landscape?: boolean }) {

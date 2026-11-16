@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { BRANDS, COUNTRIES, SKINS, type BrandId, type CountryCode } from "@/lib/data";
 import { DEVICE_APPS, PLATFORM_LABEL, appFromSlug, flyOrientation, type Platform } from "@/lib/layout";
-import { droneOf, inAir, useProto, type Overlays, type Screen } from "@/lib/store";
+import { LOOKS, droneOf, inAir, useProto, type Look, type Overlays, type Screen } from "@/lib/store";
 import { Device } from "./Device";
 import { FlyScreen } from "./Fly";
 import { ObserverPhone } from "./Observer";
@@ -40,12 +40,16 @@ export function Shell({ locked }: { locked?: Platform }) {
   const flyingNow = inAir(sim.phase);
   const showObserver = s.observer !== "none";
   return (
-    <div className="shell" style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <div className={`shell look-${s.look}`} style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <aside style={{ width: 300, flex: "none", overflowY: "auto", background: "var(--grey-0)", borderRight: "1px solid var(--grey-300)", padding: 16, display: "grid", gap: 14, alignContent: "start" }}>
         <div>
           <div className="t-title">Skyhand <span className="t-cap muted">working title</span></div>
-          <div className="t-cap muted">Wireframe prototype · concept by Artonest · greyscale · all data is mock</div>
+          <div className="t-cap muted">Creative design · concept by Artonest · all data is mock</div>
         </div>
+        <Field label="Design version (creative)">
+          <Seg value={s.look} options={LOOKS.map(([v, l]) => [v, l.split(" ")[0]] as [Look, string])} onChange={(v) => up((p) => { p.look = v; })} />
+          <span className="t-cap muted">{LOOKS.find(([v]) => v === s.look)![1]} · {LOOKS.find(([v]) => v === s.look)![2]}</span>
+        </Field>
         <Field label="Screen">
           <select value={s.screen} onChange={(e) => up((p) => { p.screen = e.target.value as Screen; })}>
             {(Object.keys(SCREEN_LABEL) as Screen[]).map((k) => <option key={k} value={k}>{SCREEN_LABEL[k]}</option>)}
@@ -147,21 +151,23 @@ export function DeviceApp({ slug }: { slug: string }) {
     </button>
   );
   return (
-    <div style={{ position: "relative", height: "100vh", display: "flex", padding: app.start === "laptop" ? "24px 24px 48px" : "24px 24px 76px", background: "radial-gradient(ellipse at 50% 40%, #f4f4f4 0, #e2e2e2 70%)", overflow: "hidden" }}>
+    <div className={`look-${s.look}`} style={{ position: "relative", height: "100vh", display: "flex", padding: app.start === "laptop" ? "24px 24px 48px" : "24px 24px 76px", background: "radial-gradient(ellipse at 50% 40%, #f4f4f4 0, #e2e2e2 70%)", overflow: "hidden" }}>
       <Device bare maxScale={2} half={s.halfFold} platform={s.platform} orient={s.orient} fly={s.screen === "fly"} dark={s.screen === "fly"} mirror={s.mirror} overlays={{ zones: false, safe: false, reserved: false, hit: false, mock: true }} label={app.label}>
         <Screen />
       </Device>
-      {app.controls.length > 0 && (
-        <div style={{ position: "absolute", left: "50%", bottom: 20, transform: "translateX(-50%)", display: "flex", gap: 2, padding: 4, borderRadius: 9999, background: "rgba(255,255,255,.9)", border: "1px solid var(--grey-200)", boxShadow: "var(--shadow-2)", backdropFilter: "blur(12px)" }}>
-          {app.controls.includes("fold") && <>
-            {pose("Closed", <FoldHorizontal size={17} />, !open, () => up((p) => { p.platform = "duoClosed"; p.halfFold = false; }))}
-            {pose("Open", <UnfoldHorizontal size={17} />, open && !s.halfFold, () => up((p) => { p.platform = "duoOpen"; p.halfFold = false; }))}
-            {pose("Half open", <BookOpen size={17} />, open && s.halfFold, () => up((p) => { p.platform = "duoOpen"; p.halfFold = true; }))}
-          </>}
-          {app.controls.includes("fold") && !rotateLocked && <span style={{ width: 1, margin: "8px 0", background: "var(--grey-200)" }} />}
-          {app.controls.includes("rotate") && !rotateLocked && ctl(s.orient === "portrait" ? "Landscape" : "Portrait", <RotateCw size={17} />, () => up((p) => { p.orient = p.orient === "portrait" ? "landscape" : "portrait"; }))}
-        </div>
-      )}
+      <div style={{ position: "absolute", left: "50%", bottom: 20, transform: "translateX(-50%)", display: "flex", gap: 2, padding: 4, borderRadius: 9999, background: "rgba(255,255,255,.9)", border: "1px solid var(--grey-200)", boxShadow: "var(--shadow-2)", backdropFilter: "blur(12px)" }}>
+        {app.controls.includes("fold") && <>
+          {pose("Closed", <FoldHorizontal size={17} />, !open, () => up((p) => { p.platform = "duoClosed"; p.halfFold = false; }))}
+          {pose("Open", <UnfoldHorizontal size={17} />, open && !s.halfFold, () => up((p) => { p.platform = "duoOpen"; p.halfFold = false; }))}
+          {pose("Half open", <BookOpen size={17} />, open && s.halfFold, () => up((p) => { p.platform = "duoOpen"; p.halfFold = true; }))}
+        </>}
+        {app.controls.includes("fold") && !rotateLocked && <span style={{ width: 1, margin: "8px 0", background: "var(--grey-200)" }} />}
+        {app.controls.includes("rotate") && !rotateLocked && ctl(s.orient === "portrait" ? "Landscape" : "Portrait", <RotateCw size={17} />, () => up((p) => { p.orient = p.orient === "portrait" ? "landscape" : "portrait"; }))}
+        {app.controls.length > 0 && <span style={{ width: 1, margin: "8px 0", background: "var(--grey-200)" }} />}
+        {/* Creative design versions (creative-design branch) */}
+        {LOOKS.map(([v, l]) => <button key={v} aria-pressed={s.look === v} title={l} onClick={() => up((p) => { p.look = v; })}
+          style={{ height: 40, minWidth: 44, padding: "0 12px", borderRadius: 9999, border: "none", background: s.look === v ? "#141414" : "transparent", color: s.look === v ? "#fff" : "var(--grey-900)", fontSize: 13, fontWeight: 600 }}>{v.toUpperCase()}</button>)}
+      </div>
     </div>
   );
 }

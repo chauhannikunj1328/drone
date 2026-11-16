@@ -115,7 +115,7 @@ export function Stick({ rect, label, locked, onMove }: { rect: { x: number; y: n
         <circle cx={rect.w / 2} cy={rect.h / 2} r={rect.w * 0.3} fill="none" stroke="rgba(255,255,255,.18)" strokeDasharray="2 5" />
       </svg>
       <div className="knob" style={{ transform: `translate(${k.x * 42}px, ${k.y * 42}px)` }} />
-      <div className="t-micro hud-text" style={{ position: "absolute", bottom: -20, width: "100%", textAlign: "center", color: "rgba(255,255,255,.75)" }}>{locked ? "Locked" : label}</div>
+      <div className="t-micro hud-text" style={{ position: "absolute", bottom: -20, width: "100%", textAlign: "center", color: "var(--hud-fg-2, rgba(255,255,255,.75))" }}>{locked ? "Locked" : label}</div>
     </div>
   );
 }

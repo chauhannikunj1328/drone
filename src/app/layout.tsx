@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./looks.css";
 
 // System font only (style sheet decision). Concept wireframe by Artonest; all data is mock.
 export const metadata: Metadata = {

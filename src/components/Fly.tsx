@@ -74,7 +74,7 @@ function FlyTouch() {
 
   return (
     <div className={`dark desk touch${foldClass(s)}`} style={{ position: "absolute", inset: 0, width: W, height: H, overflow: "hidden" }}>
-      {(s.platform === "duoClosed" || s.platform === "duoOpen") && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: DUO_SYS_W, paddingTop: s.platform === "duoClosed" ? 48 : 12, background: "rgba(12,12,12,.85)", borderLeft: "1px solid #2a2a2a", display: "flex", justifyContent: "center", alignItems: "flex-start", zIndex: 30 }}><SideStatus /></div>}
+      {(s.platform === "duoClosed" || s.platform === "duoOpen") && <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: DUO_SYS_W, paddingTop: s.platform === "duoClosed" ? 48 : 12, background: "var(--bar-glass, rgba(12,12,12,.85))", borderLeft: "1px solid var(--line-2, #2a2a2a)", display: "flex", justifyContent: "center", alignItems: "flex-start", zIndex: 30 }}><SideStatus /></div>}
       {/* Z3 video */}
       <div className="video" style={pos(L.video)}
         onPointerDown={(e) => { if (d.is360) { (e.currentTarget as HTMLElement).dataset.x = String(e.clientX); } }}
@@ -100,9 +100,9 @@ function FlyTouch() {
       <div className="z" style={{ ...pos(L.status), display: "flex", alignItems: "center", gap: 10, padding: "0 6px 0 12px", fontSize: 12, fontWeight: 600, zIndex: 5,
         background: "linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.25))", borderRadius: 14, backdropFilter: "blur(10px)", border: "1px solid var(--glass-line)" }}>
         <button data-hit aria-label={flying ? "Back to Hangar. The flight continues." : "Back to Hangar"} title="Hangar" onClick={() => up((p) => { p.screen = "hangar"; p.returnSheet = false; })}
-          style={{ width: 32, height: 32, marginLeft: -6, borderRadius: 9999, border: "none", background: "rgba(255,255,255,.12)", color: "#fff", display: "grid", placeItems: "center", flex: "none" }}><ChevronLeft size={18} /></button>
+          style={{ width: 32, height: 32, marginLeft: -6, borderRadius: 9999, border: "none", background: "rgba(255,255,255,.12)", color: "var(--hud-fg, #fff)", display: "grid", placeItems: "center", flex: "none" }}><ChevronLeft size={18} /></button>
         <button data-hit aria-label={`${d.nickname}. Change drone`} onClick={() => up((p) => { p.dronePicker = true; })}
-          style={{ display: "flex", alignItems: "center", gap: 8, height: 36, padding: "0 8px 0 4px", borderRadius: 10, border: "none", background: "transparent", color: "#fff", textAlign: "left", flex: "none" }}>
+          style={{ display: "flex", alignItems: "center", gap: 8, height: 36, padding: "0 8px 0 4px", borderRadius: 10, border: "none", background: "transparent", color: "var(--hud-fg, #fff)", textAlign: "left", flex: "none" }}>
           <span style={{ width: 30, height: 26, borderRadius: 7, background: "rgba(255,255,255,.9)", display: "grid", placeItems: "center" }}><DroneArt brand={d.brand} size={28} /></span>
           <span style={{ lineHeight: "13px" }}><span style={{ display: "block", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{d.nickname}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 500, opacity: .75, whiteSpace: "nowrap" }}><Icon kind={sim.phase === "grounded" ? "landed" : sim.phase === "returning" ? "returning" : "flying"} size={9} />{sim.phase === "grounded" ? "On ground" : sim.phase === "paused" ? "Hovering" : sim.phase === "takeoff" ? "Taking off" : sim.phase[0].toUpperCase() + sim.phase.slice(1)}</span></span>
@@ -145,12 +145,12 @@ function FlyTouch() {
         onDone={() => setSim((m) => { m.phase = "landing"; m.smartMode = undefined; })} />
 
       {/* Z4 camera stack */}
-      <button data-hit className="ctl" aria-label={skin.record} title={skin.record} style={{ ...pos(L.record), border: "3px solid #fff" }} onClick={() => { setRecT(0); setSim((m) => { m.recording = !m.recording; }); }} disabled={!flying}>
-        <span style={{ width: sim.recording ? 18 : 30, height: sim.recording ? 18 : 30, borderRadius: sim.recording ? 4 : 9999, background: "#fff", transition: "all .15s" }} />
+      <button data-hit className="ctl" aria-label={skin.record} title={skin.record} style={{ ...pos(L.record), border: "3px solid var(--hud-fg, #fff)" }} onClick={() => { setRecT(0); setSim((m) => { m.recording = !m.recording; }); }} disabled={!flying}>
+        <span style={{ width: sim.recording ? 18 : 30, height: sim.recording ? 18 : 30, borderRadius: sim.recording ? 4 : 9999, background: "var(--hud-fg, #fff)", transition: "all .15s" }} />
       </button>
-      <button data-hit className="ctl" aria-label={skin.shutter} title={skin.shutter} style={{ ...pos(L.shutter), border: "3px solid #fff", background: "rgba(0,0,0,.25)" }} disabled={!flying}
+      <button data-hit className="ctl" aria-label={skin.shutter} title={skin.shutter} style={{ ...pos(L.shutter), border: "3px solid var(--hud-fg, #fff)", background: "rgba(0,0,0,.25)" }} disabled={!flying}
         onClick={() => { setSim((m) => { m.photos += 1; }); setFlash(true); setTimeout(() => setFlash(false), 180); }}>
-        <span style={{ width: 48, height: 48, borderRadius: 9999, background: "#fff", boxShadow: "inset 0 -3px 6px rgba(0,0,0,.15)" }} />
+        <span style={{ width: 48, height: 48, borderRadius: 9999, background: "var(--hud-fg, #fff)", boxShadow: "inset 0 -3px 6px rgba(0,0,0,.15)" }} />
       </button>
       <button data-hit className="ctl" aria-label={skin.toggle} title={skin.toggle} style={{ ...pos(L.toggle), fontSize: 9 }} onClick={() => setSim((m) => { m.videoMode = !m.videoMode; })}>
         {d.brand === "autel" ? <Layers size={18} /> : sim.videoMode ? <Video size={18} /> : <Camera size={18} />}
@@ -173,7 +173,7 @@ function FlyTouch() {
         </button>
       )}
       {skin.left === "none" && L.stickL && (
-        <div className="z t-cap glass" style={{ ...pos(L.stickL), display: "flex", flexDirection: "column", gap: 6, alignItems: "center", justifyContent: "center", textAlign: "center", color: "rgba(255,255,255,.8)", padding: 12 }}>
+        <div className="z t-cap glass" style={{ ...pos(L.stickL), display: "flex", flexDirection: "column", gap: 6, alignItems: "center", justifyContent: "center", textAlign: "center", color: "var(--hud-fg-2, rgba(255,255,255,.8))", padding: 12 }}>
           <Lock size={18} />No sticks. The X10 is monitor and mission-start only in this concept.
         </div>
       )}
@@ -341,7 +341,7 @@ function OtherDrones({ rect }: { rect?: Rect }) {
         const m = s.sims[o.id];
         return (
           <div key={o.id} className="glass" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", minWidth: 220 }}>
-            <button data-hit className="t-cap" style={{ background: "none", border: "none", textAlign: "left", flex: 1, color: "#fff" }} onClick={() => up((p) => { p.handoverTo = o.id; })}>
+            <button data-hit className="t-cap" style={{ background: "none", border: "none", textAlign: "left", flex: 1, color: "var(--hud-fg, #fff)" }} onClick={() => up((p) => { p.handoverTo = o.id; })}>
               <b>{o.nickname}</b> · {Math.round(o.battery)}% · {m.phase === "returning" ? "Returning" : m.smartMode ?? "Holding"}{o.battery <= 25 ? " · Battery low" : ""}
             </button>
             <button data-hit className="chip" style={{ minHeight: 30 }} onClick={() => up((p) => { p.sims[o.id].phase = "paused"; p.sims[o.id].smartPaused = true; })}>Hold</button>

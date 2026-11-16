@@ -23,6 +23,8 @@ export interface DroneSim {
 }
 export interface FlightRecord { id: string; droneId: string; nickname: string; model: string; country: string; useCase: UseCase; seconds: number; maxH: number; maxD: number; photos: number; alerts: string[]; }
 
+export type Look = "v1" | "v2" | "v3";
+export const LOOKS: [Look, string, string][] = [["v1", "V1 Frost", "Light frosted glass, dot-matrix numbers, soft gradient cards"], ["v2", "V2 Mission", "Dark teal mission control, cyan lines, glass tiles"], ["v3", "V3 Frost + Mission", "Light glass app with a dark teal flight view"]];
 export interface Overlays { zones: boolean; safe: boolean; reserved: boolean; hit: boolean; mock: boolean; }
 
 export interface Proto {
@@ -40,6 +42,8 @@ export interface Proto {
   // Command centre (17-flighthub2-analysis.md): watch wall layout, OSD, fit/fill, cockpit leave confirm
   // iPhone Duo pose: halfFold = partially folded like a book (fold region reserved). Closed/open = platform duoClosed/duoOpen.
   halfFold: boolean;
+  // Creative design versions (creative-design branch only): v1 Frost, v2 Mission, v3 Frost + Mission flight.
+  look: Look;
   watchGrid: 1 | 4; watchFocus?: string; osd: boolean; fill: boolean; leaveCockpit?: boolean; fastMode: boolean;
 }
 
@@ -58,7 +62,7 @@ export function initialState(): Proto {
     platform: "iphone", orient: "landscape", droneId: "d1", country: "US", mirror: false, skin: "auto",
     overlays: { zones: false, safe: false, reserved: false, hit: false, mock: true },
     screen: "welcome", returnSheet: false,
-    onboarded: false, obAdding: false, halfFold: false, watchGrid: 4, osd: true, fill: true, fastMode: false, experience: "beginner", perms: { location: "unknown", nearby: "unknown", notify: "unknown" }, brandAccounts: [], fullMap: false, traySheet: false,
+    onboarded: false, obAdding: false, halfFold: false, look: "v1", watchGrid: 4, osd: true, fill: true, fastMode: false, experience: "beginner", perms: { location: "unknown", nearby: "unknown", notify: "unknown" }, brandAccounts: [], fullMap: false, traySheet: false,
     useCase: "Park", resident: false, docs: [], sight: "unknown", crowdAck: false,
     observer: "none", observerSight: false, observerLeftAck: false, armStop: false,
     link: "strong", linkLostFor: 0, moving: false, driving: false, obstacle: false,
@@ -143,14 +147,14 @@ export const useProto = () => useContext(C)!;
 export const HIFI = true;
 export const useDesk = () => { useContext(C); return HIFI; };
 
-const KEYS_IN_URL: (keyof Proto)[] = ["platform", "orient", "droneId", "country", "mirror", "skin"];
+const KEYS_IN_URL: (keyof Proto)[] = ["platform", "orient", "droneId", "country", "mirror", "skin", "look"];
 
 export function ProtoProvider({ children, lockPlatform }: { children: ReactNode; lockPlatform?: Platform }) {
   // lockPlatform: a per-device page (e.g. /tablet) keeps its own state and cannot switch device.
   const [s, setS] = useState<Proto>(() => ({ ...initialState(), ...(lockPlatform ? { platform: lockPlatform, orient: lockPlatform === "laptop" ? "landscape" as const : "portrait" as const } : {}) }));
   const input = useRef<Input>({ lx: 0, ly: 0, rx: 0, ry: 0, throttle: false, slider: 0 });
   const up = useCallback((f: (d: Proto) => void) => setS((prev) => { const d = structuredClone(prev); f(d); return d; }), []);
-  const reset = useCallback(() => setS((prev) => ({ ...initialState(), platform: prev.platform, orient: prev.orient, country: prev.country, overlays: prev.overlays, mirror: prev.mirror })), []);
+  const reset = useCallback(() => setS((prev) => ({ ...initialState(), platform: prev.platform, orient: prev.orient, country: prev.country, overlays: prev.overlays, mirror: prev.mirror, look: prev.look })), []);
 
   // read config from URL once
   useEffect(() => {
@@ -165,7 +169,7 @@ export function ProtoProvider({ children, lockPlatform }: { children: ReactNode;
     const q = new URLSearchParams();
     for (const k of KEYS_IN_URL) if (!(lockPlatform && k === "platform")) q.set(k, String(s[k]));
     window.history.replaceState(null, "", `?${q.toString()}`);
-  }, [s.platform, s.orient, s.droneId, s.country, s.mirror, s.skin]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s.platform, s.orient, s.droneId, s.country, s.mirror, s.skin, s.look]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // toasts close by themselves after 4 s
   useEffect(() => { if (!s.toast) return; const t = setTimeout(() => up((d) => { d.toast = undefined; }), 4000); return () => clearTimeout(t); }, [s.toast, up]);
