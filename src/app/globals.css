@@ -282,3 +282,68 @@ button:disabled { cursor: not-allowed; }
 .desk .ctl.pause, .desk .ctl.safety.active { color: #111; }
 .fh-tool.on { background: #fff; color: #111; }
 .desk .fh-tool.on { background: var(--fh-blue); border-color: var(--fh-blue); color: #fff; }
+
+/* =====================================================================================
+   DESKTOP DESIGN SYSTEM (18-desktop-design-system.md) — 8 px grid, 6-step type scale,
+   radius 4/8, solid surfaces, no glass, sentence-case labels. Overrides the rules above.
+   ===================================================================================== */
+.desk { --r-sm: 4px; --r: 8px; --app: #121212; --panel: #1e1e1e; --raised: #262626; --control: #343434; --line: #2e2e2e; --text: #f2f2f2; --text-2: #9a9a9a; --text-3: #6f6f6f;
+  font-size: 14px; line-height: 20px; letter-spacing: 0; }
+/* type scale */
+.desk .t-large { font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -.01em; }
+.desk .t-display { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -.01em; }
+.desk .t-title { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: 0; }
+.desk .t-head { font-size: 16px; line-height: 24px; font-weight: 600; }
+.desk .t-body { font-size: 14px; line-height: 20px; }
+.desk .t-label { font-size: 14px; line-height: 20px; font-weight: 500; }
+.desk .t-cap { font-size: 12px; line-height: 16px; }
+.desk .t-micro { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0; }
+.desk .t-over { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--text-2); }
+.desk .t-num, .desk .num { font-variant-numeric: tabular-nums; }
+.desk .fh-label { font-size: 12px; line-height: 16px; font-weight: 400; color: var(--text-2); text-transform: none !important; letter-spacing: 0 !important; }
+.desk .fh-num { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -.01em; }
+.desk .fh-unit { font-size: 12px; font-weight: 400; }
+.desk .muted { color: var(--text-2); }
+/* surfaces: solid, one border, radius 8 */
+.desk .card, .desk .group { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); box-shadow: none; }
+.desk .card.raised { box-shadow: none; }
+.desk .fh-panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.desk .fh-panel-h { height: 48px; padding: 0 16px; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0; }
+.desk .glass { background: var(--panel); backdrop-filter: none; border-radius: var(--r); }
+/* rows and lists */
+.desk .row { min-height: 56px; padding: 8px 16px; gap: 12px; }
+.desk .row .ico { width: 32px; height: 32px; border-radius: var(--r); }
+.desk .fh-row { min-height: 56px; padding: 8px 16px; gap: 12px; font-size: 14px; line-height: 20px; }
+.desk .section-h { margin: 32px 0 8px; }
+/* controls */
+.desk .btn { height: 40px; min-height: 40px; padding: 0 16px; border-radius: var(--r); font-size: 14px; line-height: 20px; font-weight: 500; gap: 8px; }
+.desk .btn-sm { height: 32px; min-height: 32px; padding: 0 12px; font-size: 14px; }
+.desk .btn-block.btn-primary { height: 48px; }
+.desk .fh-btn { height: 40px; min-height: 40px; padding: 0 16px; border-radius: var(--r); font-size: 14px; font-weight: 500; gap: 8px; }
+.desk .icon-btn { width: 40px; height: 40px; border-radius: var(--r); }
+.desk .chip { height: 24px; min-height: 24px; padding: 0 8px; border-radius: 12px; font-size: 12px; line-height: 16px; font-weight: 500; gap: 4px; }
+.desk .fh-chip { height: 32px; padding: 0 12px; border-radius: var(--r); font-size: 14px; font-weight: 500; gap: 8px; backdrop-filter: none; background: var(--panel); }
+.desk .fh-tool { width: 40px; height: 40px; border-radius: var(--r); font-size: 12px; backdrop-filter: none; background: var(--panel); }
+.desk .fh-key { height: 32px; min-width: 32px; padding: 0 8px; border-radius: var(--r-sm); border-bottom-width: 2px; font-size: 12px; }
+.desk .seg { padding: 4px; gap: 4px; border-radius: var(--r); height: 40px; }
+.desk .seg button { min-height: 32px; border-radius: var(--r-sm); font-size: 14px; }
+.desk .switch { width: 40px; height: 24px; }
+.desk .switch::after { width: 20px; height: 20px; top: 2px; left: 2px; }
+.desk .switch.on::after { transform: translateX(16px); }
+.desk .stepper { gap: 8px; }
+.desk .stepper i { height: 4px; border-radius: 2px; }
+.desk .meter { height: 8px; border-radius: 4px; }
+.desk .fh-field { font-size: 14px; color: var(--text-2); }
+.desk .fh-field b { height: 32px; display: inline-flex; align-items: center; justify-content: flex-end; min-width: 80px; padding: 0 12px; border-radius: var(--r-sm); font-weight: 500; }
+.desk .alert { border-radius: var(--r); padding: 12px 16px; gap: 12px; box-shadow: none; }
+.desk .alert .act { height: 32px; min-height: 32px; padding: 0 12px; border-radius: var(--r); font-size: 14px; font-weight: 500; }
+.desk .sheet { border-radius: var(--r); padding: 24px; }
+.desk .sheet.center { width: min(400px, 92%); padding: 24px; }
+/* removed decoration on desktop */
+.desk .mock { display: none; }
+.desk .hud-text { text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.desk .fh-field { gap: 8px; }
+.desk .ctl { gap: 4px; }
+/* real maps: keep the required map credits out of the way of controls */
+.dv .maplibregl-ctrl-bottom-right { top: 40px; bottom: auto; }
+.maplibregl-ctrl-attrib { font: 400 10px/14px Inter, system-ui; }

@@ -159,7 +159,7 @@ export function Thumb({ seed = 0, w = 64, h = 48, video = false }: { seed?: numb
   return (
     <div style={{ position: "relative", width: w, height: h, borderRadius: 10, overflow: "hidden", flex: "none", background: "var(--grey-300)" }}>
       <Scene heading={seed * 47} height={10 + (seed % 3) * 12} />
-      {video && <span style={{ position: "absolute", left: 4, bottom: 3, fontSize: 9, fontWeight: 700, color: "#fff", textShadow: "0 1px 2px #000" }}>0:{String(12 + seed * 7).slice(-2)}</span>}
+      {video && <span style={{ position: "absolute", left: 4, bottom: 4, fontSize: 12, fontWeight: 600, color: "#fff", textShadow: "0 1px 2px #000" }}>0:{String(12 + seed * 7).slice(-2)}</span>}
     </div>
   );
 }

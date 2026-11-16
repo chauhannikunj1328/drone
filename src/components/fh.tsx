@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { MapArt } from "./art";
 import { useDesk } from "@/lib/store";
 
-export function Panel({ title, right, children, style, pad = 14 }: { title?: ReactNode; right?: ReactNode; children: ReactNode; style?: CSSProperties; pad?: number }) {
+export function Panel({ title, right, children, style, pad = 16 }: { title?: ReactNode; right?: ReactNode; children: ReactNode; style?: CSSProperties; pad?: number }) {
   return (
     <section className="fh-panel" style={style}>
       {title && <header className="fh-panel-h"><span>{title}</span>{right}</header>}
@@ -35,11 +35,11 @@ export function Bars7({ data, w = 120, h = 40 }: { data: number[]; w?: number; h
 
 export function BigStat({ label, value, unit, spark, sub }: { label: string; value: string; unit?: string; spark?: number[]; sub?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10 }}>
+    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
       <div style={{ minWidth: 0 }}>
         <div className="fh-label">{label}</div>
         <div className="fh-num">{value}{unit && <span className="fh-unit"> {unit}</span>}</div>
-        {sub && <div className="fh-label" style={{ marginTop: 2 }}>{sub}</div>}
+        {sub && <div className="fh-label" style={{ marginTop: 4 }}>{sub}</div>}
       </div>
       {spark && <Sparkline data={spark} />}
     </div>
@@ -70,16 +70,16 @@ export function Ring({ segs, size = 112, center, sub }: { segs: RingSeg[]; size?
 }
 export function Swatch({ st }: { st: RingSeg["style"] }) {
   const desk = useDesk();
-  if (desk) return <span style={{ width: 10, height: 10, borderRadius: 3, background: ({ solid: "#18e888", light: "#2880f0", hatch: "#f7c600", dash: "#5c5c5c" } as Record<string, string>)[st], flex: "none" }} />;
+  if (desk) return <span style={{ width: 10, height: 10, borderRadius: 4, background: ({ solid: "#18e888", light: "#2880f0", hatch: "#f7c600", dash: "#5c5c5c" } as Record<string, string>)[st], flex: "none" }} />;
   const bg = st === "solid" ? "#fff" : st === "light" ? "rgba(255,255,255,.55)" : st === "hatch" ? "repeating-linear-gradient(45deg,#fff 0 2px,rgba(255,255,255,.18) 2px 4px)" : "transparent";
-  return <span style={{ width: 10, height: 10, borderRadius: 3, background: bg, border: st === "dash" ? "1.5px dashed rgba(255,255,255,.7)" : "none", flex: "none" }} />;
+  return <span style={{ width: 10, height: 10, borderRadius: 4, background: bg, border: st === "dash" ? "1.5px dashed rgba(255,255,255,.7)" : "none", flex: "none" }} />;
 }
 
 export function Key({ k, on, wide, label }: { k: string; on?: boolean; wide?: boolean; label?: string }) {
   return (
-    <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+    <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
       <kbd className={`fh-key${on ? " on" : ""}`} style={{ minWidth: wide ? 64 : 34 }}>{k}</kbd>
-      {label && <span className="fh-label" style={{ fontSize: 9 }}>{label}</span>}
+      {label && <span className="fh-label" style={{ fontSize: 12 }}>{label}</span>}
     </span>
   );
 }
@@ -92,9 +92,9 @@ export function DarkMap({ distance = 0, heading = 0, zones = true, compact = fal
 
 export function MapTools({ heading = 0, onRecenter }: { heading?: number; onRecenter?: () => void }) {
   return (
-    <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 6, zIndex: 3 }}>
+    <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, zIndex: 3 }}>
       <div className="fh-tool" title={`Heading ${Math.round(heading)}°`} style={{ height: 44, flexDirection: "column", gap: 0 }}>
-        <span style={{ fontSize: 9, fontWeight: 800, transform: `rotate(${-heading}deg)` }}>N</span><span style={{ fontSize: 9 }}>{String(Math.round(heading)).padStart(3, "0")}°</span>
+        <span style={{ fontSize: 12, fontWeight: 800, transform: `rotate(${-heading}deg)` }}>N</span><span style={{ fontSize: 12 }}>{String(Math.round(heading)).padStart(3, "0")}°</span>
       </div>
       <button className="fh-tool" title="2D / 3D (mock)">3D</button>
       <button className="fh-tool" title="Recenter on drone" onClick={onRecenter}>◎</button>

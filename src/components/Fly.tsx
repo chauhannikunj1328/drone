@@ -6,7 +6,9 @@ import { Cockpit } from "./Cockpit";
 import { activeAlerts, alertAction, droneOf, inAir, skinOf, startReturn, useProto } from "@/lib/store";
 import { AlertCard, HoldButton, Icon, Mock, Stick, VSlider } from "./ui";
 import { ArrowDownToLine, Camera, ChevronRight, Crosshair, Home, Keyboard, Layers, Lock, MapPin, Maximize2, Pause, Play, Satellite, Smartphone, Sparkles, Video, X } from "lucide-react";
-import { Bars, Battery, DroneArt, MapArt, Scene, StatusBar } from "./art";
+import { Bars, Battery, DroneArt, StatusBar } from "./art";
+import { DroneView, RealMap } from "./RealMap";
+import { world } from "@/lib/world";
 import { DronePicker } from "./Screens";
 import { ChevronDown, ChevronLeft } from "lucide-react";
 
@@ -63,6 +65,7 @@ function FlyTouch() {
   }, [s.platform, input, up]);
 
   const setSim = (f: (m: typeof sim) => void) => up((p) => f(p.sims[p.droneId]));
+  const w = world(s); // real map data for the current country
   const paused = sim.phase === "paused";
   const returning = sim.phase === "returning";
   const landing = sim.phase === "landing";
@@ -75,7 +78,7 @@ function FlyTouch() {
       <div className="video" style={pos(L.video)}
         onPointerDown={(e) => { if (d.is360) { (e.currentTarget as HTMLElement).dataset.x = String(e.clientX); } }}
         onPointerMove={(e) => { if (d.is360 && e.buttons) { const x0 = Number((e.currentTarget as HTMLElement).dataset.x ?? e.clientX); setSim((m) => { m.view = Math.round((m.view + (e.clientX - x0) * 0.6 + 360) % 360); }); (e.currentTarget as HTMLElement).dataset.x = String(e.clientX); } }}>
-        <Scene heading={sim.heading} height={sim.height} gimbal={sim.gimbal} zoom={sim.zoom} view={sim.view} wide={d.is360} dim={sim.phase === "grounded"} />
+        <DroneView at={w.me} heading={d.is360 ? sim.view : sim.heading} height={sim.height} gimbal={sim.gimbal} grey dim={sim.phase === "grounded"} />
         {flying && <Crosshair size={28} strokeWidth={1.2} color="rgba(255,255,255,.7)" style={{ position: "absolute", left: "50%", top: "50%", marginLeft: -14, marginTop: -14, pointerEvents: "none" }} />}
         {flash && <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,.55)", pointerEvents: "none" }} />}
         <div style={{ position: "absolute", left: 0, right: 0, bottom: "18%", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, pointerEvents: "none" }}>
@@ -83,7 +86,7 @@ function FlyTouch() {
           {sim.smartMode && <span className="chip solid"><Sparkles size={12} />{sim.smartMode}{sim.smartPaused ? " · paused" : ""}</span>}
           {sim.recording && <span className="chip"><span style={{ width: 8, height: 8, borderRadius: 9999, background: "#fff", boxShadow: "0 0 0 2px rgba(255,255,255,.3)" }} />REC {String(Math.floor(recT / 60)).padStart(2, "0")}:{String(recT % 60).padStart(2, "0")}</span>}
         </div>
-        <span className="t-micro hud-text" style={{ position: "absolute", right: 12, bottom: 10, opacity: .6, pointerEvents: "none" }}>Live view · illustration</span>
+        <span className="t-micro hud-text" style={{ position: "absolute", right: 12, bottom: 10, opacity: .6, pointerEvents: "none" }}>Simulated view · real map imagery</span>
         {sim.smartMode && ["Shadow Track and Follow", "Deep Track", "FocusTrack", "Cameraman"].includes(sim.smartMode) && (
           <div style={{ position: "absolute", left: "44%", top: "52%", width: 64, height: 80, border: "2px solid var(--grey-0)", borderRadius: 10, boxShadow: "0 0 0 1px rgba(0,0,0,.4)" }}>
             <span className="t-cap" style={{ position: "absolute", top: -18, left: 0, whiteSpace: "nowrap", color: "var(--grey-0)" }}>{d.brand === "skydio" ? "Following" : "Subject locked"}</span>
@@ -179,7 +182,7 @@ function FlyTouch() {
       {/* Z6 map PiP */}
       {!L.panel2 && <button data-hit className="z" style={{ ...pos(L.map), padding: 0, overflow: "hidden", border: "2px solid rgba(255,255,255,.9)", borderRadius: 14, boxShadow: "0 8px 24px rgba(0,0,0,.35)" }}
         onClick={() => up((p) => { p.fullMap = true; })} aria-label="Open map">
-        <MapArt distance={sim.distance} heading={sim.heading} compact />
+        <RealMap center={w.spot.home} zoom={16} grey drones={w.drones.filter((x) => x.id === s.droneId)} homes={[w.myHome]} interactive={false} attribution={false} follow={w.me} />
         <Maximize2 size={12} color="#141414" style={{ position: "absolute", right: 5, top: 5 }} />
       </button>}
 
@@ -209,7 +212,7 @@ function FlyTouch() {
       {(s.platform === "tablet" || s.platform === "laptop") && <>
         {fo === "landscape" && <div className="z" style={{ left: (L.panel?.x ?? 0) - 8, top: 0, width: (L.panel?.w ?? 0) + 16, height: H, background: "var(--grey-950)", borderLeft: "1px solid var(--glass-line)" }} />}
         <button data-hit className="z card" style={{ ...pos(L.panel), padding: 0, overflow: "hidden", textAlign: "left" }} onClick={() => up((p) => { p.fullMap = true; })}>
-          <div style={{ position: "absolute", inset: 0 }}><MapArt distance={sim.distance} heading={sim.heading} zones /></div>
+          <RealMap center={w.spot.home} zoom={16} grey drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} path={w.path} follow={w.me} interactive={false} />
           <div style={{ position: "absolute", left: 10, top: 10, right: 10, display: "flex", justifyContent: "space-between" }}><span className="chip" style={{ background: "#fff", color: "#141414" }}><MapPin size={11} />Map <Mock /></span><Maximize2 size={14} color="#141414" /></div>
         </button>
         <div className="z card" style={{ ...pos(L.panel2), padding: 14 }}>
@@ -275,7 +278,7 @@ function FlyTouch() {
             <div className="t-title">Return to</div>
             <div className="t-cap muted" style={{ marginBottom: 10 }}>{d.nickname} is {sim.distance.toFixed(0)} m away at {sim.height.toFixed(0)} m</div>
             <div className="group">
-            {[["Home", "Where the drone first got GPS", <Home key="h" size={16} />], ["Launch point", "Where it took off", <ArrowDownToLine key="l" size={16} />], ["My position", s.perms.location === "denied" ? "Location is off for Skyhand" : s.moving ? "Not available while moving" : "Where this phone is now", <Smartphone key="m" size={16} />]].map(([t, h, ic]) => {
+            {[["Home", "Where the drone first got GPS", <Home key="h" size={16} />], ["Launch point", "Where it took off", <ArrowDownToLine key="l" size={16} />], ["My position", s.perms.location === "denied" ? "Location is off for Skyhand" : s.moving ? "Not available while moving" : "Where this phone is now", <Smartphone key="m" size={16} />], [`Landing spot: ${w.nearest.name}`, `${w.nearest.note} · ${Math.round(w.nearest.dist)} m from the drone`, <MapPin key="ls" size={16} />]].map(([t, h, ic]) => {
               const off = t === "My position" && (s.moving || s.perms.location === "denied");
               return <button key={t as string} className="row" data-hit disabled={off} style={{ opacity: off ? .5 : 1, backgroundImage: off ? "var(--hatch-light)" : undefined }}
                 onClick={() => up((p) => startReturn(p, t as string))}><span className="ico">{ic}</span><span style={{ flex: 1 }}><span className="t-label" style={{ display: "block", fontWeight: 600 }}>{t}</span><span className="t-cap muted">{h}</span></span><ChevronRight size={18} color="var(--grey-400)" /></button>;
@@ -290,7 +293,7 @@ function FlyTouch() {
       {s.fullMap && (
         <div className="sheet-back" style={{ alignItems: "stretch" }}>
           <div className="light" style={{ flex: 1, position: "relative" }}>
-            <MapArt distance={sim.distance} heading={sim.heading} zones />
+            <RealMap center={w.spot.home} zoom={16.5} grey drones={w.drones} homes={w.homes} landing={w.landing} noFly={w.noFly} path={w.path} follow={w.me} tools />
             <div className="card" style={{ position: "absolute", left: 16, top: 16, padding: "10px 14px" }}><div className="t-head">Map <Mock /></div><div className="t-cap muted">{d.nickname} · {sim.height.toFixed(0)} m · {sim.distance.toFixed(0)} m from Home</div></div>
             <div className="card" style={{ position: "absolute", left: 16, bottom: 16, padding: "8px 12px", display: "flex", gap: 14 }} >
               <span className="t-cap" style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ width: 14, height: 14, borderRadius: 9999, background: "#141414" }} />Home</span>

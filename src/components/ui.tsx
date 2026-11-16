@@ -32,7 +32,7 @@ export function AlertCard({ a, onAct, extra }: { a: AlertDef; onAct: () => void;
     <div className={`alert ${a.level}`} role={a.level === "critical" ? "alert" : "status"}>
       <span style={{ flex: "none", display: "grid", placeItems: "center" }}><Icon kind={a.level} size={20} /></span>
       <div style={{ minWidth: 0 }}>
-        <div className="t-label" style={{ fontWeight: 700 }}>{a.title}<span className="t-micro" style={{ marginLeft: 6, opacity: .6, textTransform: "uppercase" }}>{a.level}</span></div>
+        <div className="t-label" style={{ fontWeight: 700 }}>{a.title}<span className="t-micro" style={{ marginLeft: 8, opacity: .6, textTransform: "uppercase" }}>{a.level}</span></div>
         <div className="t-cap" style={{ opacity: .8 }}>{a.message}</div>
         {extra}
       </div>
@@ -73,7 +73,7 @@ export function HoldButton({ label, holdLabel, activeLabel, onDone, className = 
         </svg>}
         {icon}
         <span>{activeLabel ?? label}</span>
-        {!activeLabel && <span style={{ fontSize: 9, fontWeight: 500, opacity: .7, letterSpacing: ".02em" }}>{p > 0 ? "Keep holding" : holdLabel ?? "Hold"}</span>}
+        {!activeLabel && <span style={{ fontSize: 12, fontWeight: 500, opacity: .7, letterSpacing: ".02em" }}>{p > 0 ? "Keep holding" : holdLabel ?? "Hold"}</span>}
       </button>
       {confirm && (
         <div className="sheet-back" style={{ alignItems: "center", position: "fixed" }} onClick={() => setConfirm(false)}>
@@ -133,7 +133,7 @@ export function VSlider({ rect, label, value, onChange, springTo, locked }: { re
       onPointerDown={(e) => { capture(e); handle(e); }} onPointerMove={(e) => { if (e.buttons) handle(e); }}
       onPointerUp={() => { if (springTo !== undefined) onChange(springTo); }}>
       <div className="thumb" style={{ top: (1 - value) * (rect.h - 36) + 3 }} />
-      <div className="t-cap" style={{ position: "absolute", top: "50%", left: rect.w + 2, writingMode: "vertical-rl", transform: "translateY(-50%)", whiteSpace: "nowrap", color: "var(--grey-300)", fontSize: 10, pointerEvents: "none" }}>{label}</div>
+      <div className="t-cap" style={{ position: "absolute", top: "50%", left: rect.w + 2, writingMode: "vertical-rl", transform: "translateY(-50%)", whiteSpace: "nowrap", color: "var(--grey-300)", fontSize: 12, pointerEvents: "none" }}>{label}</div>
     </div>
   );
 }
